@@ -1,0 +1,27 @@
+ElectrodeCuttingCompare_v0.3.1_GitHubReady/
+├── .github/
+│   └── workflows/
+│       └── build-apk.yml
+├── app/
+│   ├── build.gradle.kts
+│   └── src/main/
+│       ├── AndroidManifest.xml
+│       ├── java/com/example/electrodecutcompare/
+│       │   ├── BitmapAnalysis.java
+│       │   ├── CycleAnalyzer.java
+│       │   ├── MainActivity.java
+│       │   ├── RoiQualityAnalyzer.java
+│       │   └── VideoPreviewActivity.java
+│       └── res/
+│           ├── drawable/panel.xml
+│           ├── layout/activity_main.xml
+│           ├── layout/activity_video_preview.xml
+│           └── values/
+│               ├── colors.xml
+│               └── styles.xml
+├── build.gradle.kts
+├── gradle.properties
+├── settings.gradle.kts
+├── README_KO.md
+├── PROJECT_STRUCTURE.txt
+└── UPLOAD_CHECKLIST.txt
