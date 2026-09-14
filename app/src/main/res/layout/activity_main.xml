@@ -1,0 +1,268 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/light_bg"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="14dp">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/navy"
+            android:gravity="center_vertical"
+            android:padding="16dp"
+            android:text="전극 컷팅 공정 A/B 비교"
+            android:textColor="#FFFFFF"
+            android:textSize="22sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:text="v0.3 · 촬영각 보정 + Cycle + 전극/Gripper/Nip ROI 정밀분석"
+            android:textColor="@color/text_dark"
+            android:textSize="14sp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:background="@drawable/panel"
+            android:orientation="vertical">
+
+            <Button
+                android:id="@+id/btnSelectA"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="설비 A 영상 선택" />
+            <TextView
+                android:id="@+id/txtA"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="6dp"
+                android:text="선택 안 됨"
+                android:textSize="13sp" />
+            <SeekBar
+                android:id="@+id/seekA"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:max="100"
+                android:progress="50" />
+            <TextView
+                android:id="@+id/txtTimeA"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="대표 프레임: 50%"
+                android:textSize="12sp" />
+            <Button
+                android:id="@+id/btnPreviewA"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="A 영상 재생" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:background="@drawable/panel"
+            android:orientation="vertical">
+
+            <Button
+                android:id="@+id/btnSelectB"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="설비 B 영상 선택" />
+            <TextView
+                android:id="@+id/txtB"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="6dp"
+                android:text="선택 안 됨"
+                android:textSize="13sp" />
+            <SeekBar
+                android:id="@+id/seekB"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:max="100"
+                android:progress="50" />
+            <TextView
+                android:id="@+id/txtTimeB"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="대표 프레임: 50%"
+                android:textSize="12sp" />
+            <Button
+                android:id="@+id/btnPreviewB"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="B 영상 재생" />
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/btnAnalyze"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:text="자동 보정 + A/B 비교 분석"
+            android:textStyle="bold" />
+
+        <Button
+            android:id="@+id/btnCycle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="Cycle 자동 분석 + A/B 동작 패턴 비교"
+            android:textStyle="bold" />
+
+        <Button
+            android:id="@+id/btnRoi"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="v0.3 전극 선단 + Gripper + Nip 정밀분석"
+            android:textStyle="bold" />
+
+        <ProgressBar
+            android:id="@+id/progress"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:max="100"
+            android:progress="0" />
+
+        <TextView
+            android:id="@+id/txtStatus"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:background="@drawable/panel"
+            android:padding="10dp"
+            android:text="영상 A/B를 선택해 주세요."
+            android:textColor="@color/text_dark"
+            android:textSize="14sp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:text="A 기준 프레임"
+            android:textStyle="bold" />
+        <ImageView
+            android:id="@+id/imgA"
+            android:layout_width="match_parent"
+            android:layout_height="220dp"
+            android:adjustViewBounds="true"
+            android:background="#E8EDF2"
+            android:scaleType="fitCenter" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:text="B 보정 프레임"
+            android:textStyle="bold" />
+        <ImageView
+            android:id="@+id/imgB"
+            android:layout_width="match_parent"
+            android:layout_height="220dp"
+            android:adjustViewBounds="true"
+            android:background="#E8EDF2"
+            android:scaleType="fitCenter" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:text="Difference Map (빨강 = 변화 큰 영역)"
+            android:textStyle="bold" />
+        <ImageView
+            android:id="@+id/imgDiff"
+            android:layout_width="match_parent"
+            android:layout_height="220dp"
+            android:adjustViewBounds="true"
+            android:background="#E8EDF2"
+            android:scaleType="fitCenter" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:text="Cycle Motion 비교 (A=파랑 / B=빨강)"
+            android:textStyle="bold" />
+        <ImageView
+            android:id="@+id/imgCycle"
+            android:layout_width="match_parent"
+            android:layout_height="250dp"
+            android:adjustViewBounds="true"
+            android:background="#E8EDF2"
+            android:scaleType="fitCenter" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:text="v0.3 설비 A ROI 추적 (초록=Gripper / 주황=전극선단 / 빨강=Nip)"
+            android:textStyle="bold" />
+        <ImageView
+            android:id="@+id/imgRoiA"
+            android:layout_width="match_parent"
+            android:layout_height="240dp"
+            android:adjustViewBounds="true"
+            android:background="#E8EDF2"
+            android:scaleType="fitCenter" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:text="v0.3 설비 B ROI 추적 (카메라 보정 후)"
+            android:textStyle="bold" />
+        <ImageView
+            android:id="@+id/imgRoiB"
+            android:layout_width="match_parent"
+            android:layout_height="240dp"
+            android:adjustViewBounds="true"
+            android:background="#E8EDF2"
+            android:scaleType="fitCenter" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:text="v0.3 A/B 품질지표 비교"
+            android:textStyle="bold" />
+        <ImageView
+            android:id="@+id/imgRoiCompare"
+            android:layout_width="match_parent"
+            android:layout_height="270dp"
+            android:adjustViewBounds="true"
+            android:background="#E8EDF2"
+            android:scaleType="fitCenter" />
+
+        <Button
+            android:id="@+id/btnSave"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:enabled="false"
+            android:text="분석 결과 이미지 저장" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:paddingBottom="24dp"
+            android:text="※ v0.3은 전극 선단/Gripper/Nip을 경량 ROI 방식으로 추적해 진입각·Offset·흔들림·안정 Score를 표시합니다. 아직 실제 치수 Calibration과 Golden/NG 기준 학습 전이므로 품질 NG 확정 판정값이 아니라 추세/비교용 지표입니다."
+            android:textColor="#A40000"
+            android:textSize="12sp" />
+    </LinearLayout>
+</ScrollView>
