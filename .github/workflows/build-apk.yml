@@ -3,14 +3,14 @@ name: Build Android APK
 on:
   workflow_dispatch:
   push:
-    branches: [ "main", "master" ]
+    branches: [ "main" ]
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout project
+      - name: Checkout
         uses: actions/checkout@v4
 
       - name: Set up Java 17
@@ -19,10 +19,13 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - name: Install Android SDK 35
+      - name: Set Android SDK path
         run: |
-          yes | sdkmanager --licenses >/dev/null || true
-          sdkmanager "platform-tools" "platforms;android-35" "build-tools;35.0.0"
+          echo "ANDROID_HOME=/usr/local/lib/android/sdk" >> $GITHUB_ENV
+          echo "ANDROID_SDK_ROOT=/usr/local/lib/android/sdk" >> $GITHUB_ENV
+          echo "sdk.dir=/usr/local/lib/android/sdk" > local.properties
+          ls /usr/local/lib/android/sdk/platforms
+          ls /usr/local/lib/android/sdk/build-tools
 
       - name: Set up Gradle 8.9
         uses: gradle/actions/setup-gradle@v4
