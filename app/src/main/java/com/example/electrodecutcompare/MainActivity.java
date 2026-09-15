@@ -57,6 +57,12 @@ public class MainActivity extends Activity {
         findViewById(R.id.btnAnalyze).setOnClickListener(v->analyze());
         findViewById(R.id.btnCycle).setOnClickListener(v->analyzeCycle());
         findViewById(R.id.btnRoi).setOnClickListener(v->analyzeRoi());
+        findViewById(R.id.btnRoiSettings).setOnClickListener(v->{
+            Intent i=new Intent(this,RoiSettingsActivity.class);
+            if(uriA!=null)i.putExtra("uriA",uriA.toString());
+            if(uriB!=null)i.putExtra("uriB",uriB.toString());
+            startActivity(i);
+        });
         btnSave.setOnClickListener(v->saveResult());
         SeekBar.OnSeekBarChangeListener listener=new SeekBar.OnSeekBarChangeListener(){
             public void onProgressChanged(SeekBar s,int p,boolean f){ updateTimeLabels(); }
@@ -165,6 +171,9 @@ public class MainActivity extends Activity {
 
                 BitmapAnalysis.Transform t=BitmapAnalysis.estimate(a,b);
                 lastTransform=t;
+                frameA=a;
+                alignedB=BitmapAnalysis.applyTransform(b,a.getWidth(),a.getHeight(),t);
+                diffBitmap=BitmapAnalysis.differenceOverlay(a,alignedB);
                 final int w=a.getWidth(), h=a.getHeight();
                 runOnUiThread(()->{progress.setProgress(25); txtStatus.setText("설비 A: 전극 선단 / Gripper / Nip ROI 추적 중...");});
 
@@ -185,7 +194,7 @@ public class MainActivity extends Activity {
                     imgRoiB.setImageBitmap(mb.overlay);
                     imgRoiCompare.setImageBitmap(cmp);
                     btnSave.setEnabled(true);
-                    txtStatus.setText("v0.3 ROI 분석 완료\n"+ma.summary+"\n\n"+mb.summary+
+                    txtStatus.setText("v0.4 ROI 분석 완료\n"+ma.summary+"\n\n"+mb.summary+
                             String.format(Locale.getDefault(),
                                     "\n\n카메라 보정: 회전 %.2f°, 배율 %.3f, X %.1fpx / Y %.1fpx"+
                                     "\n※ 현재 px/Score는 설비 변화 추세용 참고값입니다. 실제 mm 및 NG 기준은 Calibration/Golden 데이터로 확정해야 합니다.",

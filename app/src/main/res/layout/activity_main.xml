@@ -26,7 +26,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
-            android:text="v0.3 · 촬영각 보정 + Cycle + 전극/Gripper/Nip ROI 정밀분석"
+            android:text="v0.4 · 촬영각 보정 + Cycle + 설비별 저장형 ROI 정밀분석"
             android:textColor="@color/text_dark"
             android:textSize="14sp" />
 
@@ -123,11 +123,19 @@
             android:textStyle="bold" />
 
         <Button
+            android:id="@+id/btnRoiSettings"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="v0.4 ROI 위치/크기 설정 · 설비별 저장"
+            android:textStyle="bold" />
+
+        <Button
             android:id="@+id/btnRoi"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
-            android:text="v0.3 전극 선단 + Gripper + Nip 정밀분석"
+            android:text="v0.4 저장 ROI로 전극 선단 + Gripper + Nip 분석"
             android:textStyle="bold" />
 
         <ProgressBar
@@ -210,7 +218,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
-            android:text="v0.3 설비 A ROI 추적 (초록=Gripper / 주황=전극선단 / 빨강=Nip)"
+            android:text="v0.4 설비 A ROI 추적 (초록=Gripper / 주황=전극선단 / 빨강=Nip)"
             android:textStyle="bold" />
         <ImageView
             android:id="@+id/imgRoiA"
@@ -224,7 +232,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
-            android:text="v0.3 설비 B ROI 추적 (카메라 보정 후)"
+            android:text="v0.4 설비 B ROI 추적 (카메라 보정 후)"
             android:textStyle="bold" />
         <ImageView
             android:id="@+id/imgRoiB"
@@ -238,7 +246,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
-            android:text="v0.3 A/B 품질지표 비교"
+            android:text="v0.4 A/B 품질지표 비교"
             android:textStyle="bold" />
         <ImageView
             android:id="@+id/imgRoiCompare"
@@ -261,7 +269,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
             android:paddingBottom="24dp"
-            android:text="※ v0.3은 전극 선단/Gripper/Nip을 경량 ROI 방식으로 추적해 진입각·Offset·흔들림·안정 Score를 표시합니다. 아직 실제 치수 Calibration과 Golden/NG 기준 학습 전이므로 품질 NG 확정 판정값이 아니라 추세/비교용 지표입니다."
+            android:text="※ v0.4는 전극 선단/Gripper/Nip을 경량 ROI 방식으로 추적해 진입각·Offset·흔들림·안정 Score를 표시합니다. 아직 실제 치수 Calibration과 Golden/NG 기준 학습 전이므로 품질 NG 확정 판정값이 아니라 추세/비교용 지표입니다."
             android:textColor="#A40000"
             android:textSize="12sp" />
     </LinearLayout>

@@ -64,6 +64,10 @@ public final class RoiQualityAnalyzer {
     public static Metrics analyze(Context context, Uri uri, long durationMs, int percent,
                                   BitmapAnalysis.Transform cameraTransform,
                                   int targetW, int targetH, String label) {
+        String machine = label.startsWith("설비 B") ? "B" : "A";
+        final float[] roiGripper=RoiSettingsStore.load(context,machine,"GRIPPER",ROI_GRIPPER).array();
+        final float[] roiTip=RoiSettingsStore.load(context,machine,"TIP",ROI_TIP).array();
+        final float[] roiNip=RoiSettingsStore.load(context,machine,"NIP",ROI_NIP).array();
         long centerMs = Math.max(0, durationMs * percent / 100L);
         final int samples=9;
         final long spanMs=Math.min(900, Math.max(300, durationMs/5));
@@ -87,9 +91,9 @@ public final class RoiQualityAnalyzer {
                 if(cameraTransform!=null)
                     fit=BitmapAnalysis.applyTransform(fit,targetW,targetH,cameraTransform);
 
-                grip[i]=locateEdgeCenter(fit,ROI_GRIPPER,true);
-                tip[i]=locateElectrodeTip(fit,ROI_TIP);
-                nip[i]=locateEdgeCenter(fit,ROI_NIP,false);
+                grip[i]=locateEdgeCenter(fit,roiGripper,true);
+                tip[i]=locateElectrodeTip(fit,roiTip);
+                nip[i]=locateEdgeCenter(fit,roiNip,false);
                 if(i==samples/2) centerFrame=fit.copy(Bitmap.Config.ARGB_8888,true);
             }
         }finally{
@@ -118,7 +122,7 @@ public final class RoiQualityAnalyzer {
         float score=Math.max(0,100-penalty);
 
         if(centerFrame==null) centerFrame=Bitmap.createBitmap(targetW,targetH,Bitmap.Config.ARGB_8888);
-        Bitmap overlay=drawOverlay(centerFrame,g,t,n,angle,offset,tj,gj,score,label);
+        Bitmap overlay=drawOverlay(centerFrame,g,t,n,angle,offset,tj,gj,score,label,roiGripper,roiTip,roiNip);
 
         String summary=String.format(Locale.getDefault(),
                 "%s · ROI 정밀분석(참고)\n진입각 %.2f° / Nip 상대 Offset %.1f px / Gripper→Tip %.1f px\nTip 흔들림 %.1f px / Gripper 흔들림 %.1f px / 안정 Score %.0f/100",
@@ -132,7 +136,7 @@ public final class RoiQualityAnalyzer {
         Canvas c=new Canvas(out); c.drawColor(Color.WHITE);
         Paint p=new Paint(Paint.ANTI_ALIAS_FLAG);
         p.setColor(Color.rgb(15,48,88)); p.setTextSize(36); p.setFakeBoldText(true);
-        c.drawText("v0.3 A/B ROI Quality Comparison",45,55,p);
+        c.drawText("v0.4 A/B ROI Quality Comparison",45,55,p);
         p.setFakeBoldText(false); p.setTextSize(22); p.setColor(Color.DKGRAY);
         c.drawText("촬영각 보정 후 전극 선단 / Gripper / Nip 상대값 비교",45,92,p);
 
@@ -160,7 +164,7 @@ public final class RoiQualityAnalyzer {
         p.setColor(Color.rgb(220,65,45)); c.drawText("● 설비 B",210,690,p);
         p.setColor(Color.DKGRAY); p.setTextSize(20);
         c.drawText("※ px 값은 현재 영상 내 상대지표입니다. 실제 mm 변환은 기준 치수 Calibration을 추가하면 가능합니다.",390,690,p);
-        c.drawText("※ v0.3 ROI 위치/임계값은 현재 영상에 맞춘 경량 휴리스틱이며 NG 확정 판정용이 아닙니다.",60,730,p);
+        c.drawText("※ v0.4 ROI는 설비별 저장값을 사용합니다. 현재 지표는 NG 확정 판정용이 아닙니다.",60,730,p);
         return out;
     }
 
@@ -233,7 +237,7 @@ public final class RoiQualityAnalyzer {
     }
 
     private static Bitmap drawOverlay(Bitmap src,PointF g,PointF t,PointF n,
-                                      float angle,float offset,float tj,float gj,float score,String label){
+                                      float angle,float offset,float tj,float gj,float score,String label,float[] roiGripper,float[] roiTip,float[] roiNip){
         Bitmap out=src.copy(Bitmap.Config.ARGB_8888,true);
         Canvas c=new Canvas(out);
         Paint p=new Paint(Paint.ANTI_ALIAS_FLAG);
@@ -252,9 +256,9 @@ public final class RoiQualityAnalyzer {
 
         // Draw broad default ROIs
         p.setStrokeWidth(2);
-        drawRoi(c,p,src,ROI_GRIPPER,Color.rgb(0,190,80));
-        drawRoi(c,p,src,ROI_TIP,Color.rgb(255,160,0));
-        drawRoi(c,p,src,ROI_NIP,Color.rgb(220,40,40));
+        drawRoi(c,p,src,roiGripper,Color.rgb(0,190,80));
+        drawRoi(c,p,src,roiTip,Color.rgb(255,160,0));
+        drawRoi(c,p,src,roiNip,Color.rgb(220,40,40));
 
         p.setStyle(Paint.Style.FILL); p.setColor(Color.argb(190,0,0,0));
         c.drawRect(12,12,src.getWidth()-12,118,p);
