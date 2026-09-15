@@ -26,7 +26,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
-            android:text="v0.6 · Multi-Cutter + Multi-Cycle + Jerk/Timing + 확대뷰어"
+            android:text="v0.7 · Smart Diagnostic + Golden + Top3 이상순간 + Calibration"
             android:textColor="@color/text_dark"
             android:textSize="14sp" />
 
@@ -135,6 +135,12 @@
             android:text="v0.6 고급 동작 분석 (누르면 확대)" android:textStyle="bold"/>
         <ImageView android:id="@+id/imgAdvanced" android:layout_width="match_parent" android:layout_height="270dp"
             android:adjustViewBounds="true" android:background="#E8EDF2" android:scaleType="fitCenter"/>
+
+        <Button android:id="@+id/btnDiagnostic" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="v0.7 통합진단 · Top3 이상 순간 + Golden 비교" android:textStyle="bold"/>
+        <Button android:id="@+id/btnGolden" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="6dp" android:text="현재 결과 Golden 등록 (정상 확인 후)"/>
+        <Button android:id="@+id/btnCalibration" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="6dp" android:text="px → mm Calibration 설정"/>
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="v0.7 Smart Diagnostic (자홍선 = Top3 이상 후보 순간)" android:textStyle="bold"/>
+        <ImageView android:id="@+id/imgDiagnostic" android:layout_width="match_parent" android:layout_height="270dp" android:adjustViewBounds="true" android:background="#E8EDF2" android:scaleType="fitCenter"/>
 
         <Button
             android:id="@+id/btnRoiSettings"
