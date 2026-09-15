@@ -9,7 +9,7 @@ public final class AdvancedMotionAnalyzer{
  public static Result analyze(HighSpeedAnalyzer.Result a,HighSpeedAnalyzer.Result b,String profile,float[] history){
   Metrics ma=metrics(a),mb=metrics(b);
   float jerkDiff=ratio(ma.maxJerk,mb.maxJerk), timingDiff=Math.abs(ma.meanPeriod-mb.meanPeriod)/Math.max(.001f,(ma.meanPeriod+mb.meanPeriod)/2f);
-  float jitterDiff=ratio(a.jitter,b.jitter), pathDiff=ratio(a.path,b.path);
+  float jitterDiff=ratio(ma.jitter,mb.jitter), pathDiff=ratio(ma.path,mb.path);
   float intermittent=Math.max(ma.outlier,mb.outlier);
   float score=Math.min(100,100*(.28f*jerkDiff+.25f*timingDiff+.20f*jitterDiff+.17f*pathDiff+.10f*intermittent));
   String level=score<18?"정상 후보":score<35?"주의 후보":"이상 후보";
@@ -18,12 +18,12 @@ public final class AdvancedMotionAnalyzer{
    profile,level,ma.cycles,mb.cycles,ma.meanPeriod,mb.meanPeriod,ma.cv*100,mb.cv*100,ma.maxJerk,mb.maxJerk,intermittent*100,score);
   return new Result(draw(ma,mb,history,score,profile),s,score,Math.max(ma.cycles,mb.cycles),Math.max(ma.maxJerk,mb.maxJerk),Math.max(ma.cv,mb.cv),intermittent);
  }
- static class Metrics{int cycles;float meanPeriod,cv,maxJerk,outlier;float[] jerk;}
+ static class Metrics{int cycles;float meanPeriod,cv,maxJerk,outlier,jitter,path;float[] jerk;}
  private static Metrics metrics(HighSpeedAnalyzer.Result r){
   Metrics z=new Metrics();int n=r.m.length;float[]v=new float[n],acc=new float[n],j=new float[n];float dt=n>1?Math.max(.001f,(r.t[n-1]-r.t[0])/1000f/(n-1)):.033f;
   for(int i=1;i<n;i++)v[i]=(r.m[i]-r.m[i-1])/dt;
   for(int i=2;i<n;i++)acc[i]=(v[i]-v[i-1])/dt;
-  float mean=0;for(float x:r.m)mean+=x;mean/=Math.max(1,n);float sd=0;for(float x:r.m)sd+=(x-mean)*(x-mean);sd=(float)Math.sqrt(sd/Math.max(1,n));
+  float mean=0;for(float x:r.m)mean+=x;mean/=Math.max(1,n);float sd=0;for(float x:r.m)sd+=(x-mean)*(x-mean);sd=(float)Math.sqrt(sd/Math.max(1,n));z.jitter=sd;for(int i=1;i<n;i++)z.path+=Math.abs(r.m[i]-r.m[i-1]);
   ArrayList<Integer> peaks=new ArrayList<>();float th=mean+.65f*sd;
   for(int i=3;i<n-3;i++)if(r.m[i]>th&&r.m[i]>=r.m[i-1]&&r.m[i]>r.m[i+1]&&(peaks.isEmpty()||i-peaks.get(peaks.size()-1)>3))peaks.add(i);
   z.cycles=Math.max(1,peaks.size());ArrayList<Float> periods=new ArrayList<>();
@@ -33,7 +33,7 @@ public final class AdvancedMotionAnalyzer{
   int out=0;for(int i=3;i<n;i++){j[i]=(acc[i]-acc[i-1])/dt;z.maxJerk=Math.max(z.maxJerk,Math.abs(j[i]));if(Math.abs(j[i])>0)out++;}
   float jm=0;for(float q:j)jm+=Math.abs(q);jm/=Math.max(1,n);int high=0;for(float q:j)if(Math.abs(q)>jm*3.0f)high++;z.outlier=high/(float)Math.max(1,n);z.jerk=j;return z;
  }
- private static float ratio(float a,float b){return Math.abs(a-b)/Math.max(.001f,(Math.abs(a)+Math.abs(b))/2f);}
+ private static float ratio(float a,float b){return Math.min(1f,Math.abs(a-b)/Math.max(.001f,(Math.abs(a)+Math.abs(b))/2f));}
  private static Bitmap draw(Metrics a,Metrics b,float[] hist,float score,String profile){
   int w=1200,h=820;Bitmap o=Bitmap.createBitmap(w,h,Bitmap.Config.ARGB_8888);Canvas c=new Canvas(o);c.drawColor(Color.WHITE);Paint p=new Paint(1);
   p.setColor(Color.rgb(15,48,88));p.setTextSize(34);p.setFakeBoldText(true);c.drawText("v0.6 Multi-Cycle / Jerk / Preventive Trend",45,55,p);p.setFakeBoldText(false);p.setTextSize(22);p.setColor(Color.DKGRAY);c.drawText(profile+" · Cycle/속도변화/충격/간헐이상 통합 분석",45,92,p);

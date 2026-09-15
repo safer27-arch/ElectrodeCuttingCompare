@@ -1,0 +1,1 @@
+v0.6.1: AdvancedMotionAnalyzer compile fix; jitter/path are calculated from motion m[]; all v0.6 features retained.
