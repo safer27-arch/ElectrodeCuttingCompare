@@ -32,7 +32,7 @@ public class MainActivity extends Activity {
     private long durationA=0, durationB=0;
     private TextView txtA,txtB,txtTimeA,txtTimeB,txtStatus;
     private SeekBar seekA,seekB;
-    private ImageView imgA,imgB,imgDiff,imgCycle,imgRoiA,imgRoiB,imgRoiCompare;
+    private ImageView imgA,imgB,imgDiff,imgCycle,imgHighSpeed,imgRoiA,imgRoiB,imgRoiCompare;
     private ProgressBar progress;
     private Button btnSave;
     private Bitmap frameA, alignedB, diffBitmap, cycleBitmap, roiCompareBitmap;
@@ -46,7 +46,7 @@ public class MainActivity extends Activity {
         txtA=findViewById(R.id.txtA); txtB=findViewById(R.id.txtB);
         txtTimeA=findViewById(R.id.txtTimeA); txtTimeB=findViewById(R.id.txtTimeB);
         txtStatus=findViewById(R.id.txtStatus); seekA=findViewById(R.id.seekA); seekB=findViewById(R.id.seekB);
-        imgA=findViewById(R.id.imgA); imgB=findViewById(R.id.imgB); imgDiff=findViewById(R.id.imgDiff); imgCycle=findViewById(R.id.imgCycle);
+        imgA=findViewById(R.id.imgA); imgB=findViewById(R.id.imgB); imgDiff=findViewById(R.id.imgDiff); imgCycle=findViewById(R.id.imgCycle); imgHighSpeed=findViewById(R.id.imgHighSpeed);
         imgRoiA=findViewById(R.id.imgRoiA); imgRoiB=findViewById(R.id.imgRoiB); imgRoiCompare=findViewById(R.id.imgRoiCompare);
         progress=findViewById(R.id.progress); btnSave=findViewById(R.id.btnSave);
 
@@ -56,6 +56,7 @@ public class MainActivity extends Activity {
         findViewById(R.id.btnPreviewB).setOnClickListener(v->preview(uriB));
         findViewById(R.id.btnAnalyze).setOnClickListener(v->analyze());
         findViewById(R.id.btnCycle).setOnClickListener(v->analyzeCycle());
+        findViewById(R.id.btnHighSpeed).setOnClickListener(v->analyzeHighSpeed());
         findViewById(R.id.btnRoi).setOnClickListener(v->analyzeRoi());
         findViewById(R.id.btnRoiSettings).setOnClickListener(v->{
             Intent i=new Intent(this,RoiSettingsActivity.class);
@@ -155,6 +156,12 @@ public class MainActivity extends Activity {
         });
     }
 
+
+    private void analyzeHighSpeed(){
+        if(uriA==null||uriB==null){Toast.makeText(this,"A/B 영상을 모두 선택해 주세요.",Toast.LENGTH_SHORT).show();return;}
+        progress.setProgress(5);txtStatus.setText("v0.5 고속 Event 동기화 분석 중...");
+        executor.execute(()->{try{HighSpeedAnalyzer.Result a=HighSpeedAnalyzer.analyze(this,uriA,durationA);runOnUiThread(()->progress.setProgress(48));HighSpeedAnalyzer.Result b=HighSpeedAnalyzer.analyze(this,uriB,durationB);HighSpeedAnalyzer.CompareResult cr=HighSpeedAnalyzer.compare(a,b);runOnUiThread(()->{progress.setProgress(100);imgHighSpeed.setImageBitmap(cr.chart);txtStatus.setText(cr.summary);btnSave.setEnabled(true);});}catch(Exception e){runOnUiThread(()->txtStatus.setText("고속 분석 실패: "+e.getMessage()));}});
+    }
 
     private void analyzeRoi(){
         if(uriA==null||uriB==null){Toast.makeText(this,"A/B 영상을 모두 선택해 주세요.",Toast.LENGTH_SHORT).show();return;}

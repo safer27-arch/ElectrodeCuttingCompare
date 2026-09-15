@@ -26,7 +26,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
-            android:text="v0.4 · 촬영각 보정 + Cycle + 설비별 저장형 ROI 정밀분석"
+            android:text="v0.5 · 고속 Event 동기화 + Cycle + 설비별 ROI 정밀분석"
             android:textColor="@color/text_dark"
             android:textSize="14sp" />
 
@@ -121,6 +121,10 @@
             android:layout_marginTop="8dp"
             android:text="Cycle 자동 분석 + A/B 동작 패턴 비교"
             android:textStyle="bold" />
+
+        <Button android:id="@+id/btnHighSpeed" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="v0.5 고속 동작 이상검출 · Event 자동 동기화" android:textStyle="bold" />
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="v0.5 고속 Event 동기화 / 이상 후보 시점" android:textStyle="bold" />
+        <ImageView android:id="@+id/imgHighSpeed" android:layout_width="match_parent" android:layout_height="260dp" android:adjustViewBounds="true" android:background="#E8EDF2" android:scaleType="fitCenter" />
 
         <Button
             android:id="@+id/btnRoiSettings"
