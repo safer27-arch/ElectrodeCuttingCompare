@@ -1,0 +1,11 @@
+v0.6 주요 업데이트
+- ROI 설정 Activity Manifest 누락 수정
+- A/B ROI 설정 화면에 각 설비 영상 정확히 연결
+- A/B 영상 URI 자동 복원
+- 45도 / 0도 / 사용자 Cutter Profile
+- Multi-Cycle 자동 후보 분할
+- Timing 변동, Jerk(충격 변화), 간헐 이상 후보, Motion Risk
+- 최근 30회 Risk Trend 저장
+- 분석 이미지/그래프 전체화면 Pinch Zoom + 이동 + 원위치
+- GitHub Actions debug signing key 캐시: v0.6 최초 전환 설치 후 다음 빌드부터 동일 키 업데이트 기반
+주의: Golden 정상 영상이 충분히 쌓이기 전 Risk는 NG 확정값이 아니라 상대 이상 후보 지표입니다.

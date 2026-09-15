@@ -26,9 +26,12 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
-            android:text="v0.5 · 고속 Event 동기화 + Cycle + 설비별 ROI 정밀분석"
+            android:text="v0.6 · Multi-Cutter + Multi-Cycle + Jerk/Timing + 확대뷰어"
             android:textColor="@color/text_dark"
             android:textSize="14sp" />
+
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="10dp" android:text="Cutter Profile (형상별 Golden/ROI/Trend 분리)" android:textStyle="bold"/>
+        <Spinner android:id="@+id/cutterProfile" android:layout_width="match_parent" android:layout_height="wrap_content"/>
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -126,6 +129,13 @@
         <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="v0.5 고속 Event 동기화 / 이상 후보 시점" android:textStyle="bold" />
         <ImageView android:id="@+id/imgHighSpeed" android:layout_width="match_parent" android:layout_height="260dp" android:adjustViewBounds="true" android:background="#E8EDF2" android:scaleType="fitCenter" />
 
+        <Button android:id="@+id/btnAdvanced" android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:layout_marginTop="8dp" android:text="v0.6 Multi-Cycle + Timing + Jerk + 예방 Trend 분석" android:textStyle="bold"/>
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp"
+            android:text="v0.6 고급 동작 분석 (누르면 확대)" android:textStyle="bold"/>
+        <ImageView android:id="@+id/imgAdvanced" android:layout_width="match_parent" android:layout_height="270dp"
+            android:adjustViewBounds="true" android:background="#E8EDF2" android:scaleType="fitCenter"/>
+
         <Button
             android:id="@+id/btnRoiSettings"
             android:layout_width="match_parent"
@@ -158,7 +168,7 @@
             android:layout_marginTop="8dp"
             android:background="@drawable/panel"
             android:padding="10dp"
-            android:text="영상 A/B를 선택해 주세요."
+            android:text="영상 A/B를 선택해 주세요.\n분석 이미지/그래프는 터치하면 전체화면 확대됩니다."
             android:textColor="@color/text_dark"
             android:textSize="14sp" />
 

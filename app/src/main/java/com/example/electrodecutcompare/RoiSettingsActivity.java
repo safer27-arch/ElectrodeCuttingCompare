@@ -19,6 +19,7 @@ public class RoiSettingsActivity extends Activity {
     private Bitmap base;
     private RoiSettingsStore.Roi roi;
     private String machine="A", roiName="GRIPPER";
+    private String uriAString, uriBString;
     private float step=.015f;
 
     @Override protected void onCreate(Bundle b){
@@ -46,8 +47,8 @@ public class RoiSettingsActivity extends Activity {
         findViewById(R.id.saveRoi).setOnClickListener(v->{ save(); Toast.makeText(this,"ROI 저장 완료",Toast.LENGTH_SHORT).show();});
         findViewById(R.id.resetRoi).setOnClickListener(v->{RoiSettingsStore.reset(this,machine);reloadSelection();Toast.makeText(this,"설비 "+machine+" ROI 초기화",Toast.LENGTH_SHORT).show();});
 
-        String ua=getIntent().getStringExtra("uriA"), ub=getIntent().getStringExtra("uriB");
-        loadFrame(ua!=null?ua:ub);
+        uriAString=getIntent().getStringExtra("uriA"); uriBString=getIntent().getStringExtra("uriB");
+        loadFrameForMachine();
     }
 
     private float[] def(){
@@ -60,7 +61,13 @@ public class RoiSettingsActivity extends Activity {
         int r=roiSpinner.getSelectedItemPosition();
         roiName=r==0?"GRIPPER":r==1?"TIP":"NIP";
         roi=RoiSettingsStore.load(this,machine,roiName,def());
+        loadFrameForMachine();
         draw();
+    }
+    private void loadFrameForMachine(){
+        String u="A".equals(machine)?uriAString:uriBString;
+        if(u==null||u.isEmpty())u="A".equals(machine)?uriBString:uriAString;
+        loadFrame(u);
     }
     private void loadFrame(String s){
         if(s==null){ info.setText("먼저 메인 화면에서 영상을 선택한 뒤 ROI 설정을 여세요."); return; }

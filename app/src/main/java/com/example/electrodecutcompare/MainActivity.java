@@ -18,6 +18,8 @@ import android.widget.ProgressBar;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.Spinner;
+import android.widget.ArrayAdapter;
 
 import java.io.OutputStream;
 import java.text.SimpleDateFormat;
@@ -35,7 +37,9 @@ public class MainActivity extends Activity {
     private ImageView imgA,imgB,imgDiff,imgCycle,imgHighSpeed,imgRoiA,imgRoiB,imgRoiCompare;
     private ProgressBar progress;
     private Button btnSave;
-    private Bitmap frameA, alignedB, diffBitmap, cycleBitmap, roiCompareBitmap;
+    private Spinner cutterProfile;
+    private Bitmap frameA, alignedB, diffBitmap, cycleBitmap, highSpeedBitmap, advancedBitmap, roiCompareBitmap;
+    private ImageView imgAdvanced;
     private BitmapAnalysis.Transform lastTransform;
     private RoiQualityAnalyzer.Metrics roiA, roiB;
     private CycleAnalyzer.Result cycleA, cycleB;
@@ -48,7 +52,11 @@ public class MainActivity extends Activity {
         txtStatus=findViewById(R.id.txtStatus); seekA=findViewById(R.id.seekA); seekB=findViewById(R.id.seekB);
         imgA=findViewById(R.id.imgA); imgB=findViewById(R.id.imgB); imgDiff=findViewById(R.id.imgDiff); imgCycle=findViewById(R.id.imgCycle); imgHighSpeed=findViewById(R.id.imgHighSpeed);
         imgRoiA=findViewById(R.id.imgRoiA); imgRoiB=findViewById(R.id.imgRoiB); imgRoiCompare=findViewById(R.id.imgRoiCompare);
-        progress=findViewById(R.id.progress); btnSave=findViewById(R.id.btnSave);
+        progress=findViewById(R.id.progress); btnSave=findViewById(R.id.btnSave); imgAdvanced=findViewById(R.id.imgAdvanced);
+        cutterProfile=findViewById(R.id.cutterProfile);
+        cutterProfile.setAdapter(new ArrayAdapter<>(this,android.R.layout.simple_spinner_dropdown_item,new String[]{"45° Cutter","0° Cutter","사용자 Cutter"}));
+        cutterProfile.setSelection(AppStateStore.getInt(this,"profile",0));
+        cutterProfile.setOnItemSelectedListener(new android.widget.AdapterView.OnItemSelectedListener(){public void onItemSelected(android.widget.AdapterView<?> p,View v,int pos,long id){AppStateStore.putInt(MainActivity.this,"profile",pos);}public void onNothingSelected(android.widget.AdapterView<?> p){}});
 
         findViewById(R.id.btnSelectA).setOnClickListener(v->pickVideo(PICK_A));
         findViewById(R.id.btnSelectB).setOnClickListener(v->pickVideo(PICK_B));
@@ -57,6 +65,7 @@ public class MainActivity extends Activity {
         findViewById(R.id.btnAnalyze).setOnClickListener(v->analyze());
         findViewById(R.id.btnCycle).setOnClickListener(v->analyzeCycle());
         findViewById(R.id.btnHighSpeed).setOnClickListener(v->analyzeHighSpeed());
+        findViewById(R.id.btnAdvanced).setOnClickListener(v->analyzeAdvanced());
         findViewById(R.id.btnRoi).setOnClickListener(v->analyzeRoi());
         findViewById(R.id.btnRoiSettings).setOnClickListener(v->{
             Intent i=new Intent(this,RoiSettingsActivity.class);
@@ -70,6 +79,9 @@ public class MainActivity extends Activity {
             public void onStartTrackingTouch(SeekBar s){} public void onStopTrackingTouch(SeekBar s){}
         };
         seekA.setOnSeekBarChangeListener(listener); seekB.setOnSeekBarChangeListener(listener);
+        restoreState();
+        ImageView[] zoomables={imgA,imgB,imgDiff,imgCycle,imgHighSpeed,imgRoiA,imgRoiB,imgRoiCompare,imgAdvanced};
+        for(ImageView z:zoomables)z.setOnClickListener(v->openZoom((ImageView)v));
     }
 
     private void pickVideo(int req){
@@ -81,8 +93,8 @@ public class MainActivity extends Activity {
         if(resultCode!=RESULT_OK||data==null||data.getData()==null)return;
         Uri u=data.getData();
         try{ getContentResolver().takePersistableUriPermission(u, Intent.FLAG_GRANT_READ_URI_PERMISSION); }catch(Exception ignored){}
-        if(requestCode==PICK_A){uriA=u; durationA=videoDuration(u); txtA.setText("선택됨: "+u.getLastPathSegment());}
-        if(requestCode==PICK_B){uriB=u; durationB=videoDuration(u); txtB.setText("선택됨: "+u.getLastPathSegment());}
+        if(requestCode==PICK_A){uriA=u; durationA=videoDuration(u); txtA.setText("선택됨: "+u.getLastPathSegment());AppStateStore.put(this,"uriA",u.toString());}
+        if(requestCode==PICK_B){uriB=u; durationB=videoDuration(u); txtB.setText("선택됨: "+u.getLastPathSegment());AppStateStore.put(this,"uriB",u.toString());}
         updateTimeLabels();
     }
 
@@ -160,7 +172,39 @@ public class MainActivity extends Activity {
     private void analyzeHighSpeed(){
         if(uriA==null||uriB==null){Toast.makeText(this,"A/B 영상을 모두 선택해 주세요.",Toast.LENGTH_SHORT).show();return;}
         progress.setProgress(5);txtStatus.setText("v0.5 고속 Event 동기화 분석 중...");
-        executor.execute(()->{try{HighSpeedAnalyzer.Result a=HighSpeedAnalyzer.analyze(this,uriA,durationA);runOnUiThread(()->progress.setProgress(48));HighSpeedAnalyzer.Result b=HighSpeedAnalyzer.analyze(this,uriB,durationB);HighSpeedAnalyzer.CompareResult cr=HighSpeedAnalyzer.compare(a,b);runOnUiThread(()->{progress.setProgress(100);imgHighSpeed.setImageBitmap(cr.chart);txtStatus.setText(cr.summary);btnSave.setEnabled(true);});}catch(Exception e){runOnUiThread(()->txtStatus.setText("고속 분석 실패: "+e.getMessage()));}});
+        executor.execute(()->{try{HighSpeedAnalyzer.Result a=HighSpeedAnalyzer.analyze(this,uriA,durationA);runOnUiThread(()->progress.setProgress(48));HighSpeedAnalyzer.Result b=HighSpeedAnalyzer.analyze(this,uriB,durationB);HighSpeedAnalyzer.CompareResult cr=HighSpeedAnalyzer.compare(a,b);highSpeedBitmap=cr.chart;runOnUiThread(()->{progress.setProgress(100);imgHighSpeed.setImageBitmap(cr.chart);txtStatus.setText(cr.summary);btnSave.setEnabled(true);});}catch(Exception e){runOnUiThread(()->txtStatus.setText("고속 분석 실패: "+e.getMessage()));}});
+    }
+
+
+    private String profileName(){Object o=cutterProfile.getSelectedItem();return o==null?"45° Cutter":o.toString();}
+    private void analyzeAdvanced(){
+        if(uriA==null||uriB==null){Toast.makeText(this,"A/B 영상을 모두 선택해 주세요.",Toast.LENGTH_SHORT).show();return;}
+        progress.setProgress(5);txtStatus.setText("v0.6 Multi-Cycle / Jerk / Timing 분석 중...");
+        executor.execute(()->{try{
+            HighSpeedAnalyzer.Result a=HighSpeedAnalyzer.analyze(this,uriA,durationA);
+            HighSpeedAnalyzer.Result b=HighSpeedAnalyzer.analyze(this,uriB,durationB);
+            String pf=profileName();float[] history=TrendStore.get(this,pf);
+            AdvancedMotionAnalyzer.Result ar=AdvancedMotionAnalyzer.analyze(a,b,pf,history);
+            TrendStore.add(this,pf,ar.score);advancedBitmap=ar.chart;
+            runOnUiThread(()->{progress.setProgress(100);imgAdvanced.setImageBitmap(ar.chart);txtStatus.setText(ar.summary+"\n\n이미지/그래프를 누르면 전체화면 확대가 됩니다.");btnSave.setEnabled(true);});
+        }catch(Exception e){runOnUiThread(()->{progress.setProgress(0);txtStatus.setText("v0.6 고급분석 실패: "+e.getMessage());});}});
+    }
+    private void restoreState(){
+        try{
+            String a=AppStateStore.get(this,"uriA"),b=AppStateStore.get(this,"uriB");
+            if(!a.isEmpty()){uriA=Uri.parse(a);durationA=videoDuration(uriA);txtA.setText("복원됨: "+uriA.getLastPathSegment());}
+            if(!b.isEmpty()){uriB=Uri.parse(b);durationB=videoDuration(uriB);txtB.setText("복원됨: "+uriB.getLastPathSegment());}
+            updateTimeLabels();
+        }catch(Exception ignored){}
+    }
+    private void openZoom(ImageView view){
+        if(view.getDrawable()==null){Toast.makeText(this,"먼저 분석을 실행해 주세요.",Toast.LENGTH_SHORT).show();return;}
+        Bitmap b=null;
+        if(view==imgA)b=frameA; else if(view==imgB)b=alignedB; else if(view==imgDiff)b=diffBitmap;
+        else if(view==imgCycle)b=cycleBitmap; else if(view==imgHighSpeed)b=highSpeedBitmap; else if(view==imgAdvanced)b=advancedBitmap;
+        else if(view.getDrawable() instanceof android.graphics.drawable.BitmapDrawable)b=((android.graphics.drawable.BitmapDrawable)view.getDrawable()).getBitmap();
+        if(b==null)return;
+        try{java.io.File f=new java.io.File(getCacheDir(),"zoom_result.jpg");java.io.FileOutputStream os=new java.io.FileOutputStream(f);b.compress(Bitmap.CompressFormat.JPEG,95,os);os.close();Intent i=new Intent(this,ZoomImageActivity.class);i.putExtra("path",f.getAbsolutePath());startActivity(i);}catch(Exception e){Toast.makeText(this,"확대 열기 실패",Toast.LENGTH_SHORT).show();}
     }
 
     private void analyzeRoi(){
