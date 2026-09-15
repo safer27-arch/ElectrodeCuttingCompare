@@ -46,7 +46,8 @@ public class MainActivity extends Activity {
     private final ExecutorService executor=Executors.newSingleThreadExecutor();
 
     @Override protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState); setContentView(R.layout.activity_main);
+        super.onCreate(savedInstanceState);
+        if (android.os.Build.VERSION.SDK_INT >= 30) getWindow().setDecorFitsSystemWindows(true); setContentView(R.layout.activity_main);
         txtA=findViewById(R.id.txtA); txtB=findViewById(R.id.txtB);
         txtTimeA=findViewById(R.id.txtTimeA); txtTimeB=findViewById(R.id.txtTimeB);
         txtStatus=findViewById(R.id.txtStatus); seekA=findViewById(R.id.seekA); seekB=findViewById(R.id.seekB);

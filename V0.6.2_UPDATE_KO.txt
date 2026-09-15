@@ -1,0 +1,10 @@
+v0.6.2 UI 안정화
+- 상단 상태바/하단 내비게이션바와 앱 화면 간섭 방지
+- 메인/ROI/영상/확대 화면 Safe Area 적용
+- 확대 화면 최초 표시를 화면 중앙 Fit Center로 변경
+- 원위치 버튼도 화면 중앙 Fit Center로 복귀
+- Pinch Zoom/Drag 유지
+- v0.6.1의 Multi-Cutter, Multi-Cycle, Timing, Jerk, Trend, ROI, 상태복원 기능 유지
+
+다음 고급 기능(Top3 이상 순간, 프레임 이동, Slow Motion, Golden Dashboard/검사이력)은
+실제 영상 검증과 함께 단계적으로 연결할 수 있도록 기존 분석 구조를 유지했습니다.

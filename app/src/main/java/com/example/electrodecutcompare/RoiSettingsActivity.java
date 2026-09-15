@@ -23,7 +23,8 @@ public class RoiSettingsActivity extends Activity {
     private float step=.015f;
 
     @Override protected void onCreate(Bundle b){
-        super.onCreate(b); setContentView(R.layout.activity_roi_settings);
+        super.onCreate(b);
+        if (android.os.Build.VERSION.SDK_INT >= 30) getWindow().setDecorFitsSystemWindows(true); setContentView(R.layout.activity_roi_settings);
         image=findViewById(R.id.roiImage); info=findViewById(R.id.roiInfo);
         machineSpinner=findViewById(R.id.machineSpinner); roiSpinner=findViewById(R.id.roiSpinner);
 
