@@ -71,6 +71,7 @@ public class MainActivity extends Activity {
         cutterProfile.setSelection(AppStateStore.getInt(this,"profile",0));
         cutterProfile.setOnItemSelectedListener(new android.widget.AdapterView.OnItemSelectedListener(){public void onItemSelected(android.widget.AdapterView<?> p,View v,int pos,long id){AppStateStore.putInt(MainActivity.this,"profile",pos);}public void onNothingSelected(android.widget.AdapterView<?> p){}});
 
+        findViewById(R.id.btnGuide).setOnClickListener(v->startActivity(new Intent(this,GuideActivity.class)));
         findViewById(R.id.btnSelectA).setOnClickListener(v->pickVideo(PICK_A));
         findViewById(R.id.btnSelectB).setOnClickListener(v->pickVideo(PICK_B));
         findViewById(R.id.btnPreviewA).setOnClickListener(v->preview(uriA));
@@ -104,7 +105,13 @@ public class MainActivity extends Activity {
     private void card(ProgressBar p, TextView t, int value, String message){
         runOnUiThread(()->{ p.setProgress(value); t.setText(message); });
     }
-    private void dashboard(String message){ runOnUiThread(()->txtDashboard.setText(message)); }
+    private void dashboard(String message){ runOnUiThread(()->txtDashboard.setText(highlight(message))); }
+    private android.text.SpannableString highlight(String text){
+        android.text.SpannableString sp=new android.text.SpannableString(text);
+        String[] keys={"WATCH","이상","주의","진동","Jerk","Jitter","Offset","편차","충격","안정화","복귀","Top3","Golden"};
+        for(String k:keys){int from=0; while((from=text.indexOf(k,from))>=0){int end=from+k.length(); sp.setSpan(new android.text.style.BackgroundColorSpan(Color.rgb(255,235,59)),from,end,android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE); sp.setSpan(new android.text.style.ForegroundColorSpan(Color.rgb(15,20,25)),from,end,android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE); sp.setSpan(new android.text.style.StyleSpan(android.graphics.Typeface.BOLD),from,end,android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE); from=end;}}
+        return sp;
+    }
 
     private void pickVideo(int req){
         Intent i=new Intent(Intent.ACTION_OPEN_DOCUMENT); i.addCategory(Intent.CATEGORY_OPENABLE); i.setType("video/*"); startActivityForResult(i,req);
