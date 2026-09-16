@@ -39,8 +39,9 @@ public class MainActivity extends Activity {
     private Button btnSave;
     private Spinner cutterProfile;
     private Bitmap frameA, alignedB, diffBitmap, cycleBitmap, highSpeedBitmap, advancedBitmap, diagnosticBitmap, roiCompareBitmap;
-    private ImageView imgAdvanced, imgDiagnostic;
+    private ImageView imgAdvanced, imgDiagnostic, imgEasyDiagnostic;
     private AdvancedMotionAnalyzer.Result lastAdvanced;
+    private Bitmap easyDiagnosticBitmap;
     private BitmapAnalysis.Transform lastTransform;
     private RoiQualityAnalyzer.Metrics roiA, roiB;
     private CycleAnalyzer.Result cycleA, cycleB;
@@ -54,7 +55,7 @@ public class MainActivity extends Activity {
         txtStatus=findViewById(R.id.txtStatus); seekA=findViewById(R.id.seekA); seekB=findViewById(R.id.seekB);
         imgA=findViewById(R.id.imgA); imgB=findViewById(R.id.imgB); imgDiff=findViewById(R.id.imgDiff); imgCycle=findViewById(R.id.imgCycle); imgHighSpeed=findViewById(R.id.imgHighSpeed);
         imgRoiA=findViewById(R.id.imgRoiA); imgRoiB=findViewById(R.id.imgRoiB); imgRoiCompare=findViewById(R.id.imgRoiCompare);
-        progress=findViewById(R.id.progress); btnSave=findViewById(R.id.btnSave); imgAdvanced=findViewById(R.id.imgAdvanced); imgDiagnostic=findViewById(R.id.imgDiagnostic);
+        progress=findViewById(R.id.progress); btnSave=findViewById(R.id.btnSave); imgAdvanced=findViewById(R.id.imgAdvanced); imgDiagnostic=findViewById(R.id.imgDiagnostic); imgEasyDiagnostic=findViewById(R.id.imgEasyDiagnostic);
         cutterProfile=findViewById(R.id.cutterProfile);
         cutterProfile.setAdapter(new ArrayAdapter<>(this,android.R.layout.simple_spinner_dropdown_item,new String[]{"45° Cutter","0° Cutter","사용자 Cutter"}));
         cutterProfile.setSelection(AppStateStore.getInt(this,"profile",0));
@@ -69,6 +70,7 @@ public class MainActivity extends Activity {
         findViewById(R.id.btnHighSpeed).setOnClickListener(v->analyzeHighSpeed());
         findViewById(R.id.btnAdvanced).setOnClickListener(v->analyzeAdvanced());
         findViewById(R.id.btnDiagnostic).setOnClickListener(v->analyzeDiagnostic());
+        findViewById(R.id.btnEasyDiagnostic).setOnClickListener(v->analyzeEasyDiagnostic());
         findViewById(R.id.btnGolden).setOnClickListener(v->saveGolden());
         findViewById(R.id.btnCalibration).setOnClickListener(v->showCalibrationDialog());
         findViewById(R.id.btnRoi).setOnClickListener(v->analyzeRoi());
@@ -85,7 +87,7 @@ public class MainActivity extends Activity {
         };
         seekA.setOnSeekBarChangeListener(listener); seekB.setOnSeekBarChangeListener(listener);
         restoreState();
-        ImageView[] zoomables={imgA,imgB,imgDiff,imgCycle,imgHighSpeed,imgRoiA,imgRoiB,imgRoiCompare,imgAdvanced,imgDiagnostic};
+        ImageView[] zoomables={imgA,imgB,imgDiff,imgCycle,imgHighSpeed,imgRoiA,imgRoiB,imgRoiCompare,imgAdvanced,imgDiagnostic,imgEasyDiagnostic};
         for(ImageView z:zoomables)z.setOnClickListener(v->openZoom((ImageView)v));
     }
 
@@ -195,6 +197,26 @@ public class MainActivity extends Activity {
         }catch(Exception e){runOnUiThread(()->{progress.setProgress(0);txtStatus.setText("v0.6 고급분석 실패: "+e.getMessage());});}});
     }
 
+    private void analyzeEasyDiagnostic(){
+        if(uriA==null||uriB==null){Toast.makeText(this,"A/B 영상을 모두 선택해 주세요.",Toast.LENGTH_SHORT).show();return;}
+        progress.setProgress(5);txtStatus.setText("v0.8 고정부 공통진동과 Cutter 실제운동을 분리 분석 중...");
+        executor.execute(()->{try{
+            VibrationCompensatedAnalyzer.Result a=VibrationCompensatedAnalyzer.analyze(this,uriA,durationA,profileName()+" / A");
+            runOnUiThread(()->progress.setProgress(50));
+            VibrationCompensatedAnalyzer.Result b=VibrationCompensatedAnalyzer.analyze(this,uriB,durationB,profileName()+" / B");
+            // Show B as current/evaluation machine; status contains both for immediate A/B interpretation.
+            easyDiagnosticBitmap=b.chart;
+            String verdict="[설비 A]
+"+a.summary+"
+
+[설비 B]
+"+b.summary+"
+
+쉽게 보기: 회색 공통진동이 커져도 파란 Cutter 상대운동이 안정적이면 고정부 흔들림 영향으로 봅니다.";
+            runOnUiThread(()->{progress.setProgress(100);imgEasyDiagnostic.setImageBitmap(b.chart);txtStatus.setText(verdict);btnSave.setEnabled(true);});
+        }catch(Exception e){runOnUiThread(()->{progress.setProgress(0);txtStatus.setText("v0.8 진동분리 분석 실패: "+e.getMessage());});}});
+    }
+
     private void analyzeDiagnostic(){
         if(uriA==null||uriB==null){Toast.makeText(this,"A/B 영상을 모두 선택해 주세요.",Toast.LENGTH_SHORT).show();return;}
         progress.setProgress(5);txtStatus.setText("v0.7 Smart Diagnostic · Top3 이상 순간 / Golden 비교 중...");
@@ -235,7 +257,7 @@ public class MainActivity extends Activity {
         if(view.getDrawable()==null){Toast.makeText(this,"먼저 분석을 실행해 주세요.",Toast.LENGTH_SHORT).show();return;}
         Bitmap b=null;
         if(view==imgA)b=frameA; else if(view==imgB)b=alignedB; else if(view==imgDiff)b=diffBitmap;
-        else if(view==imgCycle)b=cycleBitmap; else if(view==imgHighSpeed)b=highSpeedBitmap; else if(view==imgAdvanced)b=advancedBitmap; else if(view==imgDiagnostic)b=diagnosticBitmap;
+        else if(view==imgCycle)b=cycleBitmap; else if(view==imgHighSpeed)b=highSpeedBitmap; else if(view==imgAdvanced)b=advancedBitmap; else if(view==imgDiagnostic)b=diagnosticBitmap; else if(view==imgEasyDiagnostic)b=easyDiagnosticBitmap;
         else if(view.getDrawable() instanceof android.graphics.drawable.BitmapDrawable)b=((android.graphics.drawable.BitmapDrawable)view.getDrawable()).getBitmap();
         if(b==null)return;
         try{java.io.File f=new java.io.File(getCacheDir(),"zoom_result.jpg");java.io.FileOutputStream os=new java.io.FileOutputStream(f);b.compress(Bitmap.CompressFormat.JPEG,95,os);os.close();Intent i=new Intent(this,ZoomImageActivity.class);i.putExtra("path",f.getAbsolutePath());startActivity(i);}catch(Exception e){Toast.makeText(this,"확대 열기 실패",Toast.LENGTH_SHORT).show();}
