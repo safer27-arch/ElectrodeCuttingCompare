@@ -32,10 +32,12 @@ public class MainActivity extends Activity {
     private static final int PICK_A=1001, PICK_B=1002;
     private Uri uriA, uriB;
     private long durationA=0, durationB=0;
-    private TextView txtA,txtB,txtTimeA,txtTimeB,txtStatus;
+    private TextView txtA,txtB,txtTimeA,txtTimeB,txtStatus,txtDashboard;
+    private TextView statusCompare,statusCycle,statusHighSpeed,statusAdvanced,statusEasy,statusDiagnostic,statusRoi;
     private SeekBar seekA,seekB;
     private ImageView imgA,imgB,imgDiff,imgCycle,imgHighSpeed,imgRoiA,imgRoiB,imgRoiCompare;
     private ProgressBar progress;
+    private ProgressBar progressCompare,progressCycle,progressHighSpeed,progressAdvanced,progressEasy,progressDiagnostic,progressRoi;
     private Button btnSave;
     private Spinner cutterProfile;
     private Bitmap frameA, alignedB, diffBitmap, cycleBitmap, highSpeedBitmap, advancedBitmap, diagnosticBitmap, roiCompareBitmap;
@@ -56,6 +58,14 @@ public class MainActivity extends Activity {
         imgA=findViewById(R.id.imgA); imgB=findViewById(R.id.imgB); imgDiff=findViewById(R.id.imgDiff); imgCycle=findViewById(R.id.imgCycle); imgHighSpeed=findViewById(R.id.imgHighSpeed);
         imgRoiA=findViewById(R.id.imgRoiA); imgRoiB=findViewById(R.id.imgRoiB); imgRoiCompare=findViewById(R.id.imgRoiCompare);
         progress=findViewById(R.id.progress); btnSave=findViewById(R.id.btnSave); imgAdvanced=findViewById(R.id.imgAdvanced); imgDiagnostic=findViewById(R.id.imgDiagnostic); imgEasyDiagnostic=findViewById(R.id.imgEasyDiagnostic);
+        txtDashboard=findViewById(R.id.txtDashboard);
+        progressCompare=findViewById(R.id.progressCompare); statusCompare=findViewById(R.id.statusCompare);
+        progressCycle=findViewById(R.id.progressCycle); statusCycle=findViewById(R.id.statusCycle);
+        progressHighSpeed=findViewById(R.id.progressHighSpeed); statusHighSpeed=findViewById(R.id.statusHighSpeed);
+        progressAdvanced=findViewById(R.id.progressAdvanced); statusAdvanced=findViewById(R.id.statusAdvanced);
+        progressEasy=findViewById(R.id.progressEasy); statusEasy=findViewById(R.id.statusEasy);
+        progressDiagnostic=findViewById(R.id.progressDiagnostic); statusDiagnostic=findViewById(R.id.statusDiagnostic);
+        progressRoi=findViewById(R.id.progressRoi); statusRoi=findViewById(R.id.statusRoi);
         cutterProfile=findViewById(R.id.cutterProfile);
         cutterProfile.setAdapter(new ArrayAdapter<>(this,android.R.layout.simple_spinner_dropdown_item,new String[]{"45° Cutter","0° Cutter","사용자 Cutter"}));
         cutterProfile.setSelection(AppStateStore.getInt(this,"profile",0));
@@ -90,6 +100,11 @@ public class MainActivity extends Activity {
         ImageView[] zoomables={imgA,imgB,imgDiff,imgCycle,imgHighSpeed,imgRoiA,imgRoiB,imgRoiCompare,imgAdvanced,imgDiagnostic,imgEasyDiagnostic};
         for(ImageView z:zoomables)z.setOnClickListener(v->openZoom((ImageView)v));
     }
+
+    private void card(ProgressBar p, TextView t, int value, String message){
+        runOnUiThread(()->{ p.setProgress(value); t.setText(message); });
+    }
+    private void dashboard(String message){ runOnUiThread(()->txtDashboard.setText(message)); }
 
     private void pickVideo(int req){
         Intent i=new Intent(Intent.ACTION_OPEN_DOCUMENT); i.addCategory(Intent.CATEGORY_OPENABLE); i.setType("video/*"); startActivityForResult(i,req);
@@ -132,45 +147,45 @@ public class MainActivity extends Activity {
 
     private void analyze(){
         if(uriA==null||uriB==null){Toast.makeText(this,"A/B 영상을 모두 선택해 주세요.",Toast.LENGTH_SHORT).show();return;}
-        btnSave.setEnabled(false); progress.setProgress(5); txtStatus.setText("대표 프레임 추출 중...");
+        btnSave.setEnabled(false); progressCompare.setProgress(5); statusCompare.setText("대표 프레임 추출 중...");
         executor.execute(()->{
             try{
                 Bitmap a=frameAt(uriA,durationA,seekA.getProgress()); Bitmap b=frameAt(uriB,durationB,seekB.getProgress());
                 if(a==null||b==null) throw new Exception("프레임을 읽지 못했습니다.");
                 int maxW=960; a=BitmapAnalysis.fitMaxWidth(a,maxW); b=BitmapAnalysis.fitMaxWidth(b,maxW);
                 Bitmap finalA=a, finalB=b;
-                runOnUiThread(()->{progress.setProgress(25); txtStatus.setText("촬영각도·위치 자동 보정 중... 저사양 기기에서는 수 초 걸릴 수 있습니다."); imgA.setImageBitmap(finalA);});
+                runOnUiThread(()->{progressCompare.setProgress(25); statusCompare.setText("촬영각도·위치 자동 보정 중... 저사양 기기에서는 수 초 걸릴 수 있습니다."); imgA.setImageBitmap(finalA);});
                 BitmapAnalysis.Transform t=BitmapAnalysis.estimate(a,b);
                 lastTransform=t;
                 Bitmap aligned=BitmapAnalysis.applyTransform(b,a.getWidth(),a.getHeight(),t);
-                runOnUiThread(()->{progress.setProgress(75); txtStatus.setText("Difference Map 계산 중..."); imgB.setImageBitmap(aligned);});
+                runOnUiThread(()->{progressCompare.setProgress(75); statusCompare.setText("Difference Map 계산 중..."); imgB.setImageBitmap(aligned);});
                 Bitmap diff=BitmapAnalysis.differenceOverlay(a,aligned);
                 frameA=a; alignedB=aligned; diffBitmap=diff;
                 runOnUiThread(()->{
-                    progress.setProgress(100); imgDiff.setImageBitmap(diff); btnSave.setEnabled(true);
-                    txtStatus.setText(String.format(Locale.getDefault(),"완료 · 자동 보정값: 회전 %.2f°, 배율 %.3f, 이동 X %.1fpx / Y %.1fpx\n현재 빨간 영역은 '차이 후보'이며 불량 확정값이 아닙니다.",t.angleDeg,t.scale,t.dx,t.dy));
+                    progressCompare.setProgress(100); imgDiff.setImageBitmap(diff); btnSave.setEnabled(true);
+                    statusCompare.setText(String.format(Locale.getDefault(),"완료 · 자동 보정값: 회전 %.2f°, 배율 %.3f, 이동 X %.1fpx / Y %.1fpx\n현재 빨간 영역은 '차이 후보'이며 불량 확정값이 아닙니다.",t.angleDeg,t.scale,t.dx,t.dy));
                 });
-            }catch(Exception e){ runOnUiThread(()->{progress.setProgress(0); txtStatus.setText("분석 실패: "+e.getMessage());}); }
+            }catch(Exception e){ runOnUiThread(()->{progressCompare.setProgress(0); statusCompare.setText("분석 실패: "+e.getMessage());}); }
         });
     }
 
 
     private void analyzeCycle(){
         if(uriA==null||uriB==null){Toast.makeText(this,"A/B 영상을 모두 선택해 주세요.",Toast.LENGTH_SHORT).show();return;}
-        progress.setProgress(5); txtStatus.setText("Cycle 움직임 분석 중... (CPU 경량 분석)");
+        progressCycle.setProgress(5); statusCycle.setText("Cycle 움직임 분석 중... (CPU 경량 분석)");
         executor.execute(()->{
             try{
                 CycleAnalyzer.Result a=CycleAnalyzer.analyze(this,uriA,durationA,"설비 A");
-                runOnUiThread(()->{progress.setProgress(45); txtStatus.setText("설비 B Cycle 분석 중...");});
+                runOnUiThread(()->{progressCycle.setProgress(45); statusCycle.setText("설비 B Cycle 분석 중...");});
                 CycleAnalyzer.Result b=CycleAnalyzer.analyze(this,uriB,durationB,"설비 B");
                 Bitmap cmp=CycleAnalyzer.compare(a,b);
                 cycleA=a; cycleB=b; cycleBitmap=cmp;
                 runOnUiThread(()->{
-                    progress.setProgress(100); imgCycle.setImageBitmap(cmp); btnSave.setEnabled(true);
-                    txtStatus.setText("Cycle 분석 완료\n"+a.summary+"\n\n"+b.summary);
+                    progressCycle.setProgress(100); imgCycle.setImageBitmap(cmp); btnSave.setEnabled(true);
+                    statusCycle.setText("Cycle 분석 완료\n"+a.summary+"\n\n"+b.summary);
                 });
             }catch(Exception e){
-                runOnUiThread(()->{progress.setProgress(0); txtStatus.setText("Cycle 분석 실패: "+e.getMessage());});
+                runOnUiThread(()->{progressCycle.setProgress(0); statusCycle.setText("Cycle 분석 실패: "+e.getMessage());});
             }
         });
     }
@@ -178,52 +193,52 @@ public class MainActivity extends Activity {
 
     private void analyzeHighSpeed(){
         if(uriA==null||uriB==null){Toast.makeText(this,"A/B 영상을 모두 선택해 주세요.",Toast.LENGTH_SHORT).show();return;}
-        progress.setProgress(5);txtStatus.setText("v0.5 고속 Event 동기화 분석 중...");
-        executor.execute(()->{try{HighSpeedAnalyzer.Result a=HighSpeedAnalyzer.analyze(this,uriA,durationA);runOnUiThread(()->progress.setProgress(48));HighSpeedAnalyzer.Result b=HighSpeedAnalyzer.analyze(this,uriB,durationB);HighSpeedAnalyzer.CompareResult cr=HighSpeedAnalyzer.compare(a,b);highSpeedBitmap=cr.chart;runOnUiThread(()->{progress.setProgress(100);imgHighSpeed.setImageBitmap(cr.chart);txtStatus.setText(cr.summary);btnSave.setEnabled(true);});}catch(Exception e){runOnUiThread(()->txtStatus.setText("고속 분석 실패: "+e.getMessage()));}});
+        progressHighSpeed.setProgress(5);statusHighSpeed.setText("v0.5 고속 Event 동기화 분석 중...");
+        executor.execute(()->{try{HighSpeedAnalyzer.Result a=HighSpeedAnalyzer.analyze(this,uriA,durationA);runOnUiThread(()->progressHighSpeed.setProgress(48));HighSpeedAnalyzer.Result b=HighSpeedAnalyzer.analyze(this,uriB,durationB);HighSpeedAnalyzer.CompareResult cr=HighSpeedAnalyzer.compare(a,b);highSpeedBitmap=cr.chart;runOnUiThread(()->{progressHighSpeed.setProgress(100);imgHighSpeed.setImageBitmap(cr.chart);statusHighSpeed.setText(cr.summary);btnSave.setEnabled(true);});}catch(Exception e){runOnUiThread(()->statusHighSpeed.setText("고속 분석 실패: "+e.getMessage()));}});
     }
 
 
     private String profileName(){Object o=cutterProfile.getSelectedItem();return o==null?"45° Cutter":o.toString();}
     private void analyzeAdvanced(){
         if(uriA==null||uriB==null){Toast.makeText(this,"A/B 영상을 모두 선택해 주세요.",Toast.LENGTH_SHORT).show();return;}
-        progress.setProgress(5);txtStatus.setText("v0.6 Multi-Cycle / Jerk / Timing 분석 중...");
+        progressAdvanced.setProgress(5);statusAdvanced.setText("v0.6 Multi-Cycle / Jerk / Timing 분석 중...");
         executor.execute(()->{try{
             HighSpeedAnalyzer.Result a=HighSpeedAnalyzer.analyze(this,uriA,durationA);
             HighSpeedAnalyzer.Result b=HighSpeedAnalyzer.analyze(this,uriB,durationB);
             String pf=profileName();float[] history=TrendStore.get(this,pf);
             AdvancedMotionAnalyzer.Result ar=AdvancedMotionAnalyzer.analyze(a,b,pf,history);
             TrendStore.add(this,pf,ar.score);advancedBitmap=ar.chart; lastAdvanced=ar;
-            runOnUiThread(()->{progress.setProgress(100);imgAdvanced.setImageBitmap(ar.chart);txtStatus.setText(ar.summary+"\n\n이미지/그래프를 누르면 전체화면 확대가 됩니다.");btnSave.setEnabled(true);});
-        }catch(Exception e){runOnUiThread(()->{progress.setProgress(0);txtStatus.setText("v0.6 고급분석 실패: "+e.getMessage());});}});
+            runOnUiThread(()->{progressAdvanced.setProgress(100);imgAdvanced.setImageBitmap(ar.chart);statusAdvanced.setText(ar.summary+"\n\n이미지/그래프를 누르면 전체화면 확대가 됩니다.");btnSave.setEnabled(true);});
+        }catch(Exception e){runOnUiThread(()->{progressAdvanced.setProgress(0);statusAdvanced.setText("v0.6 고급분석 실패: "+e.getMessage());});}});
     }
 
     private void analyzeEasyDiagnostic(){
         if(uriA==null||uriB==null){Toast.makeText(this,"A/B 영상을 모두 선택해 주세요.",Toast.LENGTH_SHORT).show();return;}
-        progress.setProgress(5);txtStatus.setText("v0.8 고정부 공통진동과 Cutter 실제운동을 분리 분석 중...");
+        progressEasy.setProgress(5);statusEasy.setText("v0.8 고정부 공통진동과 Cutter 실제운동을 분리 분석 중...");
         executor.execute(()->{try{
             VibrationCompensatedAnalyzer.Result a=VibrationCompensatedAnalyzer.analyze(this,uriA,durationA,profileName()+" / A");
-            runOnUiThread(()->progress.setProgress(50));
+            runOnUiThread(()->progressEasy.setProgress(50));
             VibrationCompensatedAnalyzer.Result b=VibrationCompensatedAnalyzer.analyze(this,uriB,durationB,profileName()+" / B");
             // Show B as current/evaluation machine; status contains both for immediate A/B interpretation.
             easyDiagnosticBitmap=b.chart;
             String verdict = "[설비 A]\n" + a.summary
                     + "\n\n[설비 B]\n" + b.summary
                     + "\n\n쉽게 보기: 회색 공통진동이 커져도 파란 Cutter 상대운동이 안정적이면 고정부 흔들림 영향으로 봅니다.";
-            runOnUiThread(()->{progress.setProgress(100);imgEasyDiagnostic.setImageBitmap(b.chart);txtStatus.setText(verdict);btnSave.setEnabled(true);});
-        }catch(Exception e){runOnUiThread(()->{progress.setProgress(0);txtStatus.setText("v0.8 진동분리 분석 실패: "+e.getMessage());});}});
+            runOnUiThread(()->{progressEasy.setProgress(100);imgEasyDiagnostic.setImageBitmap(b.chart);statusEasy.setText(verdict); dashboard("종합 진단 · "+profileName()+"\nCutter/고정부 진동 분리 분석 완료\n"+b.summary);btnSave.setEnabled(true);});
+        }catch(Exception e){runOnUiThread(()->{progressEasy.setProgress(0);statusEasy.setText("v0.8 진동분리 분석 실패: "+e.getMessage());});}});
     }
 
     private void analyzeDiagnostic(){
         if(uriA==null||uriB==null){Toast.makeText(this,"A/B 영상을 모두 선택해 주세요.",Toast.LENGTH_SHORT).show();return;}
-        progress.setProgress(5);txtStatus.setText("v0.7 Smart Diagnostic · Top3 이상 순간 / Golden 비교 중...");
+        progressDiagnostic.setProgress(5);statusDiagnostic.setText("v0.7 Smart Diagnostic · Top3 이상 순간 / Golden 비교 중...");
         executor.execute(()->{try{
             HighSpeedAnalyzer.Result a=HighSpeedAnalyzer.analyze(this,uriA,durationA);
             HighSpeedAnalyzer.Result b=HighSpeedAnalyzer.analyze(this,uriB,durationB);
             String pf=profileName(); AdvancedMotionAnalyzer.Result ar=AdvancedMotionAnalyzer.analyze(a,b,pf,TrendStore.get(this,pf)); lastAdvanced=ar;
             GoldenBaselineStore.Baseline g=GoldenBaselineStore.get(this,pf); float mm=CalibrationStore.get(this,pf);
             DiagnosticAnalyzer.Result dr=DiagnosticAnalyzer.analyze(a,b,ar,roiB,g,mm,pf); diagnosticBitmap=dr.chart;
-            runOnUiThread(()->{progress.setProgress(100);imgDiagnostic.setImageBitmap(dr.chart);txtStatus.setText(dr.summary+"\n\n그래프를 누르면 전체화면 확대됩니다.");btnSave.setEnabled(true);});
-        }catch(Exception e){runOnUiThread(()->{progress.setProgress(0);txtStatus.setText("통합 진단 실패: "+e.getMessage());});}});
+            runOnUiThread(()->{progressDiagnostic.setProgress(100);imgDiagnostic.setImageBitmap(dr.chart);statusDiagnostic.setText(dr.summary+"\n\n그래프를 누르면 전체화면 확대됩니다."); dashboard("종합 진단 · "+profileName()+"\n"+dr.summary);btnSave.setEnabled(true);});
+        }catch(Exception e){runOnUiThread(()->{progressDiagnostic.setProgress(0);statusDiagnostic.setText("통합 진단 실패: "+e.getMessage());});}});
     }
 
     private void saveGolden(){
@@ -261,7 +276,7 @@ public class MainActivity extends Activity {
 
     private void analyzeRoi(){
         if(uriA==null||uriB==null){Toast.makeText(this,"A/B 영상을 모두 선택해 주세요.",Toast.LENGTH_SHORT).show();return;}
-        progress.setProgress(5); txtStatus.setText("v0.3 ROI 정밀분석 준비 중...");
+        progressRoi.setProgress(5); statusRoi.setText("v0.3 ROI 정밀분석 준비 중...");
         executor.execute(()->{
             try{
                 // Ensure we have a camera transform based on the currently selected representative frames.
@@ -278,13 +293,13 @@ public class MainActivity extends Activity {
                 alignedB=BitmapAnalysis.applyTransform(b,a.getWidth(),a.getHeight(),t);
                 diffBitmap=BitmapAnalysis.differenceOverlay(a,alignedB);
                 final int w=a.getWidth(), h=a.getHeight();
-                runOnUiThread(()->{progress.setProgress(25); txtStatus.setText("설비 A: 전극 선단 / Gripper / Nip ROI 추적 중...");});
+                runOnUiThread(()->{progressRoi.setProgress(25); statusRoi.setText("설비 A: 전극 선단 / Gripper / Nip ROI 추적 중...");});
 
                 // A is reference, so no camera transform.
                 RoiQualityAnalyzer.Metrics ma=RoiQualityAnalyzer.analyze(
                         this,uriA,durationA,seekA.getProgress(),null,w,h,"설비 A");
 
-                runOnUiThread(()->{progress.setProgress(55); txtStatus.setText("설비 B: 촬영각 보정 후 ROI 추적 중...");});
+                runOnUiThread(()->{progressRoi.setProgress(55); statusRoi.setText("설비 B: 촬영각 보정 후 ROI 추적 중...");});
                 RoiQualityAnalyzer.Metrics mb=RoiQualityAnalyzer.analyze(
                         this,uriB,durationB,seekB.getProgress(),t,w,h,"설비 B (보정)");
 
@@ -292,19 +307,19 @@ public class MainActivity extends Activity {
                 roiA=ma; roiB=mb; roiCompareBitmap=cmp;
 
                 runOnUiThread(()->{
-                    progress.setProgress(100);
+                    progressRoi.setProgress(100);
                     imgRoiA.setImageBitmap(ma.overlay);
                     imgRoiB.setImageBitmap(mb.overlay);
                     imgRoiCompare.setImageBitmap(cmp);
                     btnSave.setEnabled(true);
-                    txtStatus.setText("v0.4 ROI 분석 완료\n"+ma.summary+"\n\n"+mb.summary+
+                    statusRoi.setText("v0.4 ROI 분석 완료\n"+ma.summary+"\n\n"+mb.summary+
                             String.format(Locale.getDefault(),
                                     "\n\n카메라 보정: 회전 %.2f°, 배율 %.3f, X %.1fpx / Y %.1fpx"+
                                     "\n※ 현재 px/Score는 설비 변화 추세용 참고값입니다. 실제 mm 및 NG 기준은 Calibration/Golden 데이터로 확정해야 합니다.",
                                     t.angleDeg,t.scale,t.dx,t.dy));
                 });
             }catch(Exception e){
-                runOnUiThread(()->{progress.setProgress(0);txtStatus.setText("ROI 분석 실패: "+e.getMessage());});
+                runOnUiThread(()->{progressRoi.setProgress(0);statusRoi.setText("ROI 분석 실패: "+e.getMessage());});
             }
         });
     }
