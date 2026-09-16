@@ -206,13 +206,9 @@ public class MainActivity extends Activity {
             VibrationCompensatedAnalyzer.Result b=VibrationCompensatedAnalyzer.analyze(this,uriB,durationB,profileName()+" / B");
             // Show B as current/evaluation machine; status contains both for immediate A/B interpretation.
             easyDiagnosticBitmap=b.chart;
-            String verdict="[설비 A]
-"+a.summary+"
-
-[설비 B]
-"+b.summary+"
-
-쉽게 보기: 회색 공통진동이 커져도 파란 Cutter 상대운동이 안정적이면 고정부 흔들림 영향으로 봅니다.";
+            String verdict = "[설비 A]\n" + a.summary
+                    + "\n\n[설비 B]\n" + b.summary
+                    + "\n\n쉽게 보기: 회색 공통진동이 커져도 파란 Cutter 상대운동이 안정적이면 고정부 흔들림 영향으로 봅니다.";
             runOnUiThread(()->{progress.setProgress(100);imgEasyDiagnostic.setImageBitmap(b.chart);txtStatus.setText(verdict);btnSave.setEnabled(true);});
         }catch(Exception e){runOnUiThread(()->{progress.setProgress(0);txtStatus.setText("v0.8 진동분리 분석 실패: "+e.getMessage());});}});
     }
