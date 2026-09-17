@@ -102,7 +102,7 @@ public class MainActivity extends Activity {
         };
         seekA.setOnSeekBarChangeListener(listener); seekB.setOnSeekBarChangeListener(listener);
         restoreState();
-        ImageView[] zoomables={imgA,imgB,imgDiff,imgCycle,imgHighSpeed,imgRoiA,imgRoiB,imgRoiCompare,imgAdvanced,imgDiagnostic,imgEasyDiagnostic};
+        ImageView[] zoomables={imgA,imgB,imgDiff,imgCycle,imgHighSpeed,imgRoiA,imgRoiB,imgRoiCompare,imgAdvanced,imgDiagnostic,imgEasyDiagnostic,imgTop1,imgTop2,imgTop3};
         for(ImageView z:zoomables)z.setOnClickListener(v->openZoom((ImageView)v));
     }
 
@@ -137,12 +137,14 @@ public class MainActivity extends Activity {
                 "※ 영상 신호 기반 추정 구간이며 센서 실측 판정은 아닙니다.");
         String diag=statusDiagnostic.getText()==null?"":statusDiagnostic.getText().toString();
         java.util.regex.Matcher m=java.util.regex.Pattern.compile("#([123]) A ([0-9.]+)s / B ([0-9.]+)s · 편차 ([0-9.]+)%").matcher(diag);
-        int count=0; double[] sec=new double[3];
+        int count=0; double[] secA=new double[3]; double[] secB=new double[3]; String[] types=new String[3];
         StringBuilder top=new StringBuilder("A 기준 대비 B 주요 차이 TOP 3\n");
         while(m.find()&&count<3){
-            sec[count]=Double.parseDouble(m.group(2));
+            secA[count]=Double.parseDouble(m.group(2));
+            secB[count]=Double.parseDouble(m.group(3));
             double pct=Double.parseDouble(m.group(4));
-            String type=classifyDifference(sec[count],pct,count);
+            String type=classifyDifference(secA[count],pct,count);
+            types[count]=type;
             top.append(count==0?"🥇 1위 · ":count==1?"🥈 2위 · ":"🥉 3위 · ")
                .append(type).append("\n")
                .append("   A ").append(m.group(2)).append("s ↔ B ").append(m.group(3)).append("s · 차이 ").append(m.group(4)).append("%\n")
@@ -152,7 +154,9 @@ public class MainActivity extends Activity {
         if(count==0) top.append("통합검사 후 무엇이 다른지 1·2·3 순위로 표시합니다.");
         txtTop3Dashboard.setText(highlight(top.toString().trim()));
         imgTop1.setVisibility(count>0?View.VISIBLE:View.GONE); imgTop2.setVisibility(count>1?View.VISIBLE:View.GONE); imgTop3.setVisibility(count>2?View.VISIBLE:View.GONE);
-        if(count>0) setTopFrame(imgTop1,sec[0]); if(count>1) setTopFrame(imgTop2,sec[1]); if(count>2) setTopFrame(imgTop3,sec[2]);
+        if(count>0) setTopPairFrame(imgTop1,secA[0],secB[0],1,types[0]);
+        if(count>1) setTopPairFrame(imgTop2,secA[1],secB[1],2,types[1]);
+        if(count>2) setTopPairFrame(imgTop3,secA[2],secB[2],3,types[2]);
     }
 
     private String classifyDifference(double sec,double pct,int rank){
@@ -170,9 +174,53 @@ public class MainActivity extends Activity {
         return "전진 속도 변화와 반복 궤적";
     }
 
-    private void setTopFrame(ImageView view,double sec){
-        if(uriA==null)return; MediaMetadataRetriever r=new MediaMetadataRetriever();
-        try{r.setDataSource(this,uriA); Bitmap b=r.getFrameAtTime((long)(sec*1000000.0),MediaMetadataRetriever.OPTION_CLOSEST); if(b!=null)view.setImageBitmap(b);}catch(Exception ignored){}finally{try{r.release();}catch(Exception ignored){}}
+    private Bitmap frameAtSecond(Uri uri,double sec){
+        if(uri==null)return null;
+        MediaMetadataRetriever r=new MediaMetadataRetriever();
+        try{
+            r.setDataSource(this,uri);
+            Bitmap b=r.getFrameAtTime((long)(sec*1000000.0),MediaMetadataRetriever.OPTION_CLOSEST);
+            if(b==null)b=r.getFrameAtTime((long)(sec*1000000.0),MediaMetadataRetriever.OPTION_CLOSEST_SYNC);
+            return b;
+        }catch(Exception ignored){return null;}finally{try{r.release();}catch(Exception ignored){}}
+    }
+
+    private void setTopPairFrame(ImageView view,double secA,double secB,int rank,String type){
+        if(uriA==null||uriB==null)return;
+        Bitmap a=frameAtSecond(uriA,secA);
+        Bitmap b=frameAtSecond(uriB,secB);
+        if(a==null||b==null)return;
+        try{
+            a=BitmapAnalysis.fitMaxWidth(a,960);
+            b=BitmapAnalysis.fitMaxWidth(b,960);
+            if(b.getWidth()!=a.getWidth()||b.getHeight()!=a.getHeight())
+                b=Bitmap.createScaledBitmap(b,a.getWidth(),a.getHeight(),true);
+            if(lastTransform!=null){
+                try{b=BitmapAnalysis.applyTransform(b,a.getWidth(),a.getHeight(),lastTransform);}catch(Exception ignored){}
+            }
+            int eachW=640;
+            int imageH=Math.max(260,Math.round(eachW*(a.getHeight()/(float)Math.max(1,a.getWidth()))));
+            Bitmap as=Bitmap.createScaledBitmap(a,eachW,imageH,true);
+            Bitmap bs=Bitmap.createScaledBitmap(b,eachW,imageH,true);
+            int header=82;
+            Bitmap pair=Bitmap.createBitmap(eachW*2,imageH+header,Bitmap.Config.ARGB_8888);
+            Canvas c=new Canvas(pair);
+            c.drawColor(Color.rgb(8,19,31));
+            Paint p=new Paint(Paint.ANTI_ALIAS_FLAG);
+            p.setColor(Color.WHITE); p.setTextSize(29f); p.setFakeBoldText(true);
+            c.drawText("TOP "+rank+"   A 기준 · "+String.format(Locale.getDefault(),"%.3fs",secA),18,34,p);
+            c.drawText("B 비교 · "+String.format(Locale.getDefault(),"%.3fs",secB),eachW+18,34,p);
+            p.setTextSize(22f); p.setColor(Color.rgb(255,235,59));
+            String shortType=type==null?"주요 동작 차이":type;
+            if(shortType.length()>24)shortType=shortType.substring(0,24)+"…";
+            c.drawText(shortType,18,68,p);
+            p.setColor(Color.rgb(60,210,230)); p.setStrokeWidth(4f);
+            c.drawLine(eachW,0,eachW,imageH+header,p);
+            c.drawBitmap(as,0,header,null);
+            c.drawBitmap(bs,eachW,header,null);
+            view.setImageBitmap(pair);
+            view.setContentDescription("TOP "+rank+" A/B 비교 이미지 · 누르면 확대");
+        }catch(Exception ignored){}
     }
 
     private void pickVideo(int req){

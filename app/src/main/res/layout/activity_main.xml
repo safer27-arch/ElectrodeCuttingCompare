@@ -26,7 +26,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
-            android:text="v1.4.2 · UPDATE TEST · REFERENCE A vs TEST B + TOP3  |  Permanent Signing"
+            android:text="v1.4.3 · TOP3 A/B SIDE-BY-SIDE + ZOOM  |  Permanent Signing"
             android:textColor="@color/text_dark"
             android:textSize="14sp" />
 
@@ -43,11 +43,10 @@
         <TextView android:id="@+id/txtOverallVerdict" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="10dp" android:background="@drawable/panel" android:gravity="center" android:padding="14dp" android:text="종합판정 · 검사 대기" android:textSize="22sp" android:textStyle="bold"/>
         <TextView android:id="@+id/txtStageDashboard" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:background="@drawable/panel" android:padding="12dp" android:text="5단계 Cutter 추정 상태\n① 대기  ② 전진가속  ③ 커팅/충격  ④ 복귀가속  ⑤ 안정화" android:textSize="15sp" android:textStyle="bold"/>
         <TextView android:id="@+id/txtTop3Dashboard" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:background="@drawable/panel" android:padding="12dp" android:text="A 기준 대비 B 주요 차이 TOP 3 · 검사 대기" android:textSize="15sp" android:textStyle="bold"/>
-        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:layout_marginTop="6dp">
-            <ImageView android:id="@+id/imgTop1" android:layout_width="0dp" android:layout_height="92dp" android:layout_weight="1" android:background="#0B1523" android:scaleType="centerCrop"/>
-            <ImageView android:id="@+id/imgTop2" android:layout_width="0dp" android:layout_height="92dp" android:layout_weight="1" android:layout_marginStart="4dp" android:background="#0B1523" android:scaleType="centerCrop"/>
-            <ImageView android:id="@+id/imgTop3" android:layout_width="0dp" android:layout_height="92dp" android:layout_weight="1" android:layout_marginStart="4dp" android:background="#0B1523" android:scaleType="centerCrop"/>
-        </LinearLayout>
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="6dp" android:text="TOP3 비교 이미지는 왼쪽 A 기준 / 오른쪽 B 비교입니다. 이미지를 누르면 전체화면 확대됩니다." android:textSize="12sp" android:textStyle="bold"/>
+        <ImageView android:id="@+id/imgTop1" android:layout_width="match_parent" android:layout_height="170dp" android:layout_marginTop="6dp" android:background="#0B1523" android:adjustViewBounds="true" android:scaleType="fitCenter" android:visibility="gone"/>
+        <ImageView android:id="@+id/imgTop2" android:layout_width="match_parent" android:layout_height="170dp" android:layout_marginTop="8dp" android:background="#0B1523" android:adjustViewBounds="true" android:scaleType="fitCenter" android:visibility="gone"/>
+        <ImageView android:id="@+id/imgTop3" android:layout_width="match_parent" android:layout_height="170dp" android:layout_marginTop="8dp" android:background="#0B1523" android:adjustViewBounds="true" android:scaleType="fitCenter" android:visibility="gone"/>
 
         <TextView android:id="@+id/txtDashboard" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="10dp" android:background="@drawable/panel" android:padding="12dp" android:text="SYSTEM READY  •  종합 진단 대기\nA 기준영상과 B 비교영상을 선택하고 분석을 시작하세요.\n결과는 각 분석 카드에 독립적으로 유지됩니다." android:textSize="16sp" android:textStyle="bold"/>
 

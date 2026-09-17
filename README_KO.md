@@ -66,3 +66,11 @@ GitHub Actions > Build Android APK > Run workflow를 실행합니다.
 이 패키지는 GitHub Actions가 Gradle 8.9를 직접 설치한 뒤 `gradle :app:assembleDebug`를 실행합니다.
 따라서 Gradle Wrapper(`gradlew`, `gradlew.bat`, `gradle-wrapper.jar`)가 없어도 GitHub에서 APK를 생성할 수 있습니다.
 압축 해제 후 보이는 프로젝트 내용물을 모두 Repository 최상위에 올리면 됩니다.
+
+
+## v1.4.3 TOP3 A/B Side-by-Side + Zoom
+- TOP 1/2/3 이상 순간을 각 순위별로 **왼쪽 A 기준영상 / 오른쪽 B 비교영상**으로 나란히 표시합니다.
+- 각 A/B 비교 이미지는 발생 시점과 구간명을 함께 표시합니다.
+- TOP3 이미지를 누르면 기존 전체화면 Zoom 화면으로 이동하여 핀치 확대 및 드래그 이동이 가능합니다.
+- B 영상은 가능한 경우 기존 촬영각 자동 보정값을 적용한 비교 프레임으로 표시합니다.
+- Permanent Signing workflow를 유지하여 기존 설치 앱 위에 업데이트 설치할 수 있도록 versionCode를 증가시켰습니다.
