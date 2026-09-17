@@ -1,0 +1,16 @@
+ElectrodeCuttingCompare v1.5.0 · Cycle Repeatability
+
+핵심 추가 기능
+1. Cutter 좌→우→좌 왕복을 1 Cycle로 자동 분리
+2. A 기준영상 내부 Cycle 1~10 Overlay
+3. B 비교영상 내부 Cycle 1~10 Overlay
+4. A/B 평균 궤적 0~100% 정규화 비교
+5. Cycle Time 평균/CV 및 반복 재현성 Score
+6. 최대 A/B 차이 구간(진행률 %) 표시
+7. 원터치 통합검사에 Cycle Repeatability 자동 포함
+8. 결과 그래프 터치 시 기존 전체화면 확대/핀치줌 사용
+
+주의
+- 영상 기반 상대지표이며 실제 변위(mm), 속도, 센서값 또는 NG 확정판정이 아닙니다.
+- 여러 반복 Cycle이 포함된 영상일수록 재현성 분석 신뢰도가 높아집니다.
+- Permanent Signing workflow 유지: 기존 앱 위 업데이트 설치 구조를 계속 사용합니다.

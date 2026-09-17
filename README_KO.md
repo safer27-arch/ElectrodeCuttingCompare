@@ -1,3 +1,20 @@
+# ElectrodeCuttingCompare v1.5.0
+
+## 새 기능: Cycle Repeatability
+- Cutter 왕복 1 Cycle 자동 분리
+- A/B 각각 최대 10 Cycle 궤적 Overlay
+- Cycle별 시간을 0~100%로 정규화해 촬영 길이가 달라도 반복 패턴 비교
+- 평균 궤적, Cycle Time CV, 반복 재현성 Score, A/B 최대 차이 구간 표시
+- 원터치 통합검사에 자동 포함
+- 그래프 터치 시 전체화면 확대/핀치줌
+
+## A/B 사용 원칙
+- A = 기준영상(정상 권장)
+- B = 비교영상(검사 대상)
+
+## 업데이트 설치
+Permanent Signing workflow를 유지합니다. 동일 applicationId + 동일 signing key + 증가된 versionCode를 사용하므로 기존 고정키 앱 위에 업데이트 설치합니다.
+
 # ElectrodeCuttingCompare v1.4.2 Update Test
 
 # ElectrodeCuttingCompare v1.3 Field Dashboard

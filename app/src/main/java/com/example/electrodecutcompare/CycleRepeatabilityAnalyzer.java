@@ -1,0 +1,210 @@
+package com.example.electrodecutcompare;
+
+import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
+import android.media.MediaMetadataRetriever;
+import android.net.Uri;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Locale;
+
+/**
+ * v1.5 Cycle Repeatability analyzer.
+ * Lightweight image-based repeatability analysis for the cutter's repeated left-right-left motion.
+ * It is deliberately a relative video metric, not a calibrated displacement or NG judge.
+ */
+public final class CycleRepeatabilityAnalyzer {
+    private CycleRepeatabilityAnalyzer() {}
+
+    public static final class Result {
+        public String label;
+        public int fps;
+        public int cycleCount;
+        public float[] cycleTimesSec;
+        public float meanCycleSec;
+        public float cycleTimeCvPct;
+        public float repeatabilityScore;
+        public float[] meanPosition;
+        public float[] stdPosition;
+        public float[] meanSpeed;
+        public List<float[]> cycles;
+        public String summary;
+        public boolean reliable;
+    }
+
+    public static final class CompareResult {
+        public final Bitmap chart;
+        public final String summary;
+        public final float meanTrajectoryDifferencePct;
+        public final int worstStartPct;
+        public final int worstEndPct;
+        public final float meanSpeedDifferencePct;
+        public CompareResult(Bitmap chart, String summary, float diff, int start, int end, float speedDiff) {
+            this.chart=chart; this.summary=summary; this.meanTrajectoryDifferencePct=diff;
+            this.worstStartPct=start; this.worstEndPct=end; this.meanSpeedDifferencePct=speedDiff;
+        }
+    }
+
+    private static final class Gray {
+        final int w,h; final byte[] p;
+        Gray(int w,int h){this.w=w;this.h=h;this.p=new byte[w*h];}
+    }
+    private static final class Shift { final int dx,dy; Shift(int dx,int dy){this.dx=dx;this.dy=dy;} }
+    private static final class Trace {
+        float[] x, energy; long[] timeMs; int fps;
+    }
+    private static final class Segment { int start,end; boolean invert; Segment(int s,int e,boolean i){start=s;end=e;invert=i;} }
+
+    public static Result analyze(Context context, Uri uri, long durationMs, String label) throws Exception {
+        Trace t=extractTrace(context,uri,durationMs);
+        Result r=new Result(); r.label=label; r.fps=t.fps;
+        List<Segment> segments=findCycles(t.x,t.energy);
+        r.cycles=new ArrayList<>();
+        ArrayList<Float> times=new ArrayList<>();
+        for(Segment s:segments){
+            if(s.end-s.start<5)continue;
+            float[] c=resample(t.x,s.start,s.end,101);
+            normalizeCycle(c,s.invert);
+            r.cycles.add(c);
+            long dt=Math.max(0,t.timeMs[Math.min(t.timeMs.length-1,s.end)]-t.timeMs[Math.max(0,s.start)]);
+            times.add(dt/1000f);
+            if(r.cycles.size()>=10)break;
+        }
+        r.cycleCount=r.cycles.size();
+        r.cycleTimesSec=new float[times.size()]; for(int i=0;i<times.size();i++)r.cycleTimesSec[i]=times.get(i);
+        r.meanCycleSec=mean(r.cycleTimesSec);
+        r.cycleTimeCvPct=cvPct(r.cycleTimesSec);
+        r.meanPosition=meanCurve(r.cycles,101);
+        r.stdPosition=stdCurve(r.cycles,r.meanPosition);
+        r.meanSpeed=speed(r.meanPosition);
+        r.reliable=r.cycleCount>=2;
+        float spread=mean(r.stdPosition);
+        float trajectoryPenalty=Math.min(72f,spread*420f);
+        float timingPenalty=Math.min(28f,r.cycleTimeCvPct*2.2f);
+        r.repeatabilityScore=r.reliable?Math.max(0f,100f-trajectoryPenalty-timingPenalty):0f;
+        r.summary=buildSummary(r);
+        return r;
+    }
+
+    public static CompareResult compare(Result a, Result b) {
+        int n=Math.min(a.meanPosition.length,b.meanPosition.length);
+        float[] d=new float[n]; float sum=0,max=-1; int maxI=0;
+        for(int i=0;i<n;i++){d[i]=Math.abs(a.meanPosition[i]-b.meanPosition[i]);sum+=d[i];if(d[i]>max){max=d[i];maxI=i;}}
+        float meanDiff=n==0?0:sum/n*100f;
+        float speedScale=Math.max(.001f,Math.max(maxAbs(a.meanSpeed),maxAbs(b.meanSpeed)));
+        float speedSum=0; int sn=Math.min(a.meanSpeed.length,b.meanSpeed.length);
+        for(int i=0;i<sn;i++)speedSum+=Math.abs(a.meanSpeed[i]-b.meanSpeed[i]);
+        float speedDiff=sn==0?0:(speedSum/sn)/speedScale*100f;
+        int radius=10; int start=Math.max(0,maxI-radius),end=Math.min(100,maxI+radius);
+        String level=(!a.reliable||!b.reliable)?"Cycle 부족 · 분석 보류":meanDiff<8f?"거의 동일":meanDiff<15f?"약간 다름":meanDiff<25f?"차이 큼":"큰 차이 · 확인 필요";
+        StringBuilder s=new StringBuilder();
+        s.append("사이클 반복 재현성 A/B 비교 · ").append(level).append("\n");
+        s.append(String.format(Locale.getDefault(),"A %d Cycle · 재현성 %.0f/100 · Time CV %.1f%%\n",a.cycleCount,a.repeatabilityScore,a.cycleTimeCvPct));
+        s.append(String.format(Locale.getDefault(),"B %d Cycle · 재현성 %.0f/100 · Time CV %.1f%%\n",b.cycleCount,b.repeatabilityScore,b.cycleTimeCvPct));
+        s.append(String.format(Locale.getDefault(),"A↔B 평균 궤적 차이 %.1f%% · 속도패턴 차이 %.1f%% · 최대 차이 구간 %d~%d%%\n",meanDiff,speedDiff,start,end));
+        if(b.reliable&&a.reliable){
+            if(b.repeatabilityScore+8<a.repeatabilityScore) s.append("확인 필요: B의 반복 궤적 퍼짐이 A보다 큽니다.\n");
+            if(b.cycleTimeCvPct>a.cycleTimeCvPct+2.0f) s.append("확인 필요: B의 Cycle Time 변동이 A보다 큽니다.\n");
+        }
+        s.append("※ 각 Cycle을 0~100%로 시간 정규화한 영상 기반 상대 비교입니다. 실제 mm/속도/NG 한계는 별도 검증이 필요합니다.");
+        return new CompareResult(draw(a,b,meanDiff,speedDiff,start,end),s.toString(),meanDiff,start,end,speedDiff);
+    }
+
+    private static Trace extractTrace(Context c,Uri uri,long duration) throws Exception {
+        MediaMetadataRetriever r=new MediaMetadataRetriever(); r.setDataSource(c,uri);
+        int fps=30; try{String q=r.extractMetadata(MediaMetadataRetriever.METADATA_KEY_CAPTURE_FRAMERATE);if(q!=null)fps=Math.max(1,Math.round(Float.parseFloat(q)));}catch(Exception ignored){}
+        int n=Math.max(81,Math.min(145,(int)Math.ceil(duration/1000.0*Math.min(fps,28))+1));
+        int w=208,h=118; float[] x=new float[n-1],e=new float[n-1]; long[] tm=new long[n-1];
+        Gray prev=null;
+        try{
+            for(int i=0;i<n;i++){
+                long ms=Math.round(duration*i/(double)(n-1));
+                Bitmap raw=r.getFrameAtTime(ms*1000L,MediaMetadataRetriever.OPTION_CLOSEST);
+                if(raw==null)raw=r.getFrameAtTime(ms*1000L,MediaMetadataRetriever.OPTION_CLOSEST_SYNC);
+                if(raw==null)continue;
+                Bitmap small=Bitmap.createScaledBitmap(raw,w,h,true); Gray cur=gray(small); small.recycle();
+                if(prev!=null){Shift sh=globalShift(prev,cur);float[] xe=cutterX(prev,cur,sh.dx,sh.dy);x[i-1]=xe[0];e[i-1]=xe[1];tm[i-1]=ms;}
+                prev=cur;
+            }
+        } finally {try{r.release();}catch(Exception ignored){}}
+        fillMissingTimes(tm,duration);
+        float med=median(e); for(int i=0;i<x.length;i++)if(e[i]<Math.max(0.6f,med*.42f))x[i]=Float.NaN;
+        fillMissing(x); x=smooth(x,2); normalize01(x);
+        Trace t=new Trace();t.x=x;t.energy=smooth(e,1);t.timeMs=tm;t.fps=fps;return t;
+    }
+
+    private static Gray gray(Bitmap b){int w=b.getWidth(),h=b.getHeight();Gray g=new Gray(w,h);int[]px=new int[w*h];b.getPixels(px,0,w,0,0,w,h);for(int i=0;i<px.length;i++){int z=px[i];g.p[i]=(byte)((Color.red(z)*30+Color.green(z)*59+Color.blue(z)*11)/100);}return g;}
+    private static int u(byte b){return b&255;}
+    private static Shift globalShift(Gray a,Gray b){int bx=0,by=0;float best=Float.MAX_VALUE;for(int dy=-3;dy<=3;dy++)for(int dx=-3;dx<=3;dx++){float s=0;s+=sad(a,b,8,8,54,28,dx,dy);s+=sad(a,b,a.w-62,8,54,28,dx,dy);s+=sad(a,b,8,a.h-36,54,28,dx,dy);s+=sad(a,b,a.w-62,a.h-36,54,28,dx,dy);if(s<best){best=s;bx=dx;by=dy;}}return new Shift(bx,by);}
+    private static float sad(Gray a,Gray b,int x0,int y0,int ww,int hh,int dx,int dy){float s=0;int n=0;for(int y=y0;y<y0+hh;y+=3)for(int x=x0;x<x0+ww;x+=3){int xx=x+dx,yy=y+dy;if(xx<0||yy<0||xx>=b.w||yy>=b.h)continue;s+=Math.abs(u(a.p[y*a.w+x])-u(b.p[yy*b.w+xx]));n++;}return n==0?99999:s/n;}
+    private static float[] cutterX(Gray a,Gray b,int dx,int dy){int x0=(int)(a.w*.16),x1=(int)(a.w*.87),y0=(int)(a.h*.16),y1=(int)(a.h*.86);float wx=0,ws=0,energy=0;int n=0;for(int y=y0;y<y1;y+=2)for(int x=x0;x<x1;x+=2){int xx=x+dx,yy=y+dy;if(xx<0||yy<0||xx>=b.w||yy>=b.h)continue;int d=Math.abs(u(a.p[y*a.w+x])-u(b.p[yy*b.w+xx]));if(d>9){float q=d-8;wx+=x*q;ws+=q;energy+=q;}n++;}float pos=ws>0?((wx/ws)-x0)/Math.max(1f,(x1-x0)):Float.NaN;return new float[]{pos,n==0?0:energy/n};}
+
+    private static List<Segment> findCycles(float[] x,float[] energy){
+        ArrayList<Integer> mins=extrema(x,true),maxs=extrema(x,false);
+        List<Segment> a=segmentsFromExtrema(x,mins,true),b=segmentsFromExtrema(x,maxs,false);
+        if(a.size()>=b.size()&&a.size()>0)return a; if(b.size()>0)return b;
+        // Fallback: use strong motion peaks as cycle centers and midpoint boundaries.
+        ArrayList<Integer> peaks=new ArrayList<>();float th=median(energy)*1.35f;int minSep=Math.max(8,energy.length/12);
+        for(int i=2;i<energy.length-2;i++)if(energy[i]>th&&energy[i]>=energy[i-1]&&energy[i]>=energy[i+1]){if(peaks.isEmpty()||i-peaks.get(peaks.size()-1)>=minSep)peaks.add(i);else if(energy[i]>energy[peaks.get(peaks.size()-1)])peaks.set(peaks.size()-1,i);}
+        ArrayList<Segment> out=new ArrayList<>();for(int i=0;i<peaks.size()-1;i++){int s=i==0?Math.max(0,peaks.get(i)-(peaks.get(i+1)-peaks.get(i))/2):(peaks.get(i-1)+peaks.get(i))/2;int e=(peaks.get(i)+peaks.get(i+1))/2;if(e-s>=6)out.add(new Segment(s,e,false));}return out;
+    }
+    private static ArrayList<Integer> extrema(float[] x,boolean min){ArrayList<Integer> ids=new ArrayList<>();float lo=min(x),hi=max(x),range=Math.max(.001f,hi-lo);int sep=Math.max(7,x.length/15);for(int i=3;i<x.length-3;i++){boolean ok=true;for(int k=1;k<=3;k++){if(min&&(x[i]>x[i-k]||x[i]>x[i+k]))ok=false;if(!min&&(x[i]<x[i-k]||x[i]<x[i+k]))ok=false;}if(!ok)continue;if(min&&x[i]>lo+range*.45f)continue;if(!min&&x[i]<hi-range*.45f)continue;if(ids.isEmpty()||i-ids.get(ids.size()-1)>=sep)ids.add(i);else{int q=ids.get(ids.size()-1);if((min&&x[i]<x[q])||(!min&&x[i]>x[q]))ids.set(ids.size()-1,i);}}return ids;}
+    private static List<Segment> segmentsFromExtrema(float[] x,List<Integer> ids,boolean minStart){ArrayList<Segment> out=new ArrayList<>();float range=Math.max(.001f,max(x)-min(x));for(int i=0;i<ids.size()-1;i++){int s=ids.get(i),e=ids.get(i+1);if(e-s<6)continue;float opposite=minStart?max(x,s,e):min(x,s,e);float base=(x[s]+x[e])*.5f;boolean good=minStart?(opposite-base>range*.35f):(base-opposite>range*.35f);if(good)out.add(new Segment(s,e,!minStart));}return out;}
+
+    private static float[] resample(float[] src,int s,int e,int n){float[]o=new float[n];for(int i=0;i<n;i++){float q=s+(e-s)*i/(float)(n-1);int q0=(int)Math.floor(q),q1=Math.min(e,q0+1);float f=q-q0;o[i]=src[q0]*(1-f)+src[q1]*f;}return o;}
+    private static void normalizeCycle(float[] c,boolean invert){float lo=min(c),hi=max(c),r=Math.max(.001f,hi-lo);for(int i=0;i<c.length;i++){c[i]=(c[i]-lo)/r;if(invert)c[i]=1f-c[i];}}
+    private static float[] meanCurve(List<float[]> cs,int n){float[]m=new float[n];if(cs==null||cs.isEmpty())return m;for(float[]c:cs)for(int i=0;i<n;i++)m[i]+=c[i];for(int i=0;i<n;i++)m[i]/=cs.size();return m;}
+    private static float[] stdCurve(List<float[]> cs,float[]m){float[]s=new float[m.length];if(cs==null||cs.size()<2)return s;for(float[]c:cs)for(int i=0;i<m.length;i++){float d=c[i]-m[i];s[i]+=d*d;}for(int i=0;i<s.length;i++)s[i]=(float)Math.sqrt(s[i]/cs.size());return s;}
+    private static float[] speed(float[]p){float[]v=new float[p.length];for(int i=1;i<p.length;i++)v[i]=(p[i]-p[i-1])*100f;return smooth(v,2);}
+    private static float mean(float[]a){if(a==null||a.length==0)return 0;float s=0;for(float v:a)s+=v;return s/a.length;}
+    private static float cvPct(float[]a){if(a==null||a.length<2)return 0;float m=mean(a);if(m<=0)return 0;float s=0;for(float v:a){float d=v-m;s+=d*d;}return (float)Math.sqrt(s/a.length)/m*100f;}
+    private static float median(float[]a){if(a.length==0)return 0;float[]b=a.clone();Arrays.sort(b);return b[b.length/2];}
+    private static float min(float[]a){float m=Float.MAX_VALUE;for(float v:a)if(!Float.isNaN(v))m=Math.min(m,v);return m==Float.MAX_VALUE?0:m;}
+    private static float max(float[]a){float m=-Float.MAX_VALUE;for(float v:a)if(!Float.isNaN(v))m=Math.max(m,v);return m==-Float.MAX_VALUE?0:m;}
+    private static float maxAbs(float[]a){float m=0;for(float v:a)m=Math.max(m,Math.abs(v));return m;}
+    private static float min(float[]a,int s,int e){float m=Float.MAX_VALUE;for(int i=s;i<=e;i++)m=Math.min(m,a[i]);return m;}
+    private static float max(float[]a,int s,int e){float m=-Float.MAX_VALUE;for(int i=s;i<=e;i++)m=Math.max(m,a[i]);return m;}
+    private static float[] smooth(float[]a,int radius){float[]o=new float[a.length];for(int i=0;i<a.length;i++){float s=0;int n=0;for(int k=-radius;k<=radius;k++){int q=i+k;if(q>=0&&q<a.length&&!Float.isNaN(a[q])){s+=a[q];n++;}}o[i]=n==0?a[i]:s/n;}return o;}
+    private static void fillMissing(float[]a){int first=-1;for(int i=0;i<a.length;i++)if(!Float.isNaN(a[i])){first=i;break;}if(first<0){Arrays.fill(a,.5f);return;}for(int i=0;i<first;i++)a[i]=a[first];int last=first;for(int i=first+1;i<a.length;i++)if(!Float.isNaN(a[i])){if(i-last>1){for(int k=last+1;k<i;k++){float f=(k-last)/(float)(i-last);a[k]=a[last]*(1-f)+a[i]*f;}}last=i;}for(int i=last+1;i<a.length;i++)a[i]=a[last];}
+    private static void fillMissingTimes(long[]t,long duration){for(int i=0;i<t.length;i++)if(t[i]==0)t[i]=Math.round(duration*(i+1)/(double)t.length);}
+    private static void normalize01(float[]a){float lo=min(a),hi=max(a),r=Math.max(.001f,hi-lo);for(int i=0;i<a.length;i++)a[i]=(a[i]-lo)/r;}
+
+    private static String buildSummary(Result r){StringBuilder s=new StringBuilder();s.append(r.label).append(" · Cycle 반복 재현성\n");if(!r.reliable){s.append("검출 Cycle ").append(r.cycleCount).append("개 · 반복성 계산에 Cycle이 부족합니다. 촬영 시간을 늘리거나 커터가 여러 번 왕복하도록 촬영해 주세요.\n");}else{s.append(String.format(Locale.getDefault(),"검출 Cycle %d개 · 재현성 %.0f/100 · 평균 Cycle Time %.3fs · Time CV %.1f%%\n",r.cycleCount,r.repeatabilityScore,r.meanCycleSec,r.cycleTimeCvPct));s.append("Cycle Time: ");for(int i=0;i<r.cycleTimesSec.length&&i<10;i++){if(i>0)s.append(" / ");s.append(String.format(Locale.getDefault(),"%.3fs",r.cycleTimesSec[i]));}s.append("\n");}s.append("※ 커터의 좌→우→좌 반복 패턴을 자동 분리해 각 Cycle을 0~100%로 정규화합니다.");return s.toString();}
+
+    private static Bitmap draw(Result a,Result b,float diff,float speedDiff,int worstStart,int worstEnd){
+        int w=1200,h=1480;Bitmap out=Bitmap.createBitmap(w,h,Bitmap.Config.ARGB_8888);Canvas c=new Canvas(out);c.drawColor(Color.WHITE);Paint p=new Paint(Paint.ANTI_ALIAS_FLAG);
+        p.setColor(Color.rgb(15,48,88));p.setTextSize(38);p.setFakeBoldText(true);c.drawText("v1.5 Cycle Repeatability · A/B",45,55,p);p.setFakeBoldText(false);p.setTextSize(22);p.setColor(Color.DKGRAY);c.drawText("각 반복 Cycle을 0~100%로 정규화 · 내부 재현성 + A/B 평균 궤적/속도 비교",45,92,p);
+        drawOverlayPanel(c,p,a,60,135,1140,395,"A 기준영상 · Cycle 1~10 내부 재현성",Color.rgb(30,100,220));
+        drawOverlayPanel(c,p,b,60,430,1140,690,"B 비교영상 · Cycle 1~10 내부 재현성",Color.rgb(220,75,50));
+        drawComparePanel(c,p,a,b,60,725,1140,975,worstStart,worstEnd);
+        drawSpeedPanel(c,p,a,b,60,1010,1140,1230,worstStart,worstEnd);
+        p.setColor(Color.rgb(15,48,88));p.setTextSize(27);p.setFakeBoldText(true);c.drawText(String.format(Locale.getDefault(),"평균 궤적 차이 %.1f%% · 속도패턴 차이 %.1f%% · 최대 차이 %d~%d%%",diff,speedDiff,worstStart,worstEnd),65,1280,p);p.setFakeBoldText(false);p.setTextSize(21);p.setColor(Color.DKGRAY);
+        c.drawText(String.format(Locale.getDefault(),"A: %d Cycle · Score %.0f/100 · Time CV %.1f%%",a.cycleCount,a.repeatabilityScore,a.cycleTimeCvPct),65,1320,p);
+        c.drawText(String.format(Locale.getDefault(),"B: %d Cycle · Score %.0f/100 · Time CV %.1f%%",b.cycleCount,b.repeatabilityScore,b.cycleTimeCvPct),65,1355,p);
+        c.drawText("해석: Cycle 선들이 촘촘히 겹칠수록 반복 재현성이 좋고, 넓게 퍼지는 구간은 동작 편차 후보입니다.",65,1400,p);
+        c.drawText("※ 영상 기반 상대지표이며 실제 변위/속도/NG 판정은 센서·치수 기준과 별도 검증이 필요합니다.",65,1435,p);
+        return out;
+    }
+
+    private static void drawOverlayPanel(Canvas c,Paint p,Result r,int l,int t,int rr,int b,String title,int color){p.setStyle(Paint.Style.STROKE);p.setStrokeWidth(2);p.setColor(Color.LTGRAY);c.drawRect(l,t,rr,b,p);p.setStyle(Paint.Style.FILL);p.setTextSize(24);p.setFakeBoldText(true);p.setColor(Color.DKGRAY);c.drawText(title,l+10,t+30,p);p.setFakeBoldText(false);int top=t+48,bot=b-30;Paint q=new Paint(Paint.ANTI_ALIAS_FLAG);q.setStyle(Paint.Style.STROKE);q.setStrokeWidth(2.3f);q.setColor(color);q.setAlpha(105);for(float[]cy:r.cycles){for(int i=1;i<cy.length;i++){float x1=l+(rr-l)*(i-1)/(float)(cy.length-1),x2=l+(rr-l)*i/(float)(cy.length-1);float y1=bot-(bot-top)*cy[i-1],y2=bot-(bot-top)*cy[i];c.drawLine(x1,y1,x2,y2,q);}}q.setAlpha(255);q.setStrokeWidth(6);for(int i=1;i<r.meanPosition.length;i++){float x1=l+(rr-l)*(i-1)/(float)(r.meanPosition.length-1),x2=l+(rr-l)*i/(float)(r.meanPosition.length-1);float y1=bot-(bot-top)*r.meanPosition[i-1],y2=bot-(bot-top)*r.meanPosition[i];c.drawLine(x1,y1,x2,y2,q);}p.setTextSize(18);p.setColor(Color.GRAY);c.drawText("0%",l,bot+22,p);c.drawText("50%",(l+rr)/2-20,bot+22,p);c.drawText("100%",rr-50,bot+22,p);}
+    private static void drawComparePanel(Canvas c,Paint p,Result a,Result b,int l,int t,int rr,int bot,int ws,int we){p.setStyle(Paint.Style.STROKE);p.setColor(Color.LTGRAY);p.setStrokeWidth(2);c.drawRect(l,t,rr,bot,p);int top=t+50,bottom=bot-35;p.setStyle(Paint.Style.FILL);p.setColor(Color.argb(35,255,200,0));float x1=l+(rr-l)*ws/100f,x2=l+(rr-l)*we/100f;c.drawRect(x1,top,x2,bottom,p);p.setTextSize(24);p.setFakeBoldText(true);p.setColor(Color.DKGRAY);c.drawText("A 평균 vs B 평균 · 노랑=최대 차이 구간",l+10,t+30,p);p.setFakeBoldText(false);Paint pa=new Paint(Paint.ANTI_ALIAS_FLAG);pa.setStyle(Paint.Style.STROKE);pa.setStrokeWidth(6);pa.setColor(Color.rgb(30,100,220));Paint pb=new Paint(pa);pb.setColor(Color.rgb(220,75,50));for(int i=1;i<a.meanPosition.length;i++){float xa=l+(rr-l)*(i-1)/(float)(a.meanPosition.length-1),xb=l+(rr-l)*i/(float)(a.meanPosition.length-1);c.drawLine(xa,bottom-(bottom-top)*a.meanPosition[i-1],xb,bottom-(bottom-top)*a.meanPosition[i],pa);}for(int i=1;i<b.meanPosition.length;i++){float xa=l+(rr-l)*(i-1)/(float)(b.meanPosition.length-1),xb=l+(rr-l)*i/(float)(b.meanPosition.length-1);c.drawLine(xa,bottom-(bottom-top)*b.meanPosition[i-1],xb,bottom-(bottom-top)*b.meanPosition[i],pb);}p.setStyle(Paint.Style.FILL);p.setTextSize(21);p.setColor(Color.rgb(30,100,220));c.drawText("● A 기준 평균",l+20,bot-8,p);p.setColor(Color.rgb(220,75,50));c.drawText("● B 비교 평균",l+190,bot-8,p);}
+    private static void drawSpeedPanel(Canvas c,Paint p,Result a,Result b,int l,int t,int rr,int bot,int ws,int we){
+        p.setStyle(Paint.Style.STROKE);p.setColor(Color.LTGRAY);p.setStrokeWidth(2);c.drawRect(l,t,rr,bot,p);
+        int top=t+48,bottom=bot-30,mid=(top+bottom)/2;
+        p.setStyle(Paint.Style.FILL);p.setColor(Color.argb(35,255,200,0));float hx1=l+(rr-l)*ws/100f,hx2=l+(rr-l)*we/100f;c.drawRect(hx1,top,hx2,bottom,p);
+        p.setTextSize(24);p.setFakeBoldText(true);p.setColor(Color.DKGRAY);c.drawText("평균 속도 패턴 · A 파랑 / B 빨강",l+10,t+30,p);p.setFakeBoldText(false);
+        p.setColor(Color.LTGRAY);p.setStrokeWidth(2);c.drawLine(l,mid,rr,mid,p);
+        float scale=Math.max(.001f,Math.max(maxAbs(a.meanSpeed),maxAbs(b.meanSpeed)));
+        Paint pa=new Paint(Paint.ANTI_ALIAS_FLAG);pa.setStyle(Paint.Style.STROKE);pa.setStrokeWidth(5);pa.setColor(Color.rgb(30,100,220));Paint pb=new Paint(pa);pb.setColor(Color.rgb(220,75,50));
+        for(int i=1;i<a.meanSpeed.length;i++){float x1=l+(rr-l)*(i-1)/(float)(a.meanSpeed.length-1),x2=l+(rr-l)*i/(float)(a.meanSpeed.length-1);float y1=mid-a.meanSpeed[i-1]/scale*(bottom-top)*.42f,y2=mid-a.meanSpeed[i]/scale*(bottom-top)*.42f;c.drawLine(x1,y1,x2,y2,pa);}
+        for(int i=1;i<b.meanSpeed.length;i++){float x1=l+(rr-l)*(i-1)/(float)(b.meanSpeed.length-1),x2=l+(rr-l)*i/(float)(b.meanSpeed.length-1);float y1=mid-b.meanSpeed[i-1]/scale*(bottom-top)*.42f,y2=mid-b.meanSpeed[i]/scale*(bottom-top)*.42f;c.drawLine(x1,y1,x2,y2,pb);}
+        p.setStyle(Paint.Style.FILL);p.setTextSize(18);p.setColor(Color.GRAY);c.drawText("전진/복귀 방향 변화와 급가속·급감속의 상대 패턴을 비교",l+10,bot-7,p);
+    }
+
+}

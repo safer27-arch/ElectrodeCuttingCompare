@@ -32,21 +32,23 @@ public class MainActivity extends Activity {
     private static final int PICK_A=1001, PICK_B=1002;
     private Uri uriA, uriB;
     private long durationA=0, durationB=0;
-    private TextView txtA,txtB,txtTimeA,txtTimeB,txtStatus,txtDashboard,statusIntegrated,summaryIntegrated,txtOverallVerdict,txtStageDashboard,txtTop3Dashboard;
-    private TextView statusCompare,statusCycle,statusHighSpeed,statusAdvanced,statusEasy,statusDiagnostic,statusRoi;
+    private TextView txtA,txtB,txtTimeA,txtTimeB,txtStatus,txtDashboard,statusIntegrated,summaryIntegrated,txtOverallVerdict,txtStageDashboard,txtTop3Dashboard,txtRepeatabilityDashboard;
+    private TextView statusCompare,statusCycle,statusRepeatability,statusHighSpeed,statusAdvanced,statusEasy,statusDiagnostic,statusRoi;
     private SeekBar seekA,seekB;
-    private ImageView imgA,imgB,imgDiff,imgCycle,imgHighSpeed,imgRoiA,imgRoiB,imgRoiCompare,imgTop1,imgTop2,imgTop3;
+    private ImageView imgA,imgB,imgDiff,imgCycle,imgRepeatability,imgHighSpeed,imgRoiA,imgRoiB,imgRoiCompare,imgTop1,imgTop2,imgTop3;
     private ProgressBar progress,progressIntegrated;
-    private ProgressBar progressCompare,progressCycle,progressHighSpeed,progressAdvanced,progressEasy,progressDiagnostic,progressRoi;
+    private ProgressBar progressCompare,progressCycle,progressRepeatability,progressHighSpeed,progressAdvanced,progressEasy,progressDiagnostic,progressRoi;
     private Button btnSave;
     private Spinner cutterProfile;
-    private Bitmap frameA, alignedB, diffBitmap, cycleBitmap, highSpeedBitmap, advancedBitmap, diagnosticBitmap, roiCompareBitmap;
+    private Bitmap frameA, alignedB, diffBitmap, cycleBitmap, repeatabilityBitmap, highSpeedBitmap, advancedBitmap, diagnosticBitmap, roiCompareBitmap;
     private ImageView imgAdvanced, imgDiagnostic, imgEasyDiagnostic;
     private AdvancedMotionAnalyzer.Result lastAdvanced;
     private Bitmap easyDiagnosticBitmap;
     private BitmapAnalysis.Transform lastTransform;
     private RoiQualityAnalyzer.Metrics roiA, roiB;
     private CycleAnalyzer.Result cycleA, cycleB;
+    private CycleRepeatabilityAnalyzer.Result repeatA, repeatB;
+    private CycleRepeatabilityAnalyzer.CompareResult repeatCompare;
     private final ExecutorService executor=Executors.newSingleThreadExecutor();
 
     @Override protected void onCreate(Bundle savedInstanceState) {
@@ -59,10 +61,11 @@ public class MainActivity extends Activity {
         imgRoiA=findViewById(R.id.imgRoiA); imgRoiB=findViewById(R.id.imgRoiB); imgRoiCompare=findViewById(R.id.imgRoiCompare);
         progress=findViewById(R.id.progress); btnSave=findViewById(R.id.btnSave); imgAdvanced=findViewById(R.id.imgAdvanced); imgDiagnostic=findViewById(R.id.imgDiagnostic); imgEasyDiagnostic=findViewById(R.id.imgEasyDiagnostic);
         txtDashboard=findViewById(R.id.txtDashboard); statusIntegrated=findViewById(R.id.statusIntegrated); summaryIntegrated=findViewById(R.id.summaryIntegrated); progressIntegrated=findViewById(R.id.progressIntegrated);
-        txtOverallVerdict=findViewById(R.id.txtOverallVerdict); txtStageDashboard=findViewById(R.id.txtStageDashboard); txtTop3Dashboard=findViewById(R.id.txtTop3Dashboard);
+        txtOverallVerdict=findViewById(R.id.txtOverallVerdict); txtStageDashboard=findViewById(R.id.txtStageDashboard); txtTop3Dashboard=findViewById(R.id.txtTop3Dashboard); txtRepeatabilityDashboard=findViewById(R.id.txtRepeatabilityDashboard);
         imgTop1=findViewById(R.id.imgTop1); imgTop2=findViewById(R.id.imgTop2); imgTop3=findViewById(R.id.imgTop3);
         progressCompare=findViewById(R.id.progressCompare); statusCompare=findViewById(R.id.statusCompare);
         progressCycle=findViewById(R.id.progressCycle); statusCycle=findViewById(R.id.statusCycle);
+        progressRepeatability=findViewById(R.id.progressRepeatability); statusRepeatability=findViewById(R.id.statusRepeatability); imgRepeatability=findViewById(R.id.imgRepeatability);
         progressHighSpeed=findViewById(R.id.progressHighSpeed); statusHighSpeed=findViewById(R.id.statusHighSpeed);
         progressAdvanced=findViewById(R.id.progressAdvanced); statusAdvanced=findViewById(R.id.statusAdvanced);
         progressEasy=findViewById(R.id.progressEasy); statusEasy=findViewById(R.id.statusEasy);
@@ -82,6 +85,7 @@ public class MainActivity extends Activity {
         findViewById(R.id.btnPreviewB).setOnClickListener(v->preview(uriB));
         findViewById(R.id.btnAnalyze).setOnClickListener(v->analyze());
         findViewById(R.id.btnCycle).setOnClickListener(v->analyzeCycle());
+        findViewById(R.id.btnRepeatability).setOnClickListener(v->analyzeRepeatability());
         findViewById(R.id.btnHighSpeed).setOnClickListener(v->analyzeHighSpeed());
         findViewById(R.id.btnAdvanced).setOnClickListener(v->analyzeAdvanced());
         findViewById(R.id.btnDiagnostic).setOnClickListener(v->analyzeDiagnostic());
@@ -102,7 +106,7 @@ public class MainActivity extends Activity {
         };
         seekA.setOnSeekBarChangeListener(listener); seekB.setOnSeekBarChangeListener(listener);
         restoreState();
-        ImageView[] zoomables={imgA,imgB,imgDiff,imgCycle,imgHighSpeed,imgRoiA,imgRoiB,imgRoiCompare,imgAdvanced,imgDiagnostic,imgEasyDiagnostic,imgTop1,imgTop2,imgTop3};
+        ImageView[] zoomables={imgA,imgB,imgDiff,imgCycle,imgRepeatability,imgHighSpeed,imgRoiA,imgRoiB,imgRoiCompare,imgAdvanced,imgDiagnostic,imgEasyDiagnostic,imgTop1,imgTop2,imgTop3};
         for(ImageView z:zoomables)z.setOnClickListener(v->openZoom((ImageView)v));
     }
 
@@ -112,7 +116,7 @@ public class MainActivity extends Activity {
     private void dashboard(String message){ runOnUiThread(()->txtDashboard.setText(highlight(message))); }
     private android.text.SpannableString highlight(String text){
         android.text.SpannableString sp=new android.text.SpannableString(text);
-        String[] keys={"핵심 차이","확인 필요","큰 차이","주의 후보","이상 후보"};
+        String[] keys={"핵심 차이","확인 필요","큰 차이","재현성 저하","최대 차이","주의 후보","이상 후보"};
         for(String k:keys){int from=0; while((from=text.indexOf(k,from))>=0){int end=from+k.length(); sp.setSpan(new android.text.style.BackgroundColorSpan(Color.rgb(255,235,59)),from,end,android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE); sp.setSpan(new android.text.style.ForegroundColorSpan(Color.rgb(15,20,25)),from,end,android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE); sp.setSpan(new android.text.style.StyleSpan(android.graphics.Typeface.BOLD),from,end,android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE); from=end;}}
         return sp;
     }
@@ -290,24 +294,25 @@ public class MainActivity extends Activity {
     private void analyzeIntegrated(){
         if(uriA==null||uriB==null){Toast.makeText(this,"A/B 영상을 모두 선택해 주세요.",Toast.LENGTH_SHORT).show();return;}
         progressIntegrated.setProgress(3);
-        statusIntegrated.setText("통합검사 시작 · 1/7 카메라 보정 및 A/B 비교");
-        summaryIntegrated.setText("검사 진행 중... 각 세부 분석 결과도 아래 카드에 그대로 유지됩니다.");
+        statusIntegrated.setText("통합검사 시작 · 1/8 카메라 보정 및 A/B 비교");
+        summaryIntegrated.setText("검사 진행 중... Cycle 반복 재현성까지 자동 분석합니다.");
         analyze();
         analyzeCycle();
+        analyzeRepeatability();
         analyzeHighSpeed();
         analyzeAdvanced();
         analyzeEasyDiagnostic();
         analyzeRoi();
         analyzeDiagnostic();
         executor.execute(()->{
-            runOnUiThread(()->{progressIntegrated.setProgress(100); statusIntegrated.setText("통합검사 완료 · 전체 분석 7개 + 파생 진단 Summary 생성 완료");});
+            runOnUiThread(()->{progressIntegrated.setProgress(100); statusIntegrated.setText("통합검사 완료 · 전체 분석 8개 + 파생 진단 Summary 생성 완료");});
             try{Thread.sleep(120);}catch(Exception ignored){}
             runOnUiThread(()->buildIntegratedSummary());
         });
         // Single-thread executor executes the queued analyzers in the same order.
         new Thread(()->{
-            int[] ps={12,25,38,52,66,80,92};
-            String[] names={"2/7 Cycle 반복성","3/7 High-Speed Event","4/7 Timing / Jerk / Multi-Cycle","5/7 Cutter / 공통진동 분리","6/7 ROI Tip / Gripper / Nip","7/7 Golden / Top3 종합진단","Summary 생성"};
+            int[] ps={10,22,34,46,58,70,82,93};
+            String[] names={"2/8 Cycle 패턴","3/8 Cycle 반복 재현성","4/8 High-Speed Event","5/8 Timing / Jerk / Multi-Cycle","6/8 Cutter / 공통진동 분리","7/8 ROI Tip / Gripper / Nip","8/8 Golden / Top3 종합진단","Summary 생성"};
             for(int i=0;i<ps.length;i++){try{Thread.sleep(900);}catch(Exception ignored){} final int q=ps[i]; final String n=names[i]; runOnUiThread(()->{if(progressIntegrated.getProgress()<100){progressIntegrated.setProgress(q);statusIntegrated.setText("통합검사 진행 · "+n);}});}
         }).start();
     }
@@ -320,8 +325,9 @@ public class MainActivity extends Activity {
         sb.append("핵심 확인 항목\n");
         sb.append("• 커팅/복귀 충격 · Jerk · Timing 편차\n");
         sb.append("• Cutter 상대운동과 고정부 공통진동 분리\n");
-        sb.append("• Cycle 반복성 · 전진/복귀 비대칭 · 안정화시간 후보\n");
+        sb.append("• Cycle 반복성 · Cycle Time 편차 · 평균 궤적 A/B 차이 · 안정화시간 후보\n");
         sb.append("• Tip/Gripper/Nip ROI 편차 · Golden 변화 · Top3 이상순간\n\n");
+        if(repeatCompare!=null) sb.append(String.format(Locale.getDefault(),"Cycle 재현성: A %.0f/100 · B %.0f/100 · 평균궤적 차이 %.1f%% · 속도패턴 차이 %.1f%% · 최대차이 %d~%d%%\n",repeatA.repeatabilityScore,repeatB.repeatabilityScore,repeatCompare.meanTrajectoryDifferencePct,repeatCompare.meanSpeedDifferencePct,repeatCompare.worstStartPct,repeatCompare.worstEndPct));
         if(lastAdvanced!=null) sb.append("고급동작: 분석 완료 · Trend/Timing/Jerk 반영\n");
         if(roiA!=null&&roiB!=null) sb.append("ROI: 분석 완료 · Tip/Gripper/Nip 비교 반영\n");
         if(easyDiagnosticBitmap!=null) sb.append("진동보정: 분석 완료 · Common Vibration 분리 반영\n");
@@ -337,9 +343,9 @@ public class MainActivity extends Activity {
         progressCycle.setProgress(5); statusCycle.setText("Cycle 움직임 분석 중... (CPU 경량 분석)");
         executor.execute(()->{
             try{
-                CycleAnalyzer.Result a=CycleAnalyzer.analyze(this,uriA,durationA,"설비 A");
-                runOnUiThread(()->{progressCycle.setProgress(45); statusCycle.setText("설비 B Cycle 분석 중...");});
-                CycleAnalyzer.Result b=CycleAnalyzer.analyze(this,uriB,durationB,"설비 B");
+                CycleAnalyzer.Result a=CycleAnalyzer.analyze(this,uriA,durationA,"A 기준영상");
+                runOnUiThread(()->{progressCycle.setProgress(45); statusCycle.setText("B 비교영상 Cycle 분석 중...");});
+                CycleAnalyzer.Result b=CycleAnalyzer.analyze(this,uriB,durationB,"B 비교영상");
                 Bitmap cmp=CycleAnalyzer.compare(a,b);
                 cycleA=a; cycleB=b; cycleBitmap=cmp;
                 runOnUiThread(()->{
@@ -350,6 +356,34 @@ public class MainActivity extends Activity {
                 runOnUiThread(()->{progressCycle.setProgress(0); statusCycle.setText("Cycle 분석 실패: "+e.getMessage());});
             }
         });
+    }
+
+    private void analyzeRepeatability(){
+        if(uriA==null||uriB==null){Toast.makeText(this,"A/B 영상을 모두 선택해 주세요.",Toast.LENGTH_SHORT).show();return;}
+        progressRepeatability.setProgress(5); statusRepeatability.setText("v1.5 Cycle 반복 재현성 분석 중... A 기준영상 Cycle 자동 분리");
+        executor.execute(()->{
+            try{
+                CycleRepeatabilityAnalyzer.Result a=CycleRepeatabilityAnalyzer.analyze(this,uriA,durationA,"A 기준영상");
+                runOnUiThread(()->{progressRepeatability.setProgress(48);statusRepeatability.setText("B 비교영상 Cycle 자동 분리 및 0~100% 정규화 중...");});
+                CycleRepeatabilityAnalyzer.Result b=CycleRepeatabilityAnalyzer.analyze(this,uriB,durationB,"B 비교영상");
+                CycleRepeatabilityAnalyzer.CompareResult cr=CycleRepeatabilityAnalyzer.compare(a,b);
+                repeatA=a;repeatB=b;repeatCompare=cr;repeatabilityBitmap=cr.chart;
+                runOnUiThread(()->{
+                    progressRepeatability.setProgress(100);imgRepeatability.setImageBitmap(cr.chart);statusRepeatability.setText(a.summary+"\n\n"+b.summary+"\n\n"+cr.summary);btnSave.setEnabled(true);updateRepeatabilityDashboard();
+                });
+            }catch(Exception e){runOnUiThread(()->{progressRepeatability.setProgress(0);statusRepeatability.setText("Cycle 반복 재현성 분석 실패: "+e.getMessage());});}
+        });
+    }
+
+    private void updateRepeatabilityDashboard(){
+        if(repeatCompare==null||repeatA==null||repeatB==null){txtRepeatabilityDashboard.setText("사이클 반복 재현성 · 검사 대기");return;}
+        String bLevel=repeatB.repeatabilityScore>=90?"양호":repeatB.repeatabilityScore>=75?"주의":"재현성 저하 · 확인 필요";
+        String text=String.format(Locale.getDefault(),
+                "사이클 반복 재현성\nA 기준: %d Cycle · %.0f/100 · Time CV %.1f%%\nB 비교: %d Cycle · %.0f/100 · Time CV %.1f%% · %s\nA↔B 평균 궤적 차이 %.1f%% · 속도패턴 차이 %.1f%% · 최대 차이 %d~%d%%",
+                repeatA.cycleCount,repeatA.repeatabilityScore,repeatA.cycleTimeCvPct,
+                repeatB.cycleCount,repeatB.repeatabilityScore,repeatB.cycleTimeCvPct,bLevel,
+                repeatCompare.meanTrajectoryDifferencePct,repeatCompare.meanSpeedDifferencePct,repeatCompare.worstStartPct,repeatCompare.worstEndPct);
+        txtRepeatabilityDashboard.setText(highlight(text));
     }
 
 
@@ -430,7 +464,7 @@ public class MainActivity extends Activity {
         if(view.getDrawable()==null){Toast.makeText(this,"먼저 분석을 실행해 주세요.",Toast.LENGTH_SHORT).show();return;}
         Bitmap b=null;
         if(view==imgA)b=frameA; else if(view==imgB)b=alignedB; else if(view==imgDiff)b=diffBitmap;
-        else if(view==imgCycle)b=cycleBitmap; else if(view==imgHighSpeed)b=highSpeedBitmap; else if(view==imgAdvanced)b=advancedBitmap; else if(view==imgDiagnostic)b=diagnosticBitmap; else if(view==imgEasyDiagnostic)b=easyDiagnosticBitmap;
+        else if(view==imgCycle)b=cycleBitmap; else if(view==imgRepeatability)b=repeatabilityBitmap; else if(view==imgHighSpeed)b=highSpeedBitmap; else if(view==imgAdvanced)b=advancedBitmap; else if(view==imgDiagnostic)b=diagnosticBitmap; else if(view==imgEasyDiagnostic)b=easyDiagnosticBitmap;
         else if(view.getDrawable() instanceof android.graphics.drawable.BitmapDrawable)b=((android.graphics.drawable.BitmapDrawable)view.getDrawable()).getBitmap();
         if(b==null)return;
         try{java.io.File f=new java.io.File(getCacheDir(),"zoom_result.jpg");java.io.FileOutputStream os=new java.io.FileOutputStream(f);b.compress(Bitmap.CompressFormat.JPEG,95,os);os.close();Intent i=new Intent(this,ZoomImageActivity.class);i.putExtra("path",f.getAbsolutePath());startActivity(i);}catch(Exception e){Toast.makeText(this,"확대 열기 실패",Toast.LENGTH_SHORT).show();}
@@ -490,10 +524,11 @@ public class MainActivity extends Activity {
         if(frameA==null||alignedB==null||diffBitmap==null)return null;
         int w=frameA.getWidth(), gap=20, titleH=80, h=frameA.getHeight();
         int cycleExtra=(cycleBitmap==null?0:Math.round((w*3f)*cycleBitmap.getHeight()/cycleBitmap.getWidth())+gap);
+        int repeatExtra=(repeatabilityBitmap==null?0:Math.round((w*3f)*repeatabilityBitmap.getHeight()/repeatabilityBitmap.getWidth())+gap);
         int roiExtra=(roiCompareBitmap==null?0:Math.round((w*3f)*roiCompareBitmap.getHeight()/roiCompareBitmap.getWidth())+gap);
         int advExtra=(advancedBitmap==null?0:Math.round((w*3f)*advancedBitmap.getHeight()/advancedBitmap.getWidth())+gap);
         int diagExtra=(diagnosticBitmap==null?0:Math.round((w*3f)*diagnosticBitmap.getHeight()/diagnosticBitmap.getWidth())+gap);
-        Bitmap out=Bitmap.createBitmap(w*3+gap*4,h+titleH+gap*2+cycleExtra+roiExtra+advExtra+diagExtra,Bitmap.Config.ARGB_8888);
+        Bitmap out=Bitmap.createBitmap(w*3+gap*4,h+titleH+gap*2+cycleExtra+repeatExtra+roiExtra+advExtra+diagExtra,Bitmap.Config.ARGB_8888);
         Canvas c=new Canvas(out); c.drawColor(Color.WHITE); Paint p=new Paint(Paint.ANTI_ALIAS_FLAG); p.setColor(Color.rgb(12,45,87)); p.setTextSize(34); p.setFakeBoldText(true);
         c.drawText("전극 컷팅 A/B 비교 · A / 보정 B / Difference",gap,52,p);
         c.drawBitmap(frameA,gap,titleH+gap,p); c.drawBitmap(alignedB,w+gap*2,titleH+gap,p); c.drawBitmap(diffBitmap,w*2+gap*3,titleH+gap,p);
@@ -501,6 +536,11 @@ public class MainActivity extends Activity {
         if(cycleBitmap!=null){
             int cw=w*3+gap*2; int ch=Math.round(cw*(cycleBitmap.getHeight()/(float)cycleBitmap.getWidth()));
             Bitmap scaled=Bitmap.createScaledBitmap(cycleBitmap,cw,ch,true);
+            c.drawBitmap(scaled,gap,y,p); y+=ch+gap;
+        }
+        if(repeatabilityBitmap!=null){
+            int cw=w*3+gap*2; int ch=Math.round(cw*(repeatabilityBitmap.getHeight()/(float)repeatabilityBitmap.getWidth()));
+            Bitmap scaled=Bitmap.createScaledBitmap(repeatabilityBitmap,cw,ch,true);
             c.drawBitmap(scaled,gap,y,p); y+=ch+gap;
         }
         if(roiCompareBitmap!=null){
