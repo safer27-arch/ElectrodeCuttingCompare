@@ -1,3 +1,5 @@
+# ElectrodeCuttingCompare v1.4.2 Update Test
+
 # ElectrodeCuttingCompare v1.3 Field Dashboard
 
 현장 사용자는 A/B 영상을 선택한 뒤 **통합검사 START** 한 번으로 분석을 실행합니다. 상단 Dashboard에서 종합판정, 5단계 Cutter 추정 상태, Top3 이상순간과 순간 프레임을 먼저 확인하고, 필요할 때만 전문가 상세분석을 펼칩니다.

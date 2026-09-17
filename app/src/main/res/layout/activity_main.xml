@@ -26,7 +26,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
-            android:text="v1.4 · REFERENCE A vs TEST B + TOP3 DIFFERENCE  |  Cutter-relative Motion Intelligence"
+            android:text="v1.4.2 · UPDATE TEST · REFERENCE A vs TEST B + TOP3  |  Permanent Signing"
             android:textColor="@color/text_dark"
             android:textSize="14sp" />
 
