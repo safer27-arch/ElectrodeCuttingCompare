@@ -91,3 +91,6 @@ GitHub Actions > Build Android APK > Run workflow를 실행합니다.
 - TOP3 이미지를 누르면 기존 전체화면 Zoom 화면으로 이동하여 핀치 확대 및 드래그 이동이 가능합니다.
 - B 영상은 가능한 경우 기존 촬영각 자동 보정값을 적용한 비교 프레임으로 표시합니다.
 - Permanent Signing workflow를 유지하여 기존 설치 앱 위에 업데이트 설치할 수 있도록 versionCode를 증가시켰습니다.
+
+## v1.6 Cycle Intelligence
+v1.5 반복재현성 분석을 확장해 B 비교영상의 Worst Cycle TOP3, Cycle 편차 Heatmap, 5개 동작구간별 반복성 Spread, Cycle Time Trend를 추가했습니다. 통합검사 START 한 번으로 자동 실행되며 결과 그래프는 기존처럼 확대해서 확인할 수 있습니다.

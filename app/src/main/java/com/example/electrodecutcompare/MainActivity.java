@@ -116,7 +116,7 @@ public class MainActivity extends Activity {
     private void dashboard(String message){ runOnUiThread(()->txtDashboard.setText(highlight(message))); }
     private android.text.SpannableString highlight(String text){
         android.text.SpannableString sp=new android.text.SpannableString(text);
-        String[] keys={"핵심 차이","확인 필요","큰 차이","재현성 저하","최대 차이","주의 후보","이상 후보"};
+        String[] keys={"핵심 차이","확인 필요","큰 차이","재현성 저하","최대 차이","주의 후보","이상 후보","Worst Cycle","문제 집중 구간","Cycle Time 변동","TOP1"};
         for(String k:keys){int from=0; while((from=text.indexOf(k,from))>=0){int end=from+k.length(); sp.setSpan(new android.text.style.BackgroundColorSpan(Color.rgb(255,235,59)),from,end,android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE); sp.setSpan(new android.text.style.ForegroundColorSpan(Color.rgb(15,20,25)),from,end,android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE); sp.setSpan(new android.text.style.StyleSpan(android.graphics.Typeface.BOLD),from,end,android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE); from=end;}}
         return sp;
     }
@@ -295,7 +295,7 @@ public class MainActivity extends Activity {
         if(uriA==null||uriB==null){Toast.makeText(this,"A/B 영상을 모두 선택해 주세요.",Toast.LENGTH_SHORT).show();return;}
         progressIntegrated.setProgress(3);
         statusIntegrated.setText("통합검사 시작 · 1/8 카메라 보정 및 A/B 비교");
-        summaryIntegrated.setText("검사 진행 중... Cycle 반복 재현성까지 자동 분석합니다.");
+        summaryIntegrated.setText("검사 진행 중... v1.6 Cycle Intelligence까지 자동 분석합니다.");
         analyze();
         analyzeCycle();
         analyzeRepeatability();
@@ -327,7 +327,7 @@ public class MainActivity extends Activity {
         sb.append("• Cutter 상대운동과 고정부 공통진동 분리\n");
         sb.append("• Cycle 반복성 · Cycle Time 편차 · 평균 궤적 A/B 차이 · 안정화시간 후보\n");
         sb.append("• Tip/Gripper/Nip ROI 편차 · Golden 변화 · Top3 이상순간\n\n");
-        if(repeatCompare!=null) sb.append(String.format(Locale.getDefault(),"Cycle 재현성: A %.0f/100 · B %.0f/100 · 평균궤적 차이 %.1f%% · 속도패턴 차이 %.1f%% · 최대차이 %d~%d%%\n",repeatA.repeatabilityScore,repeatB.repeatabilityScore,repeatCompare.meanTrajectoryDifferencePct,repeatCompare.meanSpeedDifferencePct,repeatCompare.worstStartPct,repeatCompare.worstEndPct));
+        if(repeatCompare!=null) sb.append(String.format(Locale.getDefault(),"Cycle Intelligence: A %.0f/100 · B %.0f/100 · 평균궤적 차이 %.1f%% · 속도패턴 차이 %.1f%% · 최대차이 %d~%d%%\n",repeatA.repeatabilityScore,repeatB.repeatabilityScore,repeatCompare.meanTrajectoryDifferencePct,repeatCompare.meanSpeedDifferencePct,repeatCompare.worstStartPct,repeatCompare.worstEndPct));
         if(lastAdvanced!=null) sb.append("고급동작: 분석 완료 · Trend/Timing/Jerk 반영\n");
         if(roiA!=null&&roiB!=null) sb.append("ROI: 분석 완료 · Tip/Gripper/Nip 비교 반영\n");
         if(easyDiagnosticBitmap!=null) sb.append("진동보정: 분석 완료 · Common Vibration 분리 반영\n");
@@ -360,7 +360,7 @@ public class MainActivity extends Activity {
 
     private void analyzeRepeatability(){
         if(uriA==null||uriB==null){Toast.makeText(this,"A/B 영상을 모두 선택해 주세요.",Toast.LENGTH_SHORT).show();return;}
-        progressRepeatability.setProgress(5); statusRepeatability.setText("v1.5 Cycle 반복 재현성 분석 중... A 기준영상 Cycle 자동 분리");
+        progressRepeatability.setProgress(5); statusRepeatability.setText("v1.6 Cycle Intelligence 분석 중... A 기준영상 Cycle 자동 분리");
         executor.execute(()->{
             try{
                 CycleRepeatabilityAnalyzer.Result a=CycleRepeatabilityAnalyzer.analyze(this,uriA,durationA,"A 기준영상");
@@ -376,15 +376,29 @@ public class MainActivity extends Activity {
     }
 
     private void updateRepeatabilityDashboard(){
-        if(repeatCompare==null||repeatA==null||repeatB==null){txtRepeatabilityDashboard.setText("사이클 반복 재현성 · 검사 대기");return;}
+        if(repeatCompare==null||repeatA==null||repeatB==null){txtRepeatabilityDashboard.setText("Cycle Intelligence · 검사 대기");return;}
         String bLevel=repeatB.repeatabilityScore>=90?"양호":repeatB.repeatabilityScore>=75?"주의":"재현성 저하 · 확인 필요";
+        StringBuilder ranked=new StringBuilder();
+        if(repeatB.worstCycleIndices!=null){
+            for(int k=0;k<repeatB.worstCycleIndices.length;k++){
+                if(k>0)ranked.append("  ");
+                ranked.append(k==0?"🥇 ":k==1?"🥈 ":"🥉 ")
+                      .append("Cycle ").append(repeatB.worstCycleIndices[k]+1)
+                      .append(String.format(Locale.getDefault()," %.1f%%",repeatB.worstCycleDeviationPct[k]));
+            }
+        }
+        String[] stages={"대기/초기 0~25%","전진가속 25~45%","커팅/충격 45~55%","복귀가속 55~80%","안정화 80~100%"};
+        int wi=Math.max(0,Math.min(stages.length-1,repeatB.worstStageIndex));
+        float stageSpread=(repeatB.stageSpreadPct!=null&&wi<repeatB.stageSpreadPct.length)?repeatB.stageSpreadPct[wi]:0f;
         String text=String.format(Locale.getDefault(),
-                "사이클 반복 재현성\nA 기준: %d Cycle · %.0f/100 · Time CV %.1f%%\nB 비교: %d Cycle · %.0f/100 · Time CV %.1f%% · %s\nA↔B 평균 궤적 차이 %.1f%% · 속도패턴 차이 %.1f%% · 최대 차이 %d~%d%%",
+                "v1.6 Cycle Intelligence\nA 기준: %d Cycle · %.0f/100 · Time CV %.1f%%\nB 비교: %d Cycle · %.0f/100 · Time CV %.1f%% · %s\n\nWorst Cycle TOP3\n%s\n문제 집중 구간: %s · 퍼짐 %.1f%%\nCycle Time Trend: %+.1f%%\n\nA↔B 평균 궤적 차이 %.1f%% · 속도패턴 차이 %.1f%% · 최대 차이 %d~%d%%",
                 repeatA.cycleCount,repeatA.repeatabilityScore,repeatA.cycleTimeCvPct,
                 repeatB.cycleCount,repeatB.repeatabilityScore,repeatB.cycleTimeCvPct,bLevel,
+                ranked.length()==0?"Cycle 부족":ranked.toString(),stages[wi],stageSpread,repeatB.cycleTimeTrendPct,
                 repeatCompare.meanTrajectoryDifferencePct,repeatCompare.meanSpeedDifferencePct,repeatCompare.worstStartPct,repeatCompare.worstEndPct);
         txtRepeatabilityDashboard.setText(highlight(text));
     }
+
 
 
     private void analyzeHighSpeed(){

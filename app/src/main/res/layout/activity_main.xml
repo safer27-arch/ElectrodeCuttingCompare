@@ -26,7 +26,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
-            android:text="v1.5 · CYCLE REPEATABILITY + TOP3 A/B ZOOM  |  Permanent Signing"
+            android:text="v1.6 · CYCLE INTELLIGENCE + TOP3 A/B ZOOM  |  Permanent Signing"
             android:textColor="@color/text_dark"
             android:textSize="14sp" />
 
@@ -48,7 +48,7 @@
         <ImageView android:id="@+id/imgTop2" android:layout_width="match_parent" android:layout_height="170dp" android:layout_marginTop="8dp" android:background="#0B1523" android:adjustViewBounds="true" android:scaleType="fitCenter" android:visibility="gone"/>
         <ImageView android:id="@+id/imgTop3" android:layout_width="match_parent" android:layout_height="170dp" android:layout_marginTop="8dp" android:background="#0B1523" android:adjustViewBounds="true" android:scaleType="fitCenter" android:visibility="gone"/>
 
-        <TextView android:id="@+id/txtRepeatabilityDashboard" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:background="@drawable/panel" android:padding="12dp" android:text="사이클 반복 재현성 · 검사 대기&#10;A/B 내부 반복성, Cycle Time 편차, 평균 궤적 차이를 통합검사에서 자동 분석합니다." android:textSize="15sp" android:textStyle="bold"/>
+        <TextView android:id="@+id/txtRepeatabilityDashboard" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:background="@drawable/panel" android:padding="12dp" android:text="Cycle Intelligence · 검사 대기&#10;Worst Cycle TOP3, Heatmap, 구간별 반복성, Cycle Time Trend를 통합검사에서 자동 분석합니다." android:textSize="15sp" android:textStyle="bold"/>
 
         <TextView android:id="@+id/txtDashboard" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="10dp" android:background="@drawable/panel" android:padding="12dp" android:text="SYSTEM READY  •  종합 진단 대기\nA 기준영상과 B 비교영상을 선택하고 분석을 시작하세요.\n결과는 각 분석 카드에 독립적으로 유지됩니다." android:textSize="16sp" android:textStyle="bold"/>
 
@@ -151,7 +151,7 @@
         <ProgressBar android:id="@+id/progressCycle" style="?android:attr/progressBarStyleHorizontal" android:layout_width="match_parent" android:layout_height="wrap_content" android:max="100" android:progress="0"/>
         <TextView android:id="@+id/statusCycle" android:layout_width="match_parent" android:layout_height="wrap_content" android:background="@drawable/panel" android:padding="8dp" android:text="Cycle 패턴 비교 · 대기" android:textSize="13sp"/>
 
-        <Button android:id="@+id/btnRepeatability" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="v1.5 사이클 반복 재현성 · Cycle 1~10 Overlay / A-B 평균궤적" android:textStyle="bold" android:background="@drawable/button_primary" android:textColor="#FFFFFF" android:minHeight="54dp"/>
+        <Button android:id="@+id/btnRepeatability" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="v1.6 Cycle Intelligence · 반복성 TOP3 · Heatmap · 구간별 Score" android:textStyle="bold" android:background="@drawable/button_primary" android:textColor="#FFFFFF" android:minHeight="54dp"/>
         <ProgressBar android:id="@+id/progressRepeatability" style="?android:attr/progressBarStyleHorizontal" android:layout_width="match_parent" android:layout_height="wrap_content" android:max="100" android:progress="0"/>
         <TextView android:id="@+id/statusRepeatability" android:layout_width="match_parent" android:layout_height="wrap_content" android:background="@drawable/panel" android:padding="8dp" android:text="Cycle 반복 재현성 · 대기" android:textSize="13sp"/>
 
@@ -280,8 +280,8 @@
             android:background="#0B1523"
             android:scaleType="fitCenter" />
 
-        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="10dp" android:text="v1.5 Cycle Repeatability · A/B 내부 Overlay + 평균 궤적 비교 (누르면 확대)" android:textStyle="bold"/>
-        <ImageView android:id="@+id/imgRepeatability" android:layout_width="match_parent" android:layout_height="330dp" android:adjustViewBounds="true" android:background="#0B1523" android:scaleType="fitCenter"/>
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="10dp" android:text="v1.6 Cycle Intelligence · Overlay + Heatmap + Worst Cycle TOP3 (누르면 확대)" android:textStyle="bold"/>
+        <ImageView android:id="@+id/imgRepeatability" android:layout_width="match_parent" android:layout_height="460dp" android:adjustViewBounds="true" android:background="#0B1523" android:scaleType="fitCenter"/>
 
         <TextView
             android:layout_width="match_parent"

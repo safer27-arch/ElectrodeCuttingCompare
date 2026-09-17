@@ -34,6 +34,12 @@ public final class CycleRepeatabilityAnalyzer {
         public float[] stdPosition;
         public float[] meanSpeed;
         public List<float[]> cycles;
+        public float[] cycleDeviationPct;
+        public int[] worstCycleIndices;
+        public float[] worstCycleDeviationPct;
+        public float[] stageSpreadPct;
+        public int worstStageIndex;
+        public float cycleTimeTrendPct;
         public String summary;
         public boolean reliable;
     }
@@ -88,6 +94,13 @@ public final class CycleRepeatabilityAnalyzer {
         float trajectoryPenalty=Math.min(72f,spread*420f);
         float timingPenalty=Math.min(28f,r.cycleTimeCvPct*2.2f);
         r.repeatabilityScore=r.reliable?Math.max(0f,100f-trajectoryPenalty-timingPenalty):0f;
+        r.cycleDeviationPct=cycleDeviationPct(r.cycles,r.meanPosition);
+        r.worstCycleIndices=topIndices(r.cycleDeviationPct,3);
+        r.worstCycleDeviationPct=new float[r.worstCycleIndices.length];
+        for(int i=0;i<r.worstCycleIndices.length;i++){int q=r.worstCycleIndices[i];r.worstCycleDeviationPct[i]=(q>=0&&q<r.cycleDeviationPct.length)?r.cycleDeviationPct[q]:0f;}
+        r.stageSpreadPct=stageSpreadPct(r.stdPosition);
+        r.worstStageIndex=maxIndex(r.stageSpreadPct);
+        r.cycleTimeTrendPct=cycleTimeTrendPct(r.cycleTimesSec);
         r.summary=buildSummary(r);
         return r;
     }
@@ -112,6 +125,10 @@ public final class CycleRepeatabilityAnalyzer {
             if(b.repeatabilityScore+8<a.repeatabilityScore) s.append("확인 필요: B의 반복 궤적 퍼짐이 A보다 큽니다.\n");
             if(b.cycleTimeCvPct>a.cycleTimeCvPct+2.0f) s.append("확인 필요: B의 Cycle Time 변동이 A보다 큽니다.\n");
         }
+        s.append("\nCycle Intelligence\n");
+        s.append(worstCycleLine(b));
+        s.append(String.format(Locale.getDefault(),"문제 집중 구간: %s · 구간 퍼짐 %.1f%%\n",stageName(b.worstStageIndex),safeAt(b.stageSpreadPct,b.worstStageIndex)));
+        s.append(String.format(Locale.getDefault(),"Cycle Time Trend: 첫→마지막 상대 변화 %+.1f%%\n",b.cycleTimeTrendPct));
         s.append("※ 각 Cycle을 0~100%로 시간 정규화한 영상 기반 상대 비교입니다. 실제 mm/속도/NG 한계는 별도 검증이 필요합니다.");
         return new CompareResult(draw(a,b,meanDiff,speedDiff,start,end),s.toString(),meanDiff,start,end,speedDiff);
     }
@@ -175,22 +192,85 @@ public final class CycleRepeatabilityAnalyzer {
     private static void fillMissingTimes(long[]t,long duration){for(int i=0;i<t.length;i++)if(t[i]==0)t[i]=Math.round(duration*(i+1)/(double)t.length);}
     private static void normalize01(float[]a){float lo=min(a),hi=max(a),r=Math.max(.001f,hi-lo);for(int i=0;i<a.length;i++)a[i]=(a[i]-lo)/r;}
 
-    private static String buildSummary(Result r){StringBuilder s=new StringBuilder();s.append(r.label).append(" · Cycle 반복 재현성\n");if(!r.reliable){s.append("검출 Cycle ").append(r.cycleCount).append("개 · 반복성 계산에 Cycle이 부족합니다. 촬영 시간을 늘리거나 커터가 여러 번 왕복하도록 촬영해 주세요.\n");}else{s.append(String.format(Locale.getDefault(),"검출 Cycle %d개 · 재현성 %.0f/100 · 평균 Cycle Time %.3fs · Time CV %.1f%%\n",r.cycleCount,r.repeatabilityScore,r.meanCycleSec,r.cycleTimeCvPct));s.append("Cycle Time: ");for(int i=0;i<r.cycleTimesSec.length&&i<10;i++){if(i>0)s.append(" / ");s.append(String.format(Locale.getDefault(),"%.3fs",r.cycleTimesSec[i]));}s.append("\n");}s.append("※ 커터의 좌→우→좌 반복 패턴을 자동 분리해 각 Cycle을 0~100%로 정규화합니다.");return s.toString();}
+    private static String buildSummary(Result r){
+        StringBuilder s=new StringBuilder();
+        s.append(r.label).append(" · Cycle 반복 재현성\n");
+        if(!r.reliable){
+            s.append("검출 Cycle ").append(r.cycleCount).append("개 · 반복성 계산에 Cycle이 부족합니다. 촬영 시간을 늘리거나 커터가 여러 번 왕복하도록 촬영해 주세요.\n");
+        }else{
+            s.append(String.format(Locale.getDefault(),"검출 Cycle %d개 · 재현성 %.0f/100 · 평균 Cycle Time %.3fs · Time CV %.1f%%\n",r.cycleCount,r.repeatabilityScore,r.meanCycleSec,r.cycleTimeCvPct));
+            s.append("Cycle Time: ");
+            for(int i=0;i<r.cycleTimesSec.length&&i<10;i++){if(i>0)s.append(" / ");s.append(String.format(Locale.getDefault(),"%.3fs",r.cycleTimesSec[i]));}
+            s.append("\n");
+            s.append(worstCycleLine(r));
+            s.append(String.format(Locale.getDefault(),"문제 집중 구간: %s · 구간 퍼짐 %.1f%% · Cycle Time Trend %+.1f%%\n",stageName(r.worstStageIndex),safeAt(r.stageSpreadPct,r.worstStageIndex),r.cycleTimeTrendPct));
+        }
+        s.append("※ 커터의 좌→우→좌 반복 패턴을 자동 분리해 각 Cycle을 0~100%로 정규화합니다.");
+        return s.toString();
+    }
+
+    private static float[] cycleDeviationPct(List<float[]> cycles,float[] mean){
+        if(cycles==null)return new float[0];
+        float[] out=new float[cycles.size()];
+        for(int c=0;c<cycles.size();c++){float[] x=cycles.get(c);float sum=0;int n=Math.min(x.length,mean.length);for(int i=0;i<n;i++)sum+=Math.abs(x[i]-mean[i]);out[c]=n==0?0:(sum/n)*100f;}
+        return out;
+    }
+    private static int[] topIndices(float[] a,int count){
+        int n=Math.min(count,a==null?0:a.length);int[] out=new int[n];Arrays.fill(out,-1);boolean[] used=new boolean[a.length];
+        for(int k=0;k<n;k++){float best=-1;int bi=-1;for(int i=0;i<a.length;i++)if(!used[i]&&a[i]>best){best=a[i];bi=i;}if(bi>=0){out[k]=bi;used[bi]=true;}}
+        return out;
+    }
+    private static float[] stageSpreadPct(float[] std){
+        int[][] ranges={{0,25},{25,45},{45,55},{55,80},{80,100}};float[] out=new float[ranges.length];
+        for(int r=0;r<ranges.length;r++){float sum=0;int n=0;for(int i=ranges[r][0];i<=ranges[r][1]&&i<std.length;i++){sum+=std[i];n++;}out[r]=(n==0?0:sum/n)*100f;}
+        return out;
+    }
+    private static int maxIndex(float[] a){if(a==null||a.length==0)return 0;int bi=0;for(int i=1;i<a.length;i++)if(a[i]>a[bi])bi=i;return bi;}
+    private static float cycleTimeTrendPct(float[] t){if(t==null||t.length<2)return 0;float m=mean(t);if(m<=0)return 0;return (t[t.length-1]-t[0])/m*100f;}
+    private static float safeAt(float[] a,int i){return a!=null&&i>=0&&i<a.length?a[i]:0f;}
+    private static String stageName(int i){String[] n={"대기/초기 0~25%","전진가속 25~45%","커팅/충격 45~55%","복귀가속 55~80%","안정화 80~100%"};return i>=0&&i<n.length?n[i]:n[0];}
+    private static String worstCycleLine(Result r){
+        StringBuilder s=new StringBuilder("Worst Cycle TOP3: ");
+        if(r.worstCycleIndices==null||r.worstCycleIndices.length==0)return s.append("Cycle 부족\n").toString();
+        for(int k=0;k<r.worstCycleIndices.length;k++){if(k>0)s.append(" · ");int idx=r.worstCycleIndices[k];s.append(k==0?"🥇 ":k==1?"🥈 ":"🥉 ").append("Cycle ").append(idx+1).append(String.format(Locale.getDefault()," (%.1f%%)",safeAt(r.worstCycleDeviationPct,k)));}
+        return s.append("\n").toString();
+    }
 
     private static Bitmap draw(Result a,Result b,float diff,float speedDiff,int worstStart,int worstEnd){
-        int w=1200,h=1480;Bitmap out=Bitmap.createBitmap(w,h,Bitmap.Config.ARGB_8888);Canvas c=new Canvas(out);c.drawColor(Color.WHITE);Paint p=new Paint(Paint.ANTI_ALIAS_FLAG);
-        p.setColor(Color.rgb(15,48,88));p.setTextSize(38);p.setFakeBoldText(true);c.drawText("v1.5 Cycle Repeatability · A/B",45,55,p);p.setFakeBoldText(false);p.setTextSize(22);p.setColor(Color.DKGRAY);c.drawText("각 반복 Cycle을 0~100%로 정규화 · 내부 재현성 + A/B 평균 궤적/속도 비교",45,92,p);
+        int w=1200,h=2080;Bitmap out=Bitmap.createBitmap(w,h,Bitmap.Config.ARGB_8888);Canvas c=new Canvas(out);c.drawColor(Color.WHITE);Paint p=new Paint(Paint.ANTI_ALIAS_FLAG);
+        p.setColor(Color.rgb(15,48,88));p.setTextSize(38);p.setFakeBoldText(true);c.drawText("v1.6 Cycle Intelligence · A/B",45,55,p);p.setFakeBoldText(false);p.setTextSize(22);p.setColor(Color.DKGRAY);c.drawText("Cycle 1~10 Overlay + Worst Cycle TOP3 + Heatmap + 구간별 반복성",45,92,p);
         drawOverlayPanel(c,p,a,60,135,1140,395,"A 기준영상 · Cycle 1~10 내부 재현성",Color.rgb(30,100,220));
         drawOverlayPanel(c,p,b,60,430,1140,690,"B 비교영상 · Cycle 1~10 내부 재현성",Color.rgb(220,75,50));
         drawComparePanel(c,p,a,b,60,725,1140,975,worstStart,worstEnd);
         drawSpeedPanel(c,p,a,b,60,1010,1140,1230,worstStart,worstEnd);
-        p.setColor(Color.rgb(15,48,88));p.setTextSize(27);p.setFakeBoldText(true);c.drawText(String.format(Locale.getDefault(),"평균 궤적 차이 %.1f%% · 속도패턴 차이 %.1f%% · 최대 차이 %d~%d%%",diff,speedDiff,worstStart,worstEnd),65,1280,p);p.setFakeBoldText(false);p.setTextSize(21);p.setColor(Color.DKGRAY);
-        c.drawText(String.format(Locale.getDefault(),"A: %d Cycle · Score %.0f/100 · Time CV %.1f%%",a.cycleCount,a.repeatabilityScore,a.cycleTimeCvPct),65,1320,p);
-        c.drawText(String.format(Locale.getDefault(),"B: %d Cycle · Score %.0f/100 · Time CV %.1f%%",b.cycleCount,b.repeatabilityScore,b.cycleTimeCvPct),65,1355,p);
-        c.drawText("해석: Cycle 선들이 촘촘히 겹칠수록 반복 재현성이 좋고, 넓게 퍼지는 구간은 동작 편차 후보입니다.",65,1400,p);
-        c.drawText("※ 영상 기반 상대지표이며 실제 변위/속도/NG 판정은 센서·치수 기준과 별도 검증이 필요합니다.",65,1435,p);
+        drawHeatmapPanel(c,p,b,60,1265,1140,1515);
+        drawRankingPanel(c,p,b,60,1550,1140,1795);
+        drawCycleTimePanel(c,p,a,b,60,1830,1140,2010);
+        p.setColor(Color.DKGRAY);p.setTextSize(18);c.drawText("※ 영상 기반 상대지표입니다. 센서 실측/치수/NG 한계값은 별도 검증이 필요합니다.",65,2050,p);
         return out;
     }
+
+    private static void drawHeatmapPanel(Canvas c,Paint p,Result r,int l,int t,int rr,int bot){
+        p.setStyle(Paint.Style.STROKE);p.setStrokeWidth(2);p.setColor(Color.LTGRAY);c.drawRect(l,t,rr,bot,p);
+        p.setStyle(Paint.Style.FILL);p.setTextSize(24);p.setFakeBoldText(true);p.setColor(Color.DKGRAY);c.drawText("B Cycle 편차 Heatmap · 진할수록 평균 궤적에서 멀어짐",l+10,t+30,p);p.setFakeBoldText(false);
+        int top=t+48,bottom=bot-28;int rows=Math.max(1,r.cycles.size());float cellH=(bottom-top)/(float)rows;
+        for(int row=0;row<r.cycles.size();row++){float[] cy=r.cycles.get(row);for(int i=0;i<cy.length;i++){float dev=Math.abs(cy[i]-r.meanPosition[i]);float q=Math.min(1f,dev/.22f);int red=(int)(245*q+30*(1-q));int green=(int)(205*(1-q)+55);int blue=(int)(65*(1-q)+35);p.setColor(Color.rgb(Math.min(255,red),Math.min(255,green),Math.min(255,blue)));float x1=l+(rr-l)*i/(float)cy.length,x2=l+(rr-l)*(i+1)/(float)cy.length,y1=top+row*cellH,y2=top+(row+1)*cellH;c.drawRect(x1,y1,x2,y2,p);}
+            p.setColor(Color.DKGRAY);p.setTextSize(15);c.drawText("C"+(row+1),l+3,top+(row+.75f)*cellH,p);}
+        p.setTextSize(16);p.setColor(Color.GRAY);c.drawText("0%",l,bot-7,p);c.drawText("50%",(l+rr)/2-18,bot-7,p);c.drawText("100%",rr-45,bot-7,p);
+    }
+
+    private static void drawRankingPanel(Canvas c,Paint p,Result r,int l,int t,int rr,int bot){
+        p.setStyle(Paint.Style.STROKE);p.setStrokeWidth(2);p.setColor(Color.LTGRAY);c.drawRect(l,t,rr,bot,p);p.setStyle(Paint.Style.FILL);
+        p.setTextSize(24);p.setFakeBoldText(true);p.setColor(Color.DKGRAY);c.drawText("Worst Cycle TOP3 + 구간별 반복성",l+10,t+30,p);p.setFakeBoldText(false);
+        int y=t+68;p.setTextSize(22);for(int k=0;k<r.worstCycleIndices.length;k++){int idx=r.worstCycleIndices[k];String rank=k==0?"1위":k==1?"2위":"3위";p.setColor(k==0?Color.rgb(190,80,30):Color.DKGRAY);c.drawText(String.format(Locale.getDefault(),"%s · Cycle %d · 평균궤적 편차 %.1f%%",rank,idx+1,safeAt(r.worstCycleDeviationPct,k)),l+20,y,p);y+=34;}
+        y+=8;String[] names={"대기/초기","전진가속","커팅/충격","복귀가속","안정화"};float max=Math.max(.001f,max(r.stageSpreadPct));for(int i=0;i<names.length;i++){float val=safeAt(r.stageSpreadPct,i);float x2=l+200+(rr-l-240)*(val/max);p.setColor(i==r.worstStageIndex?Color.rgb(235,145,30):Color.rgb(80,130,190));c.drawRect(l+200,y-17,x2,y+4,p);p.setColor(Color.DKGRAY);p.setTextSize(18);c.drawText(names[i],l+20,y,p);c.drawText(String.format(Locale.getDefault(),"%.1f%%",val),rr-75,y,p);y+=29;}
+    }
+
+    private static void drawCycleTimePanel(Canvas c,Paint p,Result a,Result b,int l,int t,int rr,int bot){
+        p.setStyle(Paint.Style.STROKE);p.setStrokeWidth(2);p.setColor(Color.LTGRAY);c.drawRect(l,t,rr,bot,p);p.setStyle(Paint.Style.FILL);p.setTextSize(24);p.setFakeBoldText(true);p.setColor(Color.DKGRAY);c.drawText("Cycle Time Trend · A 파랑 / B 빨강",l+10,t+30,p);p.setFakeBoldText(false);
+        int top=t+48,bottom=bot-35;float maxT=Math.max(.001f,Math.max(max(a.cycleTimesSec),max(b.cycleTimesSec)));Paint pa=new Paint(Paint.ANTI_ALIAS_FLAG);pa.setStyle(Paint.Style.STROKE);pa.setStrokeWidth(5);pa.setColor(Color.rgb(30,100,220));Paint pb=new Paint(pa);pb.setColor(Color.rgb(220,75,50));drawTimeLine(c,a.cycleTimesSec,l,top,rr,bottom,maxT,pa);drawTimeLine(c,b.cycleTimesSec,l,top,rr,bottom,maxT,pb);p.setStyle(Paint.Style.FILL);p.setTextSize(18);p.setColor(Color.DKGRAY);c.drawText(String.format(Locale.getDefault(),"A Trend %+.1f%% · B Trend %+.1f%%",a.cycleTimeTrendPct,b.cycleTimeTrendPct),l+20,bot-8,p);
+    }
+    private static void drawTimeLine(Canvas c,float[] a,int l,int top,int rr,int bottom,float maxT,Paint p){if(a==null||a.length<2)return;for(int i=1;i<a.length;i++){float x1=l+(rr-l)*(i-1)/(float)Math.max(1,a.length-1),x2=l+(rr-l)*i/(float)Math.max(1,a.length-1);float y1=bottom-(bottom-top)*(a[i-1]/maxT),y2=bottom-(bottom-top)*(a[i]/maxT);c.drawLine(x1,y1,x2,y2,p);}}
 
     private static void drawOverlayPanel(Canvas c,Paint p,Result r,int l,int t,int rr,int b,String title,int color){p.setStyle(Paint.Style.STROKE);p.setStrokeWidth(2);p.setColor(Color.LTGRAY);c.drawRect(l,t,rr,b,p);p.setStyle(Paint.Style.FILL);p.setTextSize(24);p.setFakeBoldText(true);p.setColor(Color.DKGRAY);c.drawText(title,l+10,t+30,p);p.setFakeBoldText(false);int top=t+48,bot=b-30;Paint q=new Paint(Paint.ANTI_ALIAS_FLAG);q.setStyle(Paint.Style.STROKE);q.setStrokeWidth(2.3f);q.setColor(color);q.setAlpha(105);for(float[]cy:r.cycles){for(int i=1;i<cy.length;i++){float x1=l+(rr-l)*(i-1)/(float)(cy.length-1),x2=l+(rr-l)*i/(float)(cy.length-1);float y1=bot-(bot-top)*cy[i-1],y2=bot-(bot-top)*cy[i];c.drawLine(x1,y1,x2,y2,q);}}q.setAlpha(255);q.setStrokeWidth(6);for(int i=1;i<r.meanPosition.length;i++){float x1=l+(rr-l)*(i-1)/(float)(r.meanPosition.length-1),x2=l+(rr-l)*i/(float)(r.meanPosition.length-1);float y1=bot-(bot-top)*r.meanPosition[i-1],y2=bot-(bot-top)*r.meanPosition[i];c.drawLine(x1,y1,x2,y2,q);}p.setTextSize(18);p.setColor(Color.GRAY);c.drawText("0%",l,bot+22,p);c.drawText("50%",(l+rr)/2-20,bot+22,p);c.drawText("100%",rr-50,bot+22,p);}
     private static void drawComparePanel(Canvas c,Paint p,Result a,Result b,int l,int t,int rr,int bot,int ws,int we){p.setStyle(Paint.Style.STROKE);p.setColor(Color.LTGRAY);p.setStrokeWidth(2);c.drawRect(l,t,rr,bot,p);int top=t+50,bottom=bot-35;p.setStyle(Paint.Style.FILL);p.setColor(Color.argb(35,255,200,0));float x1=l+(rr-l)*ws/100f,x2=l+(rr-l)*we/100f;c.drawRect(x1,top,x2,bottom,p);p.setTextSize(24);p.setFakeBoldText(true);p.setColor(Color.DKGRAY);c.drawText("A 평균 vs B 평균 · 노랑=최대 차이 구간",l+10,t+30,p);p.setFakeBoldText(false);Paint pa=new Paint(Paint.ANTI_ALIAS_FLAG);pa.setStyle(Paint.Style.STROKE);pa.setStrokeWidth(6);pa.setColor(Color.rgb(30,100,220));Paint pb=new Paint(pa);pb.setColor(Color.rgb(220,75,50));for(int i=1;i<a.meanPosition.length;i++){float xa=l+(rr-l)*(i-1)/(float)(a.meanPosition.length-1),xb=l+(rr-l)*i/(float)(a.meanPosition.length-1);c.drawLine(xa,bottom-(bottom-top)*a.meanPosition[i-1],xb,bottom-(bottom-top)*a.meanPosition[i],pa);}for(int i=1;i<b.meanPosition.length;i++){float xa=l+(rr-l)*(i-1)/(float)(b.meanPosition.length-1),xb=l+(rr-l)*i/(float)(b.meanPosition.length-1);c.drawLine(xa,bottom-(bottom-top)*b.meanPosition[i-1],xb,bottom-(bottom-top)*b.meanPosition[i],pb);}p.setStyle(Paint.Style.FILL);p.setTextSize(21);p.setColor(Color.rgb(30,100,220));c.drawText("● A 기준 평균",l+20,bot-8,p);p.setColor(Color.rgb(220,75,50));c.drawText("● B 비교 평균",l+190,bot-8,p);}
