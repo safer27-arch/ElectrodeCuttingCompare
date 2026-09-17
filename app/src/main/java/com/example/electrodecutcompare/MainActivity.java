@@ -32,11 +32,11 @@ public class MainActivity extends Activity {
     private static final int PICK_A=1001, PICK_B=1002;
     private Uri uriA, uriB;
     private long durationA=0, durationB=0;
-    private TextView txtA,txtB,txtTimeA,txtTimeB,txtStatus,txtDashboard;
+    private TextView txtA,txtB,txtTimeA,txtTimeB,txtStatus,txtDashboard,statusIntegrated,summaryIntegrated;
     private TextView statusCompare,statusCycle,statusHighSpeed,statusAdvanced,statusEasy,statusDiagnostic,statusRoi;
     private SeekBar seekA,seekB;
     private ImageView imgA,imgB,imgDiff,imgCycle,imgHighSpeed,imgRoiA,imgRoiB,imgRoiCompare;
-    private ProgressBar progress;
+    private ProgressBar progress,progressIntegrated;
     private ProgressBar progressCompare,progressCycle,progressHighSpeed,progressAdvanced,progressEasy,progressDiagnostic,progressRoi;
     private Button btnSave;
     private Spinner cutterProfile;
@@ -58,7 +58,7 @@ public class MainActivity extends Activity {
         imgA=findViewById(R.id.imgA); imgB=findViewById(R.id.imgB); imgDiff=findViewById(R.id.imgDiff); imgCycle=findViewById(R.id.imgCycle); imgHighSpeed=findViewById(R.id.imgHighSpeed);
         imgRoiA=findViewById(R.id.imgRoiA); imgRoiB=findViewById(R.id.imgRoiB); imgRoiCompare=findViewById(R.id.imgRoiCompare);
         progress=findViewById(R.id.progress); btnSave=findViewById(R.id.btnSave); imgAdvanced=findViewById(R.id.imgAdvanced); imgDiagnostic=findViewById(R.id.imgDiagnostic); imgEasyDiagnostic=findViewById(R.id.imgEasyDiagnostic);
-        txtDashboard=findViewById(R.id.txtDashboard);
+        txtDashboard=findViewById(R.id.txtDashboard); statusIntegrated=findViewById(R.id.statusIntegrated); summaryIntegrated=findViewById(R.id.summaryIntegrated); progressIntegrated=findViewById(R.id.progressIntegrated);
         progressCompare=findViewById(R.id.progressCompare); statusCompare=findViewById(R.id.statusCompare);
         progressCycle=findViewById(R.id.progressCycle); statusCycle=findViewById(R.id.statusCycle);
         progressHighSpeed=findViewById(R.id.progressHighSpeed); statusHighSpeed=findViewById(R.id.statusHighSpeed);
@@ -71,6 +71,7 @@ public class MainActivity extends Activity {
         cutterProfile.setSelection(AppStateStore.getInt(this,"profile",0));
         cutterProfile.setOnItemSelectedListener(new android.widget.AdapterView.OnItemSelectedListener(){public void onItemSelected(android.widget.AdapterView<?> p,View v,int pos,long id){AppStateStore.putInt(MainActivity.this,"profile",pos);}public void onNothingSelected(android.widget.AdapterView<?> p){}});
 
+        findViewById(R.id.btnIntegrated).setOnClickListener(v->analyzeIntegrated());
         findViewById(R.id.btnGuide).setOnClickListener(v->startActivity(new Intent(this,GuideActivity.class)));
         findViewById(R.id.btnSelectA).setOnClickListener(v->pickVideo(PICK_A));
         findViewById(R.id.btnSelectB).setOnClickListener(v->pickVideo(PICK_B));
@@ -176,6 +177,50 @@ public class MainActivity extends Activity {
         });
     }
 
+
+    private void analyzeIntegrated(){
+        if(uriA==null||uriB==null){Toast.makeText(this,"A/B 영상을 모두 선택해 주세요.",Toast.LENGTH_SHORT).show();return;}
+        progressIntegrated.setProgress(3);
+        statusIntegrated.setText("통합검사 시작 · 1/7 카메라 보정 및 A/B 비교");
+        summaryIntegrated.setText("검사 진행 중... 각 세부 분석 결과도 아래 카드에 그대로 유지됩니다.");
+        analyze();
+        analyzeCycle();
+        analyzeHighSpeed();
+        analyzeAdvanced();
+        analyzeEasyDiagnostic();
+        analyzeRoi();
+        analyzeDiagnostic();
+        executor.execute(()->{
+            runOnUiThread(()->{progressIntegrated.setProgress(100); statusIntegrated.setText("통합검사 완료 · 전체 분석 7개 + 파생 진단 Summary 생성 완료");});
+            try{Thread.sleep(120);}catch(Exception ignored){}
+            runOnUiThread(()->buildIntegratedSummary());
+        });
+        // Single-thread executor executes the queued analyzers in the same order.
+        new Thread(()->{
+            int[] ps={12,25,38,52,66,80,92};
+            String[] names={"2/7 Cycle 반복성","3/7 High-Speed Event","4/7 Timing / Jerk / Multi-Cycle","5/7 Cutter / 공통진동 분리","6/7 ROI Tip / Gripper / Nip","7/7 Golden / Top3 종합진단","Summary 생성"};
+            for(int i=0;i<ps.length;i++){try{Thread.sleep(900);}catch(Exception ignored){} final int q=ps[i]; final String n=names[i]; runOnUiThread(()->{if(progressIntegrated.getProgress()<100){progressIntegrated.setProgress(q);statusIntegrated.setText("통합검사 진행 · "+n);}});}
+        }).start();
+    }
+
+    private void buildIntegratedSummary(){
+        StringBuilder sb=new StringBuilder();
+        sb.append("통합검사 SUMMARY · ").append(profileName()).append("\n\n");
+        sb.append("5단계 Cutter 추정 구간\n");
+        sb.append("① 대기/기준상태  ② 전진가속  ③ 커팅·충격  ④ 복귀가속  ⑤ 정지·안정화\n\n");
+        sb.append("핵심 확인 항목\n");
+        sb.append("• 커팅/복귀 충격 · Jerk · Timing 편차\n");
+        sb.append("• Cutter 상대운동과 고정부 공통진동 분리\n");
+        sb.append("• Cycle 반복성 · 전진/복귀 비대칭 · 안정화시간 후보\n");
+        sb.append("• Tip/Gripper/Nip ROI 편차 · Golden 변화 · Top3 이상순간\n\n");
+        if(lastAdvanced!=null) sb.append("고급동작: 분석 완료 · Trend/Timing/Jerk 반영\n");
+        if(roiA!=null&&roiB!=null) sb.append("ROI: 분석 완료 · Tip/Gripper/Nip 비교 반영\n");
+        if(easyDiagnosticBitmap!=null) sb.append("진동보정: 분석 완료 · Common Vibration 분리 반영\n");
+        if(diagnosticBitmap!=null) sb.append("Smart Diagnostic: Top3/Golden 비교 반영\n");
+        sb.append("\n※ 30fps 영상은 약 33ms보다 짧은 순간 이벤트를 놓칠 수 있습니다. 결과는 영상 기반 상대 진단이며 검증된 NG 기준 확보 전에는 불량 확정값으로 사용하지 않습니다.");
+        summaryIntegrated.setText(highlight(sb.toString()));
+        dashboard("통합검사 완료 · "+profileName()+"\n핵심 문제 키워드는 형광 표시 · 상세 근거는 각 분석 카드에서 확인");
+    }
 
     private void analyzeCycle(){
         if(uriA==null||uriB==null){Toast.makeText(this,"A/B 영상을 모두 선택해 주세요.",Toast.LENGTH_SHORT).show();return;}

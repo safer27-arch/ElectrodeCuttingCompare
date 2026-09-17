@@ -26,7 +26,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
-            android:text="v1.0 · FIELD DIAGNOSTIC  |  Cutter-relative Motion Intelligence"
+            android:text="v1.2 · ONE-TOUCH INTEGRATED INSPECTION  |  Cutter-relative Motion Intelligence"
             android:textColor="@color/text_dark"
             android:textSize="14sp" />
 
@@ -34,6 +34,11 @@
         <Spinner android:id="@+id/cutterProfile" android:layout_width="match_parent" android:layout_height="wrap_content"/>
 
         <Button android:id="@+id/btnGuide" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="10dp" android:background="@drawable/button_primary" android:text="ⓘ 분석 가이드 · 용어사전" android:textColor="#FFFFFF" android:textStyle="bold"/>
+
+        <Button android:id="@+id/btnIntegrated" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:minHeight="68dp" android:background="@drawable/button_primary" android:text="▶ 통합검사 START · 전체 분석 한 번에" android:textColor="#FFFFFF" android:textSize="18sp" android:textStyle="bold"/>
+        <ProgressBar android:id="@+id/progressIntegrated" style="?android:attr/progressBarStyleHorizontal" android:layout_width="match_parent" android:layout_height="wrap_content" android:max="100" android:progress="0"/>
+        <TextView android:id="@+id/statusIntegrated" android:layout_width="match_parent" android:layout_height="wrap_content" android:background="@drawable/panel" android:padding="10dp" android:text="ONE-TOUCH · A/B 영상 선택 후 버튼 한 번으로 전체 검사를 실행합니다." android:textSize="14sp" android:textStyle="bold"/>
+        <TextView android:id="@+id/summaryIntegrated" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:background="@drawable/panel" android:padding="12dp" android:text="통합검사 Summary 대기" android:textSize="15sp"/>
 
         <TextView android:id="@+id/txtDashboard" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="10dp" android:background="@drawable/panel" android:padding="12dp" android:text="SYSTEM READY  •  종합 진단 대기\nA/B 영상을 선택하고 분석을 시작하세요.\n결과는 각 분석 카드에 독립적으로 유지됩니다." android:textSize="16sp" android:textStyle="bold"/>
 
