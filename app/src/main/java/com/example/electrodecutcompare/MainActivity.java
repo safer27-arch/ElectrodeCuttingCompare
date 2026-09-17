@@ -131,10 +131,10 @@ public class MainActivity extends Activity {
         txtOverallVerdict.setText(highlight("A 기준 대비 B 비교 · "+level+(lastAdvanced==null?"":String.format(Locale.getDefault(),"  |  Motion Risk %.1f/100",risk))));
         String s1="🟢",s2="🟢",s3="🟢",s4="🟢",s5="🟢";
         if(risk>=35f){s3="🔴";s4="🔴";s5="🟡";} else if(risk>=18f){s3="🟡";s4="🟡";}
-        txtStageDashboard.setText("5단계 Cutter 추정 상태
-① "+s1+" 대기   ② "+s2+" 전진가속
-③ "+s3+" 커팅/충격   ④ "+s4+" 복귀가속   ⑤ "+s5+" 안정화
-※ 영상 신호 기반 추정 구간이며 센서 실측 판정은 아닙니다.");
+        txtStageDashboard.setText("5단계 Cutter 추정 상태\n" +
+                "① "+s1+" 대기   ② "+s2+" 전진가속\n" +
+                "③ "+s3+" 커팅/충격   ④ "+s4+" 복귀가속   ⑤ "+s5+" 안정화\n" +
+                "※ 영상 신호 기반 추정 구간이며 센서 실측 판정은 아닙니다.");
         String diag=statusDiagnostic.getText()==null?"":statusDiagnostic.getText().toString();
         java.util.regex.Matcher m=java.util.regex.Pattern.compile("#([123]) A ([0-9.]+)s / B ([0-9.]+)s · 편차 ([0-9.]+)%").matcher(diag);
         int count=0; double[] sec=new double[3];
