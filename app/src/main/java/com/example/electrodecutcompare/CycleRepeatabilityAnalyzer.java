@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.Locale;
 
 /**
- * v1.5 Cycle Repeatability analyzer.
+ * v1.7 Cycle Intelligence / validation analyzer.
  * Lightweight image-based repeatability analysis for the cutter's repeated left-right-left motion.
  * It is deliberately a relative video metric, not a calibrated displacement or NG judge.
  */
@@ -40,6 +40,12 @@ public final class CycleRepeatabilityAnalyzer {
         public float[] stageSpreadPct;
         public int worstStageIndex;
         public float cycleTimeTrendPct;
+        public float[] cycleStartSec;
+        public float[] cycleEndSec;
+        public int excludedCycleCount;
+        public int bestCycleIndex;
+        public int[] worstStagePerCycle;
+        public float[] worstStageDeviationPct;
         public String summary;
         public boolean reliable;
     }
@@ -68,22 +74,54 @@ public final class CycleRepeatabilityAnalyzer {
     private static final class Segment { int start,end; boolean invert; Segment(int s,int e,boolean i){start=s;end=e;invert=i;} }
 
     public static Result analyze(Context context, Uri uri, long durationMs, String label) throws Exception {
-        Trace t=extractTrace(context,uri,durationMs);
+        return analyze(context,uri,durationMs,label,false);
+    }
+
+    public static Result analyze(Context context, Uri uri, long durationMs, String label, boolean fastMode) throws Exception {
+        Trace t=extractTrace(context,uri,durationMs,fastMode);
         Result r=new Result(); r.label=label; r.fps=t.fps;
-        List<Segment> segments=findCycles(t.x,t.energy);
-        r.cycles=new ArrayList<>();
-        ArrayList<Float> times=new ArrayList<>();
-        for(Segment s:segments){
+        List<Segment> raw=findCycles(t.x,t.energy);
+
+        ArrayList<Segment> candidates=new ArrayList<>();
+        ArrayList<Float> rawTimes=new ArrayList<>();
+        for(Segment s:raw){
             if(s.end-s.start<5)continue;
+            long st=t.timeMs[Math.max(0,Math.min(t.timeMs.length-1,s.start))];
+            long en=t.timeMs[Math.max(0,Math.min(t.timeMs.length-1,s.end))];
+            float dt=Math.max(0.001f,(en-st)/1000f);
+            candidates.add(s); rawTimes.add(dt);
+            if(candidates.size()>=14)break;
+        }
+
+        float[] rawTimeArray=new float[rawTimes.size()];
+        for(int i=0;i<rawTimes.size();i++)rawTimeArray[i]=rawTimes.get(i);
+        float medianTime=median(rawTimeArray);
+        ArrayList<Segment> accepted=new ArrayList<>();
+        ArrayList<Float> acceptedTimes=new ArrayList<>();
+        for(int i=0;i<candidates.size();i++){
+            float dt=rawTimes.get(i);
+            boolean timeOk=medianTime<=0 || (dt>=medianTime*.58f && dt<=medianTime*1.65f);
+            if(timeOk){accepted.add(candidates.get(i));acceptedTimes.add(dt);}
+        }
+        if(accepted.size()<2 && candidates.size()>=2){accepted.clear();accepted.addAll(candidates);acceptedTimes.clear();acceptedTimes.addAll(rawTimes);}
+        r.excludedCycleCount=Math.max(0,candidates.size()-accepted.size());
+
+        r.cycles=new ArrayList<>();
+        ArrayList<Float> times=new ArrayList<>(), starts=new ArrayList<>(), ends=new ArrayList<>();
+        for(int i=0;i<accepted.size();i++){
+            Segment s=accepted.get(i);
             float[] c=resample(t.x,s.start,s.end,101);
             normalizeCycle(c,s.invert);
             r.cycles.add(c);
-            long dt=Math.max(0,t.timeMs[Math.min(t.timeMs.length-1,s.end)]-t.timeMs[Math.max(0,s.start)]);
-            times.add(dt/1000f);
+            times.add(acceptedTimes.get(i));
+            starts.add(t.timeMs[Math.max(0,Math.min(t.timeMs.length-1,s.start))]/1000f);
+            ends.add(t.timeMs[Math.max(0,Math.min(t.timeMs.length-1,s.end))]/1000f);
             if(r.cycles.size()>=10)break;
         }
         r.cycleCount=r.cycles.size();
-        r.cycleTimesSec=new float[times.size()]; for(int i=0;i<times.size();i++)r.cycleTimesSec[i]=times.get(i);
+        r.cycleTimesSec=toFloatArray(times);
+        r.cycleStartSec=toFloatArray(starts);
+        r.cycleEndSec=toFloatArray(ends);
         r.meanCycleSec=mean(r.cycleTimesSec);
         r.cycleTimeCvPct=cvPct(r.cycleTimesSec);
         r.meanPosition=meanCurve(r.cycles,101);
@@ -98,8 +136,12 @@ public final class CycleRepeatabilityAnalyzer {
         r.worstCycleIndices=topIndices(r.cycleDeviationPct,3);
         r.worstCycleDeviationPct=new float[r.worstCycleIndices.length];
         for(int i=0;i<r.worstCycleIndices.length;i++){int q=r.worstCycleIndices[i];r.worstCycleDeviationPct[i]=(q>=0&&q<r.cycleDeviationPct.length)?r.cycleDeviationPct[q]:0f;}
+        r.bestCycleIndex=minIndex(r.cycleDeviationPct);
         r.stageSpreadPct=stageSpreadPct(r.stdPosition);
         r.worstStageIndex=maxIndex(r.stageSpreadPct);
+        r.worstStagePerCycle=new int[r.cycleCount];
+        r.worstStageDeviationPct=new float[r.cycleCount];
+        computeWorstStagePerCycle(r);
         r.cycleTimeTrendPct=cycleTimeTrendPct(r.cycleTimesSec);
         r.summary=buildSummary(r);
         return r;
@@ -133,11 +175,14 @@ public final class CycleRepeatabilityAnalyzer {
         return new CompareResult(draw(a,b,meanDiff,speedDiff,start,end),s.toString(),meanDiff,start,end,speedDiff);
     }
 
-    private static Trace extractTrace(Context c,Uri uri,long duration) throws Exception {
+    private static Trace extractTrace(Context c,Uri uri,long duration,boolean fastMode) throws Exception {
         MediaMetadataRetriever r=new MediaMetadataRetriever(); r.setDataSource(c,uri);
         int fps=30; try{String q=r.extractMetadata(MediaMetadataRetriever.METADATA_KEY_CAPTURE_FRAMERATE);if(q!=null)fps=Math.max(1,Math.round(Float.parseFloat(q)));}catch(Exception ignored){}
-        int n=Math.max(81,Math.min(145,(int)Math.ceil(duration/1000.0*Math.min(fps,28))+1));
-        int w=208,h=118; float[] x=new float[n-1],e=new float[n-1]; long[] tm=new long[n-1];
+        int cap=fastMode?92:145;
+        int floor=fastMode?61:81;
+        int sampleFps=fastMode?18:28;
+        int n=Math.max(floor,Math.min(cap,(int)Math.ceil(duration/1000.0*Math.min(fps,sampleFps))+1));
+        int w=fastMode?176:208,h=fastMode?100:118; float[] x=new float[n-1],e=new float[n-1]; long[] tm=new long[n-1];
         Gray prev=null;
         try{
             for(int i=0;i<n;i++){
@@ -203,11 +248,31 @@ public final class CycleRepeatabilityAnalyzer {
             for(int i=0;i<r.cycleTimesSec.length&&i<10;i++){if(i>0)s.append(" / ");s.append(String.format(Locale.getDefault(),"%.3fs",r.cycleTimesSec[i]));}
             s.append("\n");
             s.append(worstCycleLine(r));
+            if(r.excludedCycleCount>0)s.append("Cycle 경계 검증으로 불완전/시간 이상 Cycle ").append(r.excludedCycleCount).append("개 제외\n");
             s.append(String.format(Locale.getDefault(),"문제 집중 구간: %s · 구간 퍼짐 %.1f%% · Cycle Time Trend %+.1f%%\n",stageName(r.worstStageIndex),safeAt(r.stageSpreadPct,r.worstStageIndex),r.cycleTimeTrendPct));
         }
         s.append("※ 커터의 좌→우→좌 반복 패턴을 자동 분리해 각 Cycle을 0~100%로 정규화합니다.");
         return s.toString();
     }
+
+
+    private static float[] toFloatArray(List<Float> list){float[] a=new float[list.size()];for(int i=0;i<list.size();i++)a[i]=list.get(i);return a;}
+    private static int minIndex(float[] a){if(a==null||a.length==0)return -1;int bi=0;for(int i=1;i<a.length;i++)if(a[i]<a[bi])bi=i;return bi;}
+    private static void computeWorstStagePerCycle(Result r){
+        int[][] ranges={{0,25},{25,45},{45,55},{55,80},{80,100}};
+        if(r.cycles==null||r.meanPosition==null)return;
+        for(int c=0;c<r.cycles.size();c++){
+            float[] cy=r.cycles.get(c);float best=-1;int bestStage=0;
+            for(int st=0;st<ranges.length;st++){
+                float sum=0;int n=0;
+                for(int i=ranges[st][0];i<=ranges[st][1]&&i<cy.length&&i<r.meanPosition.length;i++){sum+=Math.abs(cy[i]-r.meanPosition[i]);n++;}
+                float v=n==0?0:(sum/n)*100f;
+                if(v>best){best=v;bestStage=st;}
+            }
+            r.worstStagePerCycle[c]=bestStage;r.worstStageDeviationPct[c]=Math.max(0,best);
+        }
+    }
+    public static String stageNameForIndex(int i){return stageName(i);}
 
     private static float[] cycleDeviationPct(List<float[]> cycles,float[] mean){
         if(cycles==null)return new float[0];
@@ -238,7 +303,7 @@ public final class CycleRepeatabilityAnalyzer {
 
     private static Bitmap draw(Result a,Result b,float diff,float speedDiff,int worstStart,int worstEnd){
         int w=1200,h=2080;Bitmap out=Bitmap.createBitmap(w,h,Bitmap.Config.ARGB_8888);Canvas c=new Canvas(out);c.drawColor(Color.WHITE);Paint p=new Paint(Paint.ANTI_ALIAS_FLAG);
-        p.setColor(Color.rgb(15,48,88));p.setTextSize(38);p.setFakeBoldText(true);c.drawText("v1.6 Cycle Intelligence · A/B",45,55,p);p.setFakeBoldText(false);p.setTextSize(22);p.setColor(Color.DKGRAY);c.drawText("Cycle 1~10 Overlay + Worst Cycle TOP3 + Heatmap + 구간별 반복성",45,92,p);
+        p.setColor(Color.rgb(15,48,88));p.setTextSize(38);p.setFakeBoldText(true);c.drawText("v1.7 Cycle Intelligence · Validation + Replay",45,55,p);p.setFakeBoldText(false);p.setTextSize(22);p.setColor(Color.DKGRAY);c.drawText("Cycle 검증 + Worst Cycle TOP3 + 문제 동작구간 + Heatmap",45,92,p);
         drawOverlayPanel(c,p,a,60,135,1140,395,"A 기준영상 · Cycle 1~10 내부 재현성",Color.rgb(30,100,220));
         drawOverlayPanel(c,p,b,60,430,1140,690,"B 비교영상 · Cycle 1~10 내부 재현성",Color.rgb(220,75,50));
         drawComparePanel(c,p,a,b,60,725,1140,975,worstStart,worstEnd);
@@ -262,7 +327,7 @@ public final class CycleRepeatabilityAnalyzer {
     private static void drawRankingPanel(Canvas c,Paint p,Result r,int l,int t,int rr,int bot){
         p.setStyle(Paint.Style.STROKE);p.setStrokeWidth(2);p.setColor(Color.LTGRAY);c.drawRect(l,t,rr,bot,p);p.setStyle(Paint.Style.FILL);
         p.setTextSize(24);p.setFakeBoldText(true);p.setColor(Color.DKGRAY);c.drawText("Worst Cycle TOP3 + 구간별 반복성",l+10,t+30,p);p.setFakeBoldText(false);
-        int y=t+68;p.setTextSize(22);for(int k=0;k<r.worstCycleIndices.length;k++){int idx=r.worstCycleIndices[k];String rank=k==0?"1위":k==1?"2위":"3위";p.setColor(k==0?Color.rgb(190,80,30):Color.DKGRAY);c.drawText(String.format(Locale.getDefault(),"%s · Cycle %d · 평균궤적 편차 %.1f%%",rank,idx+1,safeAt(r.worstCycleDeviationPct,k)),l+20,y,p);y+=34;}
+        int y=t+68;p.setTextSize(22);for(int k=0;k<r.worstCycleIndices.length;k++){int idx=r.worstCycleIndices[k];String rank=k==0?"1위":k==1?"2위":"3위";p.setColor(k==0?Color.rgb(190,80,30):Color.DKGRAY);String stage=(r.worstStagePerCycle!=null&&idx>=0&&idx<r.worstStagePerCycle.length)?stageName(r.worstStagePerCycle[idx]):"구간 확인";c.drawText(String.format(Locale.getDefault(),"%s · Cycle %d · %.1f%% · %s",rank,idx+1,safeAt(r.worstCycleDeviationPct,k),stage),l+20,y,p);y+=34;}
         y+=8;String[] names={"대기/초기","전진가속","커팅/충격","복귀가속","안정화"};float max=Math.max(.001f,max(r.stageSpreadPct));for(int i=0;i<names.length;i++){float val=safeAt(r.stageSpreadPct,i);float x2=l+200+(rr-l-240)*(val/max);p.setColor(i==r.worstStageIndex?Color.rgb(235,145,30):Color.rgb(80,130,190));c.drawRect(l+200,y-17,x2,y+4,p);p.setColor(Color.DKGRAY);p.setTextSize(18);c.drawText(names[i],l+20,y,p);c.drawText(String.format(Locale.getDefault(),"%.1f%%",val),rr-75,y,p);y+=29;}
     }
 

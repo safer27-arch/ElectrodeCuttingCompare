@@ -26,16 +26,20 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
-            android:text="v1.6 · CYCLE INTELLIGENCE + TOP3 A/B ZOOM  |  Permanent Signing"
+            android:text="v1.7 · CYCLE DIAGNOSIS + FAST INSPECTION + REPLAY  |  Permanent Signing"
             android:textColor="@color/text_dark"
             android:textSize="14sp" />
 
         <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="10dp" android:text="Cutter Profile (형상별 Golden/ROI/Trend 분리)" android:textStyle="bold"/>
         <Spinner android:id="@+id/cutterProfile" android:layout_width="match_parent" android:layout_height="wrap_content"/>
 
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="통합검사 모드" android:textStyle="bold"/>
+        <Spinner android:id="@+id/inspectionMode" android:layout_width="match_parent" android:layout_height="wrap_content"/>
+        <TextView android:id="@+id/txtInspectionModeHint" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:background="@drawable/panel" android:padding="8dp" android:text="빠른검사: 문제 Cycle TOP3와 문제 동작구간을 우선 분석합니다." android:textSize="12sp"/>
+
         <Button android:id="@+id/btnGuide" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="10dp" android:background="@drawable/button_primary" android:text="ⓘ 분석 가이드 · 용어사전" android:textColor="#FFFFFF" android:textStyle="bold"/>
 
-        <Button android:id="@+id/btnIntegrated" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:minHeight="68dp" android:background="@drawable/button_primary" android:text="▶ 통합검사 START · 전체 분석 한 번에" android:textColor="#FFFFFF" android:textSize="18sp" android:textStyle="bold"/>
+        <Button android:id="@+id/btnIntegrated" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:minHeight="68dp" android:background="@drawable/button_primary" android:text="▶ 통합검사 START · 선택 모드로 자동 분석" android:textColor="#FFFFFF" android:textSize="18sp" android:textStyle="bold"/>
         <ProgressBar android:id="@+id/progressIntegrated" style="?android:attr/progressBarStyleHorizontal" android:layout_width="match_parent" android:layout_height="wrap_content" android:max="100" android:progress="0"/>
         <TextView android:id="@+id/statusIntegrated" android:layout_width="match_parent" android:layout_height="wrap_content" android:background="@drawable/panel" android:padding="10dp" android:text="ONE-TOUCH · A 기준영상(정상 권장)과 B 비교영상(검사 대상)을 선택한 뒤 전체 검사를 실행합니다." android:textSize="14sp" android:textStyle="bold"/>
         <TextView android:id="@+id/summaryIntegrated" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:background="@drawable/panel" android:padding="12dp" android:text="통합검사 Summary 대기" android:textSize="15sp"/>
@@ -48,7 +52,14 @@
         <ImageView android:id="@+id/imgTop2" android:layout_width="match_parent" android:layout_height="170dp" android:layout_marginTop="8dp" android:background="#0B1523" android:adjustViewBounds="true" android:scaleType="fitCenter" android:visibility="gone"/>
         <ImageView android:id="@+id/imgTop3" android:layout_width="match_parent" android:layout_height="170dp" android:layout_marginTop="8dp" android:background="#0B1523" android:adjustViewBounds="true" android:scaleType="fitCenter" android:visibility="gone"/>
 
-        <TextView android:id="@+id/txtRepeatabilityDashboard" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:background="@drawable/panel" android:padding="12dp" android:text="Cycle Intelligence · 검사 대기&#10;Worst Cycle TOP3, Heatmap, 구간별 반복성, Cycle Time Trend를 통합검사에서 자동 분석합니다." android:textSize="15sp" android:textStyle="bold"/>
+        <TextView android:id="@+id/txtRepeatabilityDashboard" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:background="@drawable/panel" android:padding="12dp" android:text="Cycle Diagnosis · 검사 대기&#10;어느 Cycle이 문제인지 + 어떤 동작구간이 문제인지 TOP3로 표시합니다." android:textSize="15sp" android:textStyle="bold"/>
+
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="6dp" android:orientation="vertical" android:background="@drawable/panel" android:padding="8dp">
+            <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Worst Cycle A/B 반복 비교재생" android:textStyle="bold" android:textSize="13sp"/>
+            <Button android:id="@+id/btnReplayTop1" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="🥇 TOP1 Cycle 비교재생 · 분석 후 활성화" android:enabled="false"/>
+            <Button android:id="@+id/btnReplayTop2" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="🥈 TOP2 Cycle 비교재생 · 분석 후 활성화" android:enabled="false"/>
+            <Button android:id="@+id/btnReplayTop3" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="🥉 TOP3 Cycle 비교재생 · 분석 후 활성화" android:enabled="false"/>
+        </LinearLayout>
 
         <TextView android:id="@+id/txtDashboard" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="10dp" android:background="@drawable/panel" android:padding="12dp" android:text="SYSTEM READY  •  종합 진단 대기\nA 기준영상과 B 비교영상을 선택하고 분석을 시작하세요.\n결과는 각 분석 카드에 독립적으로 유지됩니다." android:textSize="16sp" android:textStyle="bold"/>
 
@@ -151,7 +162,7 @@
         <ProgressBar android:id="@+id/progressCycle" style="?android:attr/progressBarStyleHorizontal" android:layout_width="match_parent" android:layout_height="wrap_content" android:max="100" android:progress="0"/>
         <TextView android:id="@+id/statusCycle" android:layout_width="match_parent" android:layout_height="wrap_content" android:background="@drawable/panel" android:padding="8dp" android:text="Cycle 패턴 비교 · 대기" android:textSize="13sp"/>
 
-        <Button android:id="@+id/btnRepeatability" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="v1.6 Cycle Intelligence · 반복성 TOP3 · Heatmap · 구간별 Score" android:textStyle="bold" android:background="@drawable/button_primary" android:textColor="#FFFFFF" android:minHeight="54dp"/>
+        <Button android:id="@+id/btnRepeatability" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="v1.7 Cycle Diagnosis · 문제 Cycle TOP3 · 문제 동작 · Validation" android:textStyle="bold" android:background="@drawable/button_primary" android:textColor="#FFFFFF" android:minHeight="54dp"/>
         <ProgressBar android:id="@+id/progressRepeatability" style="?android:attr/progressBarStyleHorizontal" android:layout_width="match_parent" android:layout_height="wrap_content" android:max="100" android:progress="0"/>
         <TextView android:id="@+id/statusRepeatability" android:layout_width="match_parent" android:layout_height="wrap_content" android:background="@drawable/panel" android:padding="8dp" android:text="Cycle 반복 재현성 · 대기" android:textSize="13sp"/>
 
@@ -280,7 +291,7 @@
             android:background="#0B1523"
             android:scaleType="fitCenter" />
 
-        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="10dp" android:text="v1.6 Cycle Intelligence · Overlay + Heatmap + Worst Cycle TOP3 (누르면 확대)" android:textStyle="bold"/>
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="10dp" android:text="v1.7 Cycle Intelligence · Validation + Heatmap + Worst Cycle TOP3 (누르면 확대)" android:textStyle="bold"/>
         <ImageView android:id="@+id/imgRepeatability" android:layout_width="match_parent" android:layout_height="460dp" android:adjustViewBounds="true" android:background="#0B1523" android:scaleType="fitCenter"/>
 
         <TextView

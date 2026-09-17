@@ -4,6 +4,7 @@
  <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32"/>
  <application android:allowBackup="true" android:label="전극 컷팅 비교" android:theme="@style/AppTheme">
   <activity android:name=".GuideActivity" android:screenOrientation="portrait"/>
+  <activity android:name=".CycleReplayActivity" android:screenOrientation="sensorLandscape"/>
   <activity android:name=".ZoomImageActivity" android:screenOrientation="sensor"/>
   <activity android:name=".RoiSettingsActivity" android:screenOrientation="portrait"/>
   <activity android:name=".VideoPreviewActivity" android:screenOrientation="sensorLandscape"/>
