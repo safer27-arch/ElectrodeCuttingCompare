@@ -32,10 +32,10 @@ public class MainActivity extends Activity {
     private static final int PICK_A=1001, PICK_B=1002;
     private Uri uriA, uriB;
     private long durationA=0, durationB=0;
-    private TextView txtA,txtB,txtTimeA,txtTimeB,txtStatus,txtDashboard,statusIntegrated,summaryIntegrated;
+    private TextView txtA,txtB,txtTimeA,txtTimeB,txtStatus,txtDashboard,statusIntegrated,summaryIntegrated,txtOverallVerdict,txtStageDashboard,txtTop3Dashboard;
     private TextView statusCompare,statusCycle,statusHighSpeed,statusAdvanced,statusEasy,statusDiagnostic,statusRoi;
     private SeekBar seekA,seekB;
-    private ImageView imgA,imgB,imgDiff,imgCycle,imgHighSpeed,imgRoiA,imgRoiB,imgRoiCompare;
+    private ImageView imgA,imgB,imgDiff,imgCycle,imgHighSpeed,imgRoiA,imgRoiB,imgRoiCompare,imgTop1,imgTop2,imgTop3;
     private ProgressBar progress,progressIntegrated;
     private ProgressBar progressCompare,progressCycle,progressHighSpeed,progressAdvanced,progressEasy,progressDiagnostic,progressRoi;
     private Button btnSave;
@@ -59,6 +59,8 @@ public class MainActivity extends Activity {
         imgRoiA=findViewById(R.id.imgRoiA); imgRoiB=findViewById(R.id.imgRoiB); imgRoiCompare=findViewById(R.id.imgRoiCompare);
         progress=findViewById(R.id.progress); btnSave=findViewById(R.id.btnSave); imgAdvanced=findViewById(R.id.imgAdvanced); imgDiagnostic=findViewById(R.id.imgDiagnostic); imgEasyDiagnostic=findViewById(R.id.imgEasyDiagnostic);
         txtDashboard=findViewById(R.id.txtDashboard); statusIntegrated=findViewById(R.id.statusIntegrated); summaryIntegrated=findViewById(R.id.summaryIntegrated); progressIntegrated=findViewById(R.id.progressIntegrated);
+        txtOverallVerdict=findViewById(R.id.txtOverallVerdict); txtStageDashboard=findViewById(R.id.txtStageDashboard); txtTop3Dashboard=findViewById(R.id.txtTop3Dashboard);
+        imgTop1=findViewById(R.id.imgTop1); imgTop2=findViewById(R.id.imgTop2); imgTop3=findViewById(R.id.imgTop3);
         progressCompare=findViewById(R.id.progressCompare); statusCompare=findViewById(R.id.statusCompare);
         progressCycle=findViewById(R.id.progressCycle); statusCycle=findViewById(R.id.statusCycle);
         progressHighSpeed=findViewById(R.id.progressHighSpeed); statusHighSpeed=findViewById(R.id.statusHighSpeed);
@@ -72,6 +74,7 @@ public class MainActivity extends Activity {
         cutterProfile.setOnItemSelectedListener(new android.widget.AdapterView.OnItemSelectedListener(){public void onItemSelected(android.widget.AdapterView<?> p,View v,int pos,long id){AppStateStore.putInt(MainActivity.this,"profile",pos);}public void onNothingSelected(android.widget.AdapterView<?> p){}});
 
         findViewById(R.id.btnIntegrated).setOnClickListener(v->analyzeIntegrated());
+        findViewById(R.id.btnToggleExpert).setOnClickListener(v->toggleExpert());
         findViewById(R.id.btnGuide).setOnClickListener(v->startActivity(new Intent(this,GuideActivity.class)));
         findViewById(R.id.btnSelectA).setOnClickListener(v->pickVideo(PICK_A));
         findViewById(R.id.btnSelectB).setOnClickListener(v->pickVideo(PICK_B));
@@ -109,9 +112,39 @@ public class MainActivity extends Activity {
     private void dashboard(String message){ runOnUiThread(()->txtDashboard.setText(highlight(message))); }
     private android.text.SpannableString highlight(String text){
         android.text.SpannableString sp=new android.text.SpannableString(text);
-        String[] keys={"WATCH","이상","주의","진동","Jerk","Jitter","Offset","편차","충격","안정화","복귀","Top3","Golden"};
+        String[] keys={"WATCH","이상","주의","진동","Jerk","Jitter","Offset","편차","충격","안정화","복귀","Top3","Golden","핵심 문제","정착 지연","공통진동","상대운동"};
         for(String k:keys){int from=0; while((from=text.indexOf(k,from))>=0){int end=from+k.length(); sp.setSpan(new android.text.style.BackgroundColorSpan(Color.rgb(255,235,59)),from,end,android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE); sp.setSpan(new android.text.style.ForegroundColorSpan(Color.rgb(15,20,25)),from,end,android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE); sp.setSpan(new android.text.style.StyleSpan(android.graphics.Typeface.BOLD),from,end,android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE); from=end;}}
         return sp;
+    }
+
+    private void toggleExpert(){
+        View panel=findViewById(R.id.expertPanel); Button b=findViewById(R.id.btnToggleExpert);
+        boolean show=panel.getVisibility()!=View.VISIBLE; panel.setVisibility(show?View.VISIBLE:View.GONE);
+        b.setText(show?"▲ 전문가 상세분석 닫기":"▼ 전문가 상세분석 보기");
+    }
+
+    private String levelFromRisk(float risk){ return risk<18f?"정상 후보":risk<35f?"주의 후보":"이상 후보"; }
+
+    private void updateFieldDashboard(){
+        float risk=lastAdvanced==null?0f:lastAdvanced.score;
+        String level=lastAdvanced==null?"분석 완료":levelFromRisk(risk);
+        txtOverallVerdict.setText(highlight("종합판정 · "+level+(lastAdvanced==null?"":String.format(Locale.getDefault(),"  |  Motion Risk %.1f/100",risk))));
+        String s1="🟢",s2="🟢",s3="🟢",s4="🟢",s5="🟢";
+        if(risk>=35f){s3="🔴";s4="🔴";s5="🟡";} else if(risk>=18f){s3="🟡";s4="🟡";}
+        txtStageDashboard.setText(highlight("5단계 Cutter 추정 상태\n① "+s1+" 대기   ② "+s2+" 전진가속\n③ "+s3+" 커팅/충격   ④ "+s4+" 복귀가속   ⑤ "+s5+" 안정화\n※ 영상 신호 기반 추정 구간이며 센서 실측 판정은 아닙니다."));
+        String diag=statusDiagnostic.getText()==null?"":statusDiagnostic.getText().toString();
+        StringBuilder top=new StringBuilder("TOP3 이상순간\n");
+        java.util.regex.Matcher m=java.util.regex.Pattern.compile("#([123]) A ([0-9.]+)s / B ([0-9.]+)s · 편차 ([0-9.]+)%").matcher(diag);
+        int count=0; double[] sec=new double[3];
+        while(m.find()&&count<3){sec[count]=Double.parseDouble(m.group(2)); top.append("#").append(m.group(1)).append("  ").append(m.group(2)).append("s  ·  편차 ").append(m.group(4)).append("%\n"); count++;}
+        if(count==0) top.append("Smart Diagnostic 결과에서 Top3를 산출합니다.");
+        txtTop3Dashboard.setText(highlight(top.toString().trim()));
+        if(count>0) setTopFrame(imgTop1,sec[0]); if(count>1) setTopFrame(imgTop2,sec[1]); if(count>2) setTopFrame(imgTop3,sec[2]);
+    }
+
+    private void setTopFrame(ImageView view,double sec){
+        if(uriA==null)return; MediaMetadataRetriever r=new MediaMetadataRetriever();
+        try{r.setDataSource(this,uriA); Bitmap b=r.getFrameAtTime((long)(sec*1000000.0),MediaMetadataRetriever.OPTION_CLOSEST); if(b!=null)view.setImageBitmap(b);}catch(Exception ignored){}finally{try{r.release();}catch(Exception ignored){}}
     }
 
     private void pickVideo(int req){
@@ -219,7 +252,8 @@ public class MainActivity extends Activity {
         if(diagnosticBitmap!=null) sb.append("Smart Diagnostic: Top3/Golden 비교 반영\n");
         sb.append("\n※ 30fps 영상은 약 33ms보다 짧은 순간 이벤트를 놓칠 수 있습니다. 결과는 영상 기반 상대 진단이며 검증된 NG 기준 확보 전에는 불량 확정값으로 사용하지 않습니다.");
         summaryIntegrated.setText(highlight(sb.toString()));
-        dashboard("통합검사 완료 · "+profileName()+"\n핵심 문제 키워드는 형광 표시 · 상세 근거는 각 분석 카드에서 확인");
+        dashboard("통합검사 완료 · "+profileName()+"\n핵심 문제 키워드는 형광 표시 · 상세 근거는 전문가 상세분석에서 확인");
+        updateFieldDashboard();
     }
 
     private void analyzeCycle(){

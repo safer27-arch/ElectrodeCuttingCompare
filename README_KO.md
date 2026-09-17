@@ -1,3 +1,9 @@
+# ElectrodeCuttingCompare v1.3 Field Dashboard
+
+현장 사용자는 A/B 영상을 선택한 뒤 **통합검사 START** 한 번으로 분석을 실행합니다. 상단 Dashboard에서 종합판정, 5단계 Cutter 추정 상태, Top3 이상순간과 순간 프레임을 먼저 확인하고, 필요할 때만 전문가 상세분석을 펼칩니다.
+
+> 주의: 영상 기반 상대 진단 도구이며 검증된 NG 기준 확보 전에는 불량 확정 판정으로 사용하지 않습니다. 30fps 영상은 약 33ms보다 짧은 이벤트를 놓칠 수 있습니다.
+
 # ElectrodeCuttingCompare v0.3.1 (GitHub Ready)
 
 저사양 Android 스마트폰에서 동작하도록 설계한 전극 컷팅 설비 A/B 동영상 비교 앱 프로토타입입니다.
