@@ -112,7 +112,7 @@ public class MainActivity extends Activity {
     private void dashboard(String message){ runOnUiThread(()->txtDashboard.setText(highlight(message))); }
     private android.text.SpannableString highlight(String text){
         android.text.SpannableString sp=new android.text.SpannableString(text);
-        String[] keys={"WATCH","이상","주의","진동","Jerk","Jitter","Offset","편차","충격","안정화","복귀","Top3","Golden","핵심 문제","정착 지연","공통진동","상대운동"};
+        String[] keys={"핵심 차이","확인 필요","큰 차이","주의 후보","이상 후보"};
         for(String k:keys){int from=0; while((from=text.indexOf(k,from))>=0){int end=from+k.length(); sp.setSpan(new android.text.style.BackgroundColorSpan(Color.rgb(255,235,59)),from,end,android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE); sp.setSpan(new android.text.style.ForegroundColorSpan(Color.rgb(15,20,25)),from,end,android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE); sp.setSpan(new android.text.style.StyleSpan(android.graphics.Typeface.BOLD),from,end,android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE); from=end;}}
         return sp;
     }
@@ -128,18 +128,46 @@ public class MainActivity extends Activity {
     private void updateFieldDashboard(){
         float risk=lastAdvanced==null?0f:lastAdvanced.score;
         String level=lastAdvanced==null?"분석 완료":levelFromRisk(risk);
-        txtOverallVerdict.setText(highlight("종합판정 · "+level+(lastAdvanced==null?"":String.format(Locale.getDefault(),"  |  Motion Risk %.1f/100",risk))));
+        txtOverallVerdict.setText(highlight("A 기준 대비 B 비교 · "+level+(lastAdvanced==null?"":String.format(Locale.getDefault(),"  |  Motion Risk %.1f/100",risk))));
         String s1="🟢",s2="🟢",s3="🟢",s4="🟢",s5="🟢";
         if(risk>=35f){s3="🔴";s4="🔴";s5="🟡";} else if(risk>=18f){s3="🟡";s4="🟡";}
-        txtStageDashboard.setText(highlight("5단계 Cutter 추정 상태\n① "+s1+" 대기   ② "+s2+" 전진가속\n③ "+s3+" 커팅/충격   ④ "+s4+" 복귀가속   ⑤ "+s5+" 안정화\n※ 영상 신호 기반 추정 구간이며 센서 실측 판정은 아닙니다."));
+        txtStageDashboard.setText("5단계 Cutter 추정 상태
+① "+s1+" 대기   ② "+s2+" 전진가속
+③ "+s3+" 커팅/충격   ④ "+s4+" 복귀가속   ⑤ "+s5+" 안정화
+※ 영상 신호 기반 추정 구간이며 센서 실측 판정은 아닙니다.");
         String diag=statusDiagnostic.getText()==null?"":statusDiagnostic.getText().toString();
-        StringBuilder top=new StringBuilder("TOP3 이상순간\n");
         java.util.regex.Matcher m=java.util.regex.Pattern.compile("#([123]) A ([0-9.]+)s / B ([0-9.]+)s · 편차 ([0-9.]+)%").matcher(diag);
         int count=0; double[] sec=new double[3];
-        while(m.find()&&count<3){sec[count]=Double.parseDouble(m.group(2)); top.append("#").append(m.group(1)).append("  ").append(m.group(2)).append("s  ·  편차 ").append(m.group(4)).append("%\n"); count++;}
-        if(count==0) top.append("Smart Diagnostic 결과에서 Top3를 산출합니다.");
+        StringBuilder top=new StringBuilder("A 기준 대비 B 주요 차이 TOP 3\n");
+        while(m.find()&&count<3){
+            sec[count]=Double.parseDouble(m.group(2));
+            double pct=Double.parseDouble(m.group(4));
+            String type=classifyDifference(sec[count],pct,count);
+            top.append(count==0?"🥇 1위 · ":count==1?"🥈 2위 · ":"🥉 3위 · ")
+               .append(type).append("\n")
+               .append("   A ").append(m.group(2)).append("s ↔ B ").append(m.group(3)).append("s · 차이 ").append(m.group(4)).append("%\n")
+               .append("   확인: ").append(checkPoint(type)).append("\n");
+            count++;
+        }
+        if(count==0) top.append("통합검사 후 무엇이 다른지 1·2·3 순위로 표시합니다.");
         txtTop3Dashboard.setText(highlight(top.toString().trim()));
+        imgTop1.setVisibility(count>0?View.VISIBLE:View.GONE); imgTop2.setVisibility(count>1?View.VISIBLE:View.GONE); imgTop3.setVisibility(count>2?View.VISIBLE:View.GONE);
         if(count>0) setTopFrame(imgTop1,sec[0]); if(count>1) setTopFrame(imgTop2,sec[1]); if(count>2) setTopFrame(imgTop3,sec[2]);
+    }
+
+    private String classifyDifference(double sec,double pct,int rank){
+        double ratio=durationA<=0?0.5:Math.max(0.0,Math.min(1.0,sec/(durationA/1000.0)));
+        if(ratio<0.18) return "초기 전진/가속 동작 패턴 차이";
+        if(ratio<0.42) return "커팅/충격 구간 동작 차이";
+        if(ratio<0.72) return "복귀 동작 패턴 차이";
+        return "정지·안정화 잔류 움직임 차이";
+    }
+
+    private String checkPoint(String type){
+        if(type.contains("커팅")) return "Cutter 충격, 순간 흔들림, 전극 영향";
+        if(type.contains("복귀")) return "복귀 속도·충격과 정착 거동";
+        if(type.contains("안정화")) return "복귀 후 잔류진동과 안정화시간";
+        return "전진 속도 변화와 반복 궤적";
     }
 
     private void setTopFrame(ImageView view,double sec){
@@ -156,8 +184,8 @@ public class MainActivity extends Activity {
         if(resultCode!=RESULT_OK||data==null||data.getData()==null)return;
         Uri u=data.getData();
         try{ getContentResolver().takePersistableUriPermission(u, Intent.FLAG_GRANT_READ_URI_PERMISSION); }catch(Exception ignored){}
-        if(requestCode==PICK_A){uriA=u; durationA=videoDuration(u); txtA.setText("선택됨: "+u.getLastPathSegment());AppStateStore.put(this,"uriA",u.toString());}
-        if(requestCode==PICK_B){uriB=u; durationB=videoDuration(u); txtB.setText("선택됨: "+u.getLastPathSegment());AppStateStore.put(this,"uriB",u.toString());}
+        if(requestCode==PICK_A){uriA=u; durationA=videoDuration(u); txtA.setText("A 기준영상 · "+u.getLastPathSegment());AppStateStore.put(this,"uriA",u.toString());}
+        if(requestCode==PICK_B){uriB=u; durationB=videoDuration(u); txtB.setText("B 비교영상 · "+u.getLastPathSegment());AppStateStore.put(this,"uriB",u.toString());}
         updateTimeLabels();
     }
 

@@ -26,7 +26,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
-            android:text="v1.3 · FIELD DASHBOARD + ONE-TOUCH INSPECTION  |  Cutter-relative Motion Intelligence"
+            android:text="v1.4 · REFERENCE A vs TEST B + TOP3 DIFFERENCE  |  Cutter-relative Motion Intelligence"
             android:textColor="@color/text_dark"
             android:textSize="14sp" />
 
@@ -37,19 +37,19 @@
 
         <Button android:id="@+id/btnIntegrated" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:minHeight="68dp" android:background="@drawable/button_primary" android:text="▶ 통합검사 START · 전체 분석 한 번에" android:textColor="#FFFFFF" android:textSize="18sp" android:textStyle="bold"/>
         <ProgressBar android:id="@+id/progressIntegrated" style="?android:attr/progressBarStyleHorizontal" android:layout_width="match_parent" android:layout_height="wrap_content" android:max="100" android:progress="0"/>
-        <TextView android:id="@+id/statusIntegrated" android:layout_width="match_parent" android:layout_height="wrap_content" android:background="@drawable/panel" android:padding="10dp" android:text="ONE-TOUCH · A/B 영상 선택 후 버튼 한 번으로 전체 검사를 실행합니다." android:textSize="14sp" android:textStyle="bold"/>
+        <TextView android:id="@+id/statusIntegrated" android:layout_width="match_parent" android:layout_height="wrap_content" android:background="@drawable/panel" android:padding="10dp" android:text="ONE-TOUCH · A 기준영상(정상 권장)과 B 비교영상(검사 대상)을 선택한 뒤 전체 검사를 실행합니다." android:textSize="14sp" android:textStyle="bold"/>
         <TextView android:id="@+id/summaryIntegrated" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:background="@drawable/panel" android:padding="12dp" android:text="통합검사 Summary 대기" android:textSize="15sp"/>
 
         <TextView android:id="@+id/txtOverallVerdict" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="10dp" android:background="@drawable/panel" android:gravity="center" android:padding="14dp" android:text="종합판정 · 검사 대기" android:textSize="22sp" android:textStyle="bold"/>
         <TextView android:id="@+id/txtStageDashboard" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:background="@drawable/panel" android:padding="12dp" android:text="5단계 Cutter 추정 상태\n① 대기  ② 전진가속  ③ 커팅/충격  ④ 복귀가속  ⑤ 안정화" android:textSize="15sp" android:textStyle="bold"/>
-        <TextView android:id="@+id/txtTop3Dashboard" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:background="@drawable/panel" android:padding="12dp" android:text="TOP3 이상순간 · 검사 대기" android:textSize="15sp" android:textStyle="bold"/>
+        <TextView android:id="@+id/txtTop3Dashboard" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:background="@drawable/panel" android:padding="12dp" android:text="A 기준 대비 B 주요 차이 TOP 3 · 검사 대기" android:textSize="15sp" android:textStyle="bold"/>
         <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:layout_marginTop="6dp">
             <ImageView android:id="@+id/imgTop1" android:layout_width="0dp" android:layout_height="92dp" android:layout_weight="1" android:background="#0B1523" android:scaleType="centerCrop"/>
             <ImageView android:id="@+id/imgTop2" android:layout_width="0dp" android:layout_height="92dp" android:layout_weight="1" android:layout_marginStart="4dp" android:background="#0B1523" android:scaleType="centerCrop"/>
             <ImageView android:id="@+id/imgTop3" android:layout_width="0dp" android:layout_height="92dp" android:layout_weight="1" android:layout_marginStart="4dp" android:background="#0B1523" android:scaleType="centerCrop"/>
         </LinearLayout>
 
-        <TextView android:id="@+id/txtDashboard" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="10dp" android:background="@drawable/panel" android:padding="12dp" android:text="SYSTEM READY  •  종합 진단 대기\nA/B 영상을 선택하고 분석을 시작하세요.\n결과는 각 분석 카드에 독립적으로 유지됩니다." android:textSize="16sp" android:textStyle="bold"/>
+        <TextView android:id="@+id/txtDashboard" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="10dp" android:background="@drawable/panel" android:padding="12dp" android:text="SYSTEM READY  •  종합 진단 대기\nA 기준영상과 B 비교영상을 선택하고 분석을 시작하세요.\n결과는 각 분석 카드에 독립적으로 유지됩니다." android:textSize="16sp" android:textStyle="bold"/>
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -62,7 +62,7 @@
                 android:id="@+id/btnSelectA"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="설비 A 영상 선택" />
+                android:text="A · 기준영상 선택 (정상 권장)" />
             <TextView
                 android:id="@+id/txtA"
                 android:layout_width="match_parent"
@@ -86,7 +86,7 @@
                 android:id="@+id/btnPreviewA"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="A 영상 재생" />
+                android:text="A 기준영상 재생" />
         </LinearLayout>
 
         <LinearLayout
@@ -100,7 +100,7 @@
                 android:id="@+id/btnSelectB"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="설비 B 영상 선택" />
+                android:text="B · 비교영상 선택 (검사 대상)" />
             <TextView
                 android:id="@+id/txtB"
                 android:layout_width="match_parent"
@@ -124,7 +124,7 @@
                 android:id="@+id/btnPreviewB"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="B 영상 재생" />
+                android:text="B 비교영상 재생" />
         </LinearLayout>
 
         <Button android:id="@+id/btnToggleExpert" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="14dp" android:background="@drawable/button_primary" android:text="▼ 전문가 상세분석 보기" android:textColor="#FFFFFF" android:textStyle="bold"/>
