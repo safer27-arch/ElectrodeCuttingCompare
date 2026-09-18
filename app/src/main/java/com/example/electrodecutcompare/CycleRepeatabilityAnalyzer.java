@@ -160,8 +160,8 @@ public final class CycleRepeatabilityAnalyzer {
         String level=(!a.reliable||!b.reliable)?"Cycle 부족 · 분석 보류":meanDiff<8f?"거의 동일":meanDiff<15f?"약간 다름":meanDiff<25f?"차이 큼":"큰 차이 · 확인 필요";
         StringBuilder s=new StringBuilder();
         s.append("사이클 반복 재현성 A/B 비교 · ").append(level).append("\n");
-        s.append(String.format(Locale.getDefault(),"A %d Cycle · 재현성 %.0f/100 · Time CV %.1f%%\n",a.cycleCount,a.repeatabilityScore,a.cycleTimeCvPct));
-        s.append(String.format(Locale.getDefault(),"B %d Cycle · 재현성 %.0f/100 · Time CV %.1f%%\n",b.cycleCount,b.repeatabilityScore,b.cycleTimeCvPct));
+        s.append(String.format(Locale.getDefault(),"A %d Cycle · 재현성 Score %.0f/100 (100=안정) · Time CV %.1f%%\n",a.cycleCount,a.repeatabilityScore,a.cycleTimeCvPct));
+        s.append(String.format(Locale.getDefault(),"B %d Cycle · 재현성 Score %.0f/100 (100=안정) · Time CV %.1f%%\n",b.cycleCount,b.repeatabilityScore,b.cycleTimeCvPct));
         s.append(String.format(Locale.getDefault(),"A↔B 평균 궤적 차이 %.1f%% · 속도패턴 차이 %.1f%% · 최대 차이 구간 %d~%d%%\n",meanDiff,speedDiff,start,end));
         if(b.reliable&&a.reliable){
             if(b.repeatabilityScore+8<a.repeatabilityScore) s.append("확인 필요: B의 반복 궤적 퍼짐이 A보다 큽니다.\n");
@@ -243,7 +243,7 @@ public final class CycleRepeatabilityAnalyzer {
         if(!r.reliable){
             s.append("검출 Cycle ").append(r.cycleCount).append("개 · 반복성 계산에 Cycle이 부족합니다. 촬영 시간을 늘리거나 커터가 여러 번 왕복하도록 촬영해 주세요.\n");
         }else{
-            s.append(String.format(Locale.getDefault(),"검출 Cycle %d개 · 재현성 %.0f/100 · 평균 Cycle Time %.3fs · Time CV %.1f%%\n",r.cycleCount,r.repeatabilityScore,r.meanCycleSec,r.cycleTimeCvPct));
+            s.append(String.format(Locale.getDefault(),"검출 Cycle %d개 · 재현성 Score %.0f/100 (100=안정) · 평균 Cycle Time %.3fs · Time CV %.1f%%\n",r.cycleCount,r.repeatabilityScore,r.meanCycleSec,r.cycleTimeCvPct));
             s.append("Cycle Time: ");
             for(int i=0;i<r.cycleTimesSec.length&&i<10;i++){if(i>0)s.append(" / ");s.append(String.format(Locale.getDefault(),"%.3fs",r.cycleTimesSec[i]));}
             s.append("\n");
@@ -303,7 +303,7 @@ public final class CycleRepeatabilityAnalyzer {
 
     private static Bitmap draw(Result a,Result b,float diff,float speedDiff,int worstStart,int worstEnd){
         int w=1200,h=2080;Bitmap out=Bitmap.createBitmap(w,h,Bitmap.Config.ARGB_8888);Canvas c=new Canvas(out);c.drawColor(Color.WHITE);Paint p=new Paint(Paint.ANTI_ALIAS_FLAG);
-        p.setColor(Color.rgb(15,48,88));p.setTextSize(38);p.setFakeBoldText(true);c.drawText("v1.7 Cycle Intelligence · Validation + Replay",45,55,p);p.setFakeBoldText(false);p.setTextSize(22);p.setColor(Color.DKGRAY);c.drawText("Cycle 검증 + Worst Cycle TOP3 + 문제 동작구간 + Heatmap",45,92,p);
+        p.setColor(Color.rgb(15,48,88));p.setTextSize(38);p.setFakeBoldText(true);c.drawText("v1.7.1 Cycle Intelligence · Polish + Replay",45,55,p);p.setFakeBoldText(false);p.setTextSize(22);p.setColor(Color.DKGRAY);c.drawText("Cycle 검증 + Worst Cycle TOP3 + 문제 동작구간 + Heatmap",45,92,p);
         drawOverlayPanel(c,p,a,60,135,1140,395,"A 기준영상 · Cycle 1~10 내부 재현성",Color.rgb(30,100,220));
         drawOverlayPanel(c,p,b,60,430,1140,690,"B 비교영상 · Cycle 1~10 내부 재현성",Color.rgb(220,75,50));
         drawComparePanel(c,p,a,b,60,725,1140,975,worstStart,worstEnd);

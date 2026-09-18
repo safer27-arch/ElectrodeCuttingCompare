@@ -26,7 +26,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
-            android:text="v1.7 · CYCLE DIAGNOSIS + FAST INSPECTION + REPLAY  |  Permanent Signing"
+            android:text="v1.7.1 · SCORE POLISH + FAST INSPECTION + REPLAY  |  Permanent Signing"
             android:textColor="@color/text_dark"
             android:textSize="14sp" />
 
@@ -162,7 +162,7 @@
         <ProgressBar android:id="@+id/progressCycle" style="?android:attr/progressBarStyleHorizontal" android:layout_width="match_parent" android:layout_height="wrap_content" android:max="100" android:progress="0"/>
         <TextView android:id="@+id/statusCycle" android:layout_width="match_parent" android:layout_height="wrap_content" android:background="@drawable/panel" android:padding="8dp" android:text="Cycle 패턴 비교 · 대기" android:textSize="13sp"/>
 
-        <Button android:id="@+id/btnRepeatability" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="v1.7 Cycle Diagnosis · 문제 Cycle TOP3 · 문제 동작 · Validation" android:textStyle="bold" android:background="@drawable/button_primary" android:textColor="#FFFFFF" android:minHeight="54dp"/>
+        <Button android:id="@+id/btnRepeatability" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="v1.7.1 Cycle Diagnosis · 문제 Cycle TOP3 · 문제 동작 · Validation" android:textStyle="bold" android:background="@drawable/button_primary" android:textColor="#FFFFFF" android:minHeight="54dp"/>
         <ProgressBar android:id="@+id/progressRepeatability" style="?android:attr/progressBarStyleHorizontal" android:layout_width="match_parent" android:layout_height="wrap_content" android:max="100" android:progress="0"/>
         <TextView android:id="@+id/statusRepeatability" android:layout_width="match_parent" android:layout_height="wrap_content" android:background="@drawable/panel" android:padding="8dp" android:text="Cycle 반복 재현성 · 대기" android:textSize="13sp"/>
 
@@ -170,7 +170,7 @@
         <ProgressBar android:id="@+id/progressHighSpeed" style="?android:attr/progressBarStyleHorizontal" android:layout_width="match_parent" android:layout_height="wrap_content" android:max="100" android:progress="0"/>
         <TextView android:id="@+id/statusHighSpeed" android:layout_width="match_parent" android:layout_height="wrap_content" android:background="@drawable/panel" android:padding="8dp" android:text="고속 Event 동기화 · 대기" android:textSize="13sp"/>
         <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="v0.5 고속 Event 동기화 / 이상 후보 시점" android:textStyle="bold" />
-        <ImageView android:id="@+id/imgHighSpeed" android:layout_width="match_parent" android:layout_height="260dp" android:adjustViewBounds="true" android:background="#0B1523" android:scaleType="fitCenter" />
+        <ImageView android:id="@+id/imgHighSpeed" android:layout_width="match_parent" android:layout_height="260dp" android:adjustViewBounds="true" android:background="#0B1523" android:scaleType="fitCenter" android:visibility="gone"/>
 
         <Button android:id="@+id/btnAdvanced" android:layout_width="match_parent" android:layout_height="wrap_content"
             android:layout_marginTop="8dp" android:text="v0.6 Multi-Cycle + Timing + Jerk + 예방 Trend 분석" android:textStyle="bold" android:background="@drawable/button_primary" android:textColor="#FFFFFF" android:minHeight="54dp"/>
@@ -179,13 +179,13 @@
         <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp"
             android:text="v0.6 고급 동작 분석 (누르면 확대)" android:textStyle="bold"/>
         <ImageView android:id="@+id/imgAdvanced" android:layout_width="match_parent" android:layout_height="270dp"
-            android:adjustViewBounds="true" android:background="#0B1523" android:scaleType="fitCenter"/>
+            android:adjustViewBounds="true" android:background="#0B1523" android:scaleType="fitCenter" android:visibility="gone"/>
 
         <Button android:id="@+id/btnEasyDiagnostic" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="10dp" android:text="v0.8 쉬운 진단 · Cutter 운동 / 고정부 진동 분리 + 구간별 분석" android:textStyle="bold" android:background="@drawable/button_primary" android:textColor="#FFFFFF" android:minHeight="54dp"/>
         <ProgressBar android:id="@+id/progressEasy" style="?android:attr/progressBarStyleHorizontal" android:layout_width="match_parent" android:layout_height="wrap_content" android:max="100" android:progress="0"/>
         <TextView android:id="@+id/statusEasy" android:layout_width="match_parent" android:layout_height="wrap_content" android:background="@drawable/panel" android:padding="8dp" android:text="Cutter 운동 / 고정부 진동 분리 · 대기" android:textSize="13sp"/>
         <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="v0.8 한눈에 보기 (파랑=Cutter 실제운동 / 회색=공통진동 / 자홍=Top3)" android:textStyle="bold"/>
-        <ImageView android:id="@+id/imgEasyDiagnostic" android:layout_width="match_parent" android:layout_height="300dp" android:adjustViewBounds="true" android:background="#0B1523" android:scaleType="fitCenter"/>
+        <ImageView android:id="@+id/imgEasyDiagnostic" android:layout_width="match_parent" android:layout_height="300dp" android:adjustViewBounds="true" android:background="#0B1523" android:scaleType="fitCenter" android:visibility="gone"/>
 
         <Button android:id="@+id/btnDiagnostic" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="v0.7 통합진단 · Top3 이상 순간 + Golden 비교" android:textStyle="bold" android:background="@drawable/button_primary" android:textColor="#FFFFFF" android:minHeight="54dp"/>
         <ProgressBar android:id="@+id/progressDiagnostic" style="?android:attr/progressBarStyleHorizontal" android:layout_width="match_parent" android:layout_height="wrap_content" android:max="100" android:progress="0"/>
@@ -193,7 +193,7 @@
         <Button android:id="@+id/btnGolden" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="6dp" android:text="현재 결과 Golden 등록 (정상 확인 후)"/>
         <Button android:id="@+id/btnCalibration" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="6dp" android:text="px → mm Calibration 설정"/>
         <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="v0.7 Smart Diagnostic (자홍선 = Top3 이상 후보 순간)" android:textStyle="bold"/>
-        <ImageView android:id="@+id/imgDiagnostic" android:layout_width="match_parent" android:layout_height="270dp" android:adjustViewBounds="true" android:background="#0B1523" android:scaleType="fitCenter"/>
+        <ImageView android:id="@+id/imgDiagnostic" android:layout_width="match_parent" android:layout_height="270dp" android:adjustViewBounds="true" android:background="#0B1523" android:scaleType="fitCenter" android:visibility="gone"/>
 
         <Button
             android:id="@+id/btnRoiSettings"
@@ -289,10 +289,10 @@
             android:layout_height="250dp"
             android:adjustViewBounds="true"
             android:background="#0B1523"
-            android:scaleType="fitCenter" />
+            android:scaleType="fitCenter" android:visibility="gone"/>
 
-        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="10dp" android:text="v1.7 Cycle Intelligence · Validation + Heatmap + Worst Cycle TOP3 (누르면 확대)" android:textStyle="bold"/>
-        <ImageView android:id="@+id/imgRepeatability" android:layout_width="match_parent" android:layout_height="460dp" android:adjustViewBounds="true" android:background="#0B1523" android:scaleType="fitCenter"/>
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="10dp" android:text="v1.7.1 Cycle Intelligence · Score 명확화 + Heatmap + Worst Cycle TOP3 (누르면 확대)" android:textStyle="bold"/>
+        <ImageView android:id="@+id/imgRepeatability" android:layout_width="match_parent" android:layout_height="460dp" android:adjustViewBounds="true" android:background="#0B1523" android:scaleType="fitCenter" android:visibility="gone"/>
 
         <TextView
             android:layout_width="match_parent"
@@ -306,7 +306,7 @@
             android:layout_height="240dp"
             android:adjustViewBounds="true"
             android:background="#0B1523"
-            android:scaleType="fitCenter" />
+            android:scaleType="fitCenter" android:visibility="gone"/>
 
         <TextView
             android:layout_width="match_parent"
@@ -320,7 +320,7 @@
             android:layout_height="240dp"
             android:adjustViewBounds="true"
             android:background="#0B1523"
-            android:scaleType="fitCenter" />
+            android:scaleType="fitCenter" android:visibility="gone"/>
 
         <TextView
             android:layout_width="match_parent"
@@ -334,7 +334,7 @@
             android:layout_height="270dp"
             android:adjustViewBounds="true"
             android:background="#0B1523"
-            android:scaleType="fitCenter" />
+            android:scaleType="fitCenter" android:visibility="gone"/>
 
         </LinearLayout>
 

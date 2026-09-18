@@ -95,7 +95,7 @@ GitHub Actions > Build Android APK > Run workflow를 실행합니다.
 ## v1.6 Cycle Intelligence
 v1.5 반복재현성 분석을 확장해 B 비교영상의 Worst Cycle TOP3, Cycle 편차 Heatmap, 5개 동작구간별 반복성 Spread, Cycle Time Trend를 추가했습니다. 통합검사 START 한 번으로 자동 실행되며 결과 그래프는 기존처럼 확대해서 확인할 수 있습니다.
 
-## v1.7 Cycle Diagnosis + Fast Inspection + Replay
+## v1.7.1 Cycle Diagnosis + Fast Inspection + Replay
 - 통합검사 모드 3단계: 빠른검사 / 표준검사 / 정밀검사
 - 빠른검사는 Cycle Diagnosis를 우선하고 프레임 샘플 수를 줄여 현장 확인 시간을 단축
 - High-Speed Event 결과는 통합검사 내 Advanced/Diagnostic에서 Cache로 재사용
