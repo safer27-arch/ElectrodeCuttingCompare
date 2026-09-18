@@ -1,3 +1,8 @@
+# ElectrodeCuttingCompare v1.8.1
+
+현재 핵심: Fast Engine + Cycle Diagnosis + TOP3 핵심 카드 + A/B Worst Cycle Replay.
+문제 Cycle과 문제 동작구간을 먼저 보여주고, 상세 그래프/ROI는 아래에서 확인합니다.
+
 # ElectrodeCuttingCompare v1.8.0 Fast Engine
 
 ## v1.8 핵심

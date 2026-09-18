@@ -32,13 +32,14 @@ public class MainActivity extends Activity {
     private static final int PICK_A=1001, PICK_B=1002;
     private Uri uriA, uriB;
     private long durationA=0, durationB=0;
-    private TextView txtA,txtB,txtTimeA,txtTimeB,txtStatus,txtDashboard,statusIntegrated,summaryIntegrated,txtOverallVerdict,txtStageDashboard,txtTop3Dashboard,txtRepeatabilityDashboard,txtInspectionModeHint;
+    private TextView txtA,txtB,txtTimeA,txtTimeB,txtStatus,txtDashboard,statusIntegrated,summaryIntegrated,txtOverallVerdict,txtStageDashboard,txtTop3Dashboard,txtRepeatabilityDashboard,txtInspectionModeHint,txtFastHeadline;
     private TextView statusCompare,statusCycle,statusRepeatability,statusHighSpeed,statusAdvanced,statusEasy,statusDiagnostic,statusRoi;
     private SeekBar seekA,seekB;
     private ImageView imgA,imgB,imgDiff,imgCycle,imgRepeatability,imgHighSpeed,imgRoiA,imgRoiB,imgRoiCompare,imgTop1,imgTop2,imgTop3;
     private ProgressBar progress,progressIntegrated;
     private ProgressBar progressCompare,progressCycle,progressRepeatability,progressHighSpeed,progressAdvanced,progressEasy,progressDiagnostic,progressRoi;
     private Button btnSave,btnReplayTop1,btnReplayTop2,btnReplayTop3;
+    private View replayPanel;
     private Spinner cutterProfile,inspectionMode;
     private Bitmap frameA, alignedB, diffBitmap, cycleBitmap, repeatabilityBitmap, highSpeedBitmap, advancedBitmap, diagnosticBitmap, roiCompareBitmap;
     private ImageView imgAdvanced, imgDiagnostic, imgEasyDiagnostic;
@@ -66,7 +67,7 @@ public class MainActivity extends Activity {
         imgRoiA=findViewById(R.id.imgRoiA); imgRoiB=findViewById(R.id.imgRoiB); imgRoiCompare=findViewById(R.id.imgRoiCompare);
         progress=findViewById(R.id.progress); btnSave=findViewById(R.id.btnSave); imgAdvanced=findViewById(R.id.imgAdvanced); imgDiagnostic=findViewById(R.id.imgDiagnostic); imgEasyDiagnostic=findViewById(R.id.imgEasyDiagnostic);
         txtDashboard=findViewById(R.id.txtDashboard); statusIntegrated=findViewById(R.id.statusIntegrated); summaryIntegrated=findViewById(R.id.summaryIntegrated); progressIntegrated=findViewById(R.id.progressIntegrated);
-        txtOverallVerdict=findViewById(R.id.txtOverallVerdict); txtStageDashboard=findViewById(R.id.txtStageDashboard); txtTop3Dashboard=findViewById(R.id.txtTop3Dashboard); txtRepeatabilityDashboard=findViewById(R.id.txtRepeatabilityDashboard);
+        txtOverallVerdict=findViewById(R.id.txtOverallVerdict); txtStageDashboard=findViewById(R.id.txtStageDashboard); txtTop3Dashboard=findViewById(R.id.txtTop3Dashboard); txtRepeatabilityDashboard=findViewById(R.id.txtRepeatabilityDashboard); txtFastHeadline=findViewById(R.id.txtFastHeadline);
         imgTop1=findViewById(R.id.imgTop1); imgTop2=findViewById(R.id.imgTop2); imgTop3=findViewById(R.id.imgTop3);
         progressCompare=findViewById(R.id.progressCompare); statusCompare=findViewById(R.id.statusCompare);
         progressCycle=findViewById(R.id.progressCycle); statusCycle=findViewById(R.id.statusCycle);
@@ -78,7 +79,7 @@ public class MainActivity extends Activity {
         progressRoi=findViewById(R.id.progressRoi); statusRoi=findViewById(R.id.statusRoi);
         cutterProfile=findViewById(R.id.cutterProfile);
         inspectionMode=findViewById(R.id.inspectionMode); txtInspectionModeHint=findViewById(R.id.txtInspectionModeHint);
-        btnReplayTop1=findViewById(R.id.btnReplayTop1); btnReplayTop2=findViewById(R.id.btnReplayTop2); btnReplayTop3=findViewById(R.id.btnReplayTop3);
+        btnReplayTop1=findViewById(R.id.btnReplayTop1); btnReplayTop2=findViewById(R.id.btnReplayTop2); btnReplayTop3=findViewById(R.id.btnReplayTop3); replayPanel=findViewById(R.id.replayPanel);
         cutterProfile.setAdapter(new ArrayAdapter<>(this,android.R.layout.simple_spinner_dropdown_item,new String[]{"45° Cutter","0° Cutter","사용자 Cutter"}));
         cutterProfile.setSelection(AppStateStore.getInt(this,"profile",0));
         cutterProfile.setOnItemSelectedListener(new android.widget.AdapterView.OnItemSelectedListener(){public void onItemSelected(android.widget.AdapterView<?> p,View v,int pos,long id){AppStateStore.putInt(MainActivity.this,"profile",pos);}public void onNothingSelected(android.widget.AdapterView<?> p){}});
@@ -136,7 +137,7 @@ public class MainActivity extends Activity {
 
     private void updateInspectionModeHint(int mode){
         if(txtInspectionModeHint==null)return;
-        if(mode==0)txtInspectionModeHint.setText("빠른검사 v1.8 Fast Engine · A/B 영상을 병렬로 읽고 Batch Frame Scan을 우선 사용합니다. 문제 Cycle TOP3 + 문제 동작구간을 먼저 계산하며 픽셀 Difference/ROI 정밀검사는 생략해 시간을 단축합니다.");
+        if(mode==0)txtInspectionModeHint.setText("빠른검사 v1.8.1 Fast Engine · A/B 영상을 병렬로 읽고 Batch Frame Scan을 우선 사용합니다. 문제 Cycle TOP3 + 문제 동작구간을 먼저 계산하며 픽셀 Difference/ROI 정밀검사는 생략해 시간을 단축합니다.");
         else if(mode==1)txtInspectionModeHint.setText("표준검사 · Cycle Diagnosis에 Event, 공통진동 분리, Top3/Golden을 추가합니다. 일상 점검용 권장 모드입니다.");
         else txtInspectionModeHint.setText("정밀검사 · 기존 전체 분석 8개 + ROI/Jerk까지 수행합니다. 시간이 더 걸리지만 상세 원인 확인에 적합합니다.");
     }
@@ -369,7 +370,9 @@ public class MainActivity extends Activity {
         lastInspectionElapsedSec=0.0;
         applyInspectionModeVisibility(mode);
         progressIntegrated.setProgress(2);
-        statusIntegrated.setText("통합검사 시작 · "+lastInspectionModeName+" · v1.8 Fast Engine");
+        statusIntegrated.setText("통합검사 시작 · "+lastInspectionModeName+" · v1.8.1 Fast Engine");
+        txtFastHeadline.setVisibility(View.GONE);
+        replayPanel.setVisibility(View.GONE);
         summaryIntegrated.setText("검사 진행 중... A/B 병렬 Frame Scan → 문제 Cycle TOP3 → 문제 동작구간 순으로 계산합니다.");
         if(mode==0)statusDiagnostic.setText("Smart Diagnostic / Top3 / Golden · 빠른검사에서는 생략");
 
@@ -451,6 +454,7 @@ public class MainActivity extends Activity {
         sb.append("\n※ 30fps 영상은 약 33ms보다 짧은 순간 이벤트를 놓칠 수 있습니다. 결과는 영상 기반 상대 진단이며 검증된 NG 기준 확보 전에는 불량 확정값으로 사용하지 않습니다.");
         summaryIntegrated.setText(highlight(sb.toString()));
         dashboard("통합검사 완료 · "+profileName()+"\n핵심 문제 키워드는 형광 표시 · 상세 근거는 전문가 상세분석에서 확인");
+        updateFastHeadline();
         updateFieldDashboard();
     }
 
@@ -478,13 +482,13 @@ public class MainActivity extends Activity {
 
     private void analyzeRepeatability(boolean fastMode){
         if(uriA==null||uriB==null){Toast.makeText(this,"A/B 영상을 모두 선택해 주세요.",Toast.LENGTH_SHORT).show();return;}
-        progressRepeatability.setProgress(5); statusRepeatability.setText((fastMode?"v1.8 Fast Engine · A/B 병렬 추출 · ":"")+"Cycle Diagnosis 분석 중... Cycle 자동 분리 + 경계 검증");
+        progressRepeatability.setProgress(5); statusRepeatability.setText((fastMode?"v1.8.1 Fast Engine · A/B 병렬 추출 · ":"")+"Cycle Diagnosis 분석 중... Cycle 자동 분리 + 경계 검증");
         executor.execute(()->{
             try{
                 CycleRepeatabilityAnalyzer.Result a;
                 CycleRepeatabilityAnalyzer.Result b;
                 if(fastMode){
-                    runOnUiThread(()->{progressRepeatability.setProgress(18);statusRepeatability.setText("v1.8 Fast Engine · A/B 영상 병렬 Frame Scan 중...");});
+                    runOnUiThread(()->{progressRepeatability.setProgress(18);statusRepeatability.setText("v1.8.1 Fast Engine · A/B 영상 병렬 Frame Scan 중...");});
                     java.util.concurrent.ExecutorService pair=java.util.concurrent.Executors.newFixedThreadPool(2);
                     try{
                         java.util.concurrent.Future<CycleRepeatabilityAnalyzer.Result> fa=pair.submit(()->CycleRepeatabilityAnalyzer.analyze(this,uriA,durationA,"A 기준영상",true));
@@ -528,7 +532,7 @@ public class MainActivity extends Activity {
         float stageSpread=(repeatB.stageSpreadPct!=null&&wi<repeatB.stageSpreadPct.length)?repeatB.stageSpreadPct[wi]:0f;
         String validation=repeatB.excludedCycleCount>0?"불완전 Cycle "+repeatB.excludedCycleCount+"개 자동 제외":"Cycle 경계 검증 통과";
         String text=String.format(Locale.getDefault(),
-                "v1.8 Fast Engine Cycle Diagnosis · %s\nA 기준: %d Cycle · 재현성 Score %.0f/100 (100=안정) · Time CV %.1f%%\nB 비교: %d Cycle · 재현성 Score %.0f/100 (100=안정) · Time CV %.1f%% · %s\nFast Engine: A %s %.1fs / B %s %.1fs · 병렬처리\n\n어느 Cycle이 문제인가? / 어떤 동작이 문제인가?\n%s\n\n전체 문제 집중 구간: %s · 퍼짐 %.1f%%\nCycle Time Trend: %+.1f%%\n\nA↔B 평균 궤적 차이 %.1f%% · 속도패턴 차이 %.1f%% · 최대 차이 %d~%d%%",
+                "v1.8.1 Fast Engine Cycle Diagnosis · %s\nA 기준: %d Cycle · 재현성 Score %.0f/100 (100=안정) · Time CV %.1f%%\nB 비교: %d Cycle · 재현성 Score %.0f/100 (100=안정) · Time CV %.1f%% · %s\nFast Engine: A %s %.1fs / B %s %.1fs · 병렬처리\n\n어느 Cycle이 문제인가? / 어떤 동작이 문제인가?\n%s\n\n전체 문제 집중 구간: %s · 퍼짐 %.1f%%\nCycle Time Trend: %+.1f%%\n\nA↔B 평균 궤적 차이 %.1f%% · 속도패턴 차이 %.1f%% · 최대 차이 %d~%d%%",
                 validation,repeatA.cycleCount,repeatA.repeatabilityScore,repeatA.cycleTimeCvPct,
                 repeatB.cycleCount,repeatB.repeatabilityScore,repeatB.cycleTimeCvPct,bLevel,
                 repeatA.engineName,repeatA.traceExtractSec,repeatB.engineName,repeatB.traceExtractSec,
@@ -536,10 +540,45 @@ public class MainActivity extends Activity {
                 repeatCompare.meanTrajectoryDifferencePct,repeatCompare.meanSpeedDifferencePct,repeatCompare.worstStartPct,repeatCompare.worstEndPct);
         if(repeatA.repeatabilityScore<75f) text += "\n\n기준영상 점검: A 기준영상 자체 재현성 Score가 낮습니다. 정상 기준영상 재선정/재촬영을 권장합니다.";
         txtRepeatabilityDashboard.setText(highlight(text));
+        updateFastHeadline();
         updateReplayButtons();
     }
 
-    private void setReplayButtonsEnabled(boolean enabled){btnReplayTop1.setEnabled(enabled);btnReplayTop2.setEnabled(enabled);btnReplayTop3.setEnabled(enabled);}
+    private void updateFastHeadline(){
+        if(txtFastHeadline==null)return;
+        if(repeatB==null||repeatB.worstCycleIndices==null||repeatB.worstCycleIndices.length==0){
+            txtFastHeadline.setVisibility(View.GONE);
+            return;
+        }
+        StringBuilder sb=new StringBuilder();
+        sb.append("문제 Cycle TOP3 · 무엇이 다른지 먼저 확인\n");
+        int shown=0;
+        for(int k=0;k<repeatB.worstCycleIndices.length&&shown<3;k++){
+            int idx=repeatB.worstCycleIndices[k];
+            if(idx<0||idx>=repeatB.cycleCount)continue;
+            int stage=(repeatB.worstStagePerCycle!=null&&idx<repeatB.worstStagePerCycle.length)?repeatB.worstStagePerCycle[idx]:repeatB.worstStageIndex;
+            float dev=(repeatB.worstCycleDeviationPct!=null&&k<repeatB.worstCycleDeviationPct.length)?repeatB.worstCycleDeviationPct[k]:0f;
+            sb.append(shown==0?"🥇 ":shown==1?"🥈 ":"🥉 ")
+              .append("Cycle ").append(idx+1).append(" · ")
+              .append(CycleRepeatabilityAnalyzer.stageNameForIndex(stage))
+              .append(String.format(Locale.getDefault()," · 편차 %.1f%%",dev)).append("\n");
+            shown++;
+        }
+        String state;
+        if(repeatB.cycleCount<3) state="Cycle 부족 · 결과 참고";
+        else if(repeatA!=null&&repeatA.repeatabilityScore<75f) state="기준영상 점검 필요";
+        else if(repeatB.excludedCycleCount>0) state="경계검증 완료 · 불완전 Cycle "+repeatB.excludedCycleCount+"개 제외";
+        else state="Cycle 경계검증 완료";
+        sb.append("분석 상태: ").append(state);
+        if(lastInspectionElapsedSec>0) sb.append(String.format(Locale.getDefault()," · 검사시간 %.1f초",lastInspectionElapsedSec));
+        txtFastHeadline.setText(highlight(sb.toString()));
+        txtFastHeadline.setVisibility(View.VISIBLE);
+    }
+
+    private void setReplayButtonsEnabled(boolean enabled){
+        btnReplayTop1.setEnabled(enabled);btnReplayTop2.setEnabled(enabled);btnReplayTop3.setEnabled(enabled);
+        if(replayPanel!=null) replayPanel.setVisibility(enabled?View.VISIBLE:View.GONE);
+    }
 
     private void updateReplayButtons(){
         setReplayButtonsEnabled(false);
