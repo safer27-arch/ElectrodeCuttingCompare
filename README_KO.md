@@ -1,3 +1,16 @@
+# ElectrodeCuttingCompare v1.8.0 Fast Engine
+
+## v1.8 핵심
+- 빠른검사에서 **A/B Cycle Trace를 병렬 처리**합니다.
+- Android 9(API 28)+에서 **Batch Frame Scan**을 우선 사용해 반복 random seek를 줄입니다.
+- 빠른검사는 Cycle 진단에 필요하지 않은 픽셀 Difference/촬영각 정밀 Transform 단계를 생략합니다.
+- Batch Scan이 지원되지 않는 영상/기기에서는 Scaled Random Scan으로 자동 fallback 합니다.
+- 결과에 **사용 Engine / 샘플 수 / A-B Trace 추출시간 / 전체 검사시간**을 표시합니다.
+- Worst Cycle TOP3, 문제 동작구간, Heatmap, A/B 좌우 반복재생은 그대로 유지합니다.
+- Permanent Signing을 유지하므로 기존 설치 앱 위에 업데이트합니다.
+
+> 빠른검사는 문제 Cycle 탐색용입니다. 픽셀 Difference, ROI, Jerk 등 상세 원인 분석은 표준/정밀검사를 사용하세요.
+
 # ElectrodeCuttingCompare v1.5.0
 
 ## 새 기능: Cycle Repeatability

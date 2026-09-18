@@ -26,7 +26,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
-            android:text="v1.7.1 · SCORE POLISH + FAST INSPECTION + REPLAY  |  Permanent Signing"
+            android:text="v1.8 · FAST ENGINE + CYCLE DIAGNOSIS + REPLAY  |  Permanent Signing"
             android:textColor="@color/text_dark"
             android:textSize="14sp" />
 
@@ -162,7 +162,7 @@
         <ProgressBar android:id="@+id/progressCycle" style="?android:attr/progressBarStyleHorizontal" android:layout_width="match_parent" android:layout_height="wrap_content" android:max="100" android:progress="0"/>
         <TextView android:id="@+id/statusCycle" android:layout_width="match_parent" android:layout_height="wrap_content" android:background="@drawable/panel" android:padding="8dp" android:text="Cycle 패턴 비교 · 대기" android:textSize="13sp"/>
 
-        <Button android:id="@+id/btnRepeatability" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="v1.7.1 Cycle Diagnosis · 문제 Cycle TOP3 · 문제 동작 · Validation" android:textStyle="bold" android:background="@drawable/button_primary" android:textColor="#FFFFFF" android:minHeight="54dp"/>
+        <Button android:id="@+id/btnRepeatability" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="v1.8 Fast Engine · 문제 Cycle TOP3 · 문제 동작 · 빠른 분석" android:textStyle="bold" android:background="@drawable/button_primary" android:textColor="#FFFFFF" android:minHeight="54dp"/>
         <ProgressBar android:id="@+id/progressRepeatability" style="?android:attr/progressBarStyleHorizontal" android:layout_width="match_parent" android:layout_height="wrap_content" android:max="100" android:progress="0"/>
         <TextView android:id="@+id/statusRepeatability" android:layout_width="match_parent" android:layout_height="wrap_content" android:background="@drawable/panel" android:padding="8dp" android:text="Cycle 반복 재현성 · 대기" android:textSize="13sp"/>
 
@@ -291,7 +291,7 @@
             android:background="#0B1523"
             android:scaleType="fitCenter" android:visibility="gone"/>
 
-        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="10dp" android:text="v1.7.1 Cycle Intelligence · Score 명확화 + Heatmap + Worst Cycle TOP3 (누르면 확대)" android:textStyle="bold"/>
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="10dp" android:text="v1.8 Fast Engine · A/B 병렬 Batch Scan + Heatmap + Worst Cycle TOP3 (누르면 확대)" android:textStyle="bold"/>
         <ImageView android:id="@+id/imgRepeatability" android:layout_width="match_parent" android:layout_height="460dp" android:adjustViewBounds="true" android:background="#0B1523" android:scaleType="fitCenter" android:visibility="gone"/>
 
         <TextView

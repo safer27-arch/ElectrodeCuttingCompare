@@ -7,6 +7,7 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.media.MediaMetadataRetriever;
 import android.net.Uri;
+import android.os.Build;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -15,7 +16,7 @@ import java.util.List;
 import java.util.Locale;
 
 /**
- * v1.7 Cycle Intelligence / validation analyzer.
+ * v1.8 Fast Engine / Cycle Intelligence analyzer.
  * Lightweight image-based repeatability analysis for the cutter's repeated left-right-left motion.
  * It is deliberately a relative video metric, not a calibrated displacement or NG judge.
  */
@@ -48,6 +49,9 @@ public final class CycleRepeatabilityAnalyzer {
         public float[] worstStageDeviationPct;
         public String summary;
         public boolean reliable;
+        public String engineName;
+        public int sampledFrameCount;
+        public double traceExtractSec;
     }
 
     public static final class CompareResult {
@@ -70,6 +74,7 @@ public final class CycleRepeatabilityAnalyzer {
     private static final class Shift { final int dx,dy; Shift(int dx,int dy){this.dx=dx;this.dy=dy;} }
     private static final class Trace {
         float[] x, energy; long[] timeMs; int fps;
+        String engineName; int sampleCount; double extractSec;
     }
     private static final class Segment { int start,end; boolean invert; Segment(int s,int e,boolean i){start=s;end=e;invert=i;} }
 
@@ -80,6 +85,7 @@ public final class CycleRepeatabilityAnalyzer {
     public static Result analyze(Context context, Uri uri, long durationMs, String label, boolean fastMode) throws Exception {
         Trace t=extractTrace(context,uri,durationMs,fastMode);
         Result r=new Result(); r.label=label; r.fps=t.fps;
+        r.engineName=t.engineName==null?"Frame Scan":t.engineName; r.sampledFrameCount=t.sampleCount; r.traceExtractSec=t.extractSec;
         List<Segment> raw=findCycles(t.x,t.energy);
 
         ArrayList<Segment> candidates=new ArrayList<>();
@@ -176,21 +182,109 @@ public final class CycleRepeatabilityAnalyzer {
     }
 
     private static Trace extractTrace(Context c,Uri uri,long duration,boolean fastMode) throws Exception {
+        // v1.8 Fast Engine: on Android 9+ try batch frame decoding first.
+        // This avoids dozens of independent random seeks, which was the main cause of long inspection time.
+        if(fastMode && Build.VERSION.SDK_INT>=28){
+            try{
+                Trace batch=extractTraceBatch(c,uri,duration,true);
+                if(batch!=null && batch.x!=null && batch.x.length>=20) return batch;
+            }catch(Throwable ignored){
+                // Device/codec dependent. Fall back to the stable retriever path below.
+            }
+        }
+        return extractTraceRetriever(c,uri,duration,fastMode);
+    }
+
+    private static Trace extractTraceBatch(Context c,Uri uri,long duration,boolean fastMode) throws Exception {
+        long started=android.os.SystemClock.elapsedRealtime();
+        MediaMetadataRetriever r=new MediaMetadataRetriever();
+        r.setDataSource(c,uri);
+        try{
+            int fps=30;
+            try{String q=r.extractMetadata(MediaMetadataRetriever.METADATA_KEY_CAPTURE_FRAMERATE);if(q!=null)fps=Math.max(1,Math.round(Float.parseFloat(q)));}catch(Exception ignored){}
+            int frameCount=0;
+            try{String q=r.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_FRAME_COUNT);if(q!=null)frameCount=Integer.parseInt(q);}catch(Exception ignored){}
+            // Batch decoding is ideal for the short 4~10 s cutter clips used here. For very long clips,
+            // random sampled retrieval uses less memory/decoding work.
+            if(frameCount<24 || frameCount>420) return null;
+
+            int cap=fastMode?92:145;
+            int floor=fastMode?61:81;
+            int sampleFps=fastMode?18:28;
+            int desired=Math.max(floor,Math.min(cap,(int)Math.ceil(duration/1000.0*Math.min(fps,sampleFps))+1));
+            desired=Math.max(12,Math.min(desired,frameCount));
+            int[] sampleIndex=new int[desired];
+            for(int i=0;i<desired;i++) sampleIndex[i]=Math.round((frameCount-1)*i/(float)Math.max(1,desired-1));
+
+            int w=fastMode?168:208,h=fastMode?96:118;
+            ArrayList<Float> xs=new ArrayList<>(), es=new ArrayList<>();
+            ArrayList<Long> times=new ArrayList<>();
+            Gray prev=null;
+            int target=0;
+            final int chunkSize=12;
+            for(int chunkStart=0;chunkStart<frameCount && target<desired;chunkStart+=chunkSize){
+                int count=Math.min(chunkSize,frameCount-chunkStart);
+                List<Bitmap> frames=r.getFramesAtIndex(chunkStart,count);
+                if(frames==null || frames.isEmpty()) throw new Exception("batch frame decode failed");
+                while(target<desired && sampleIndex[target]<chunkStart+count){
+                    int idx=sampleIndex[target];
+                    if(idx<chunkStart){target++;continue;}
+                    int local=idx-chunkStart;
+                    if(local>=0 && local<frames.size()){
+                        Bitmap raw=frames.get(local);
+                        if(raw!=null){
+                            Bitmap small=(raw.getWidth()==w && raw.getHeight()==h)?raw:Bitmap.createScaledBitmap(raw,w,h,true);
+                            Gray cur=gray(small);
+                            if(small!=raw) small.recycle();
+                            if(prev!=null){
+                                Shift sh=globalShift(prev,cur);
+                                float[] xe=cutterX(prev,cur,sh.dx,sh.dy);
+                                xs.add(xe[0]); es.add(xe[1]);
+                                times.add(Math.round(duration*idx/(double)Math.max(1,frameCount-1)));
+                            }
+                            prev=cur;
+                        }
+                    }
+                    target++;
+                }
+                for(Bitmap b:frames) if(b!=null && !b.isRecycled()) b.recycle();
+            }
+            if(xs.size()<20) return null;
+            float[] x=new float[xs.size()],e=new float[es.size()];long[] tm=new long[times.size()];
+            for(int i=0;i<x.length;i++){x[i]=xs.get(i);e[i]=es.get(i);tm[i]=times.get(i);}
+            fillMissingTimes(tm,duration);
+            float med=median(e); for(int i=0;i<x.length;i++)if(e[i]<Math.max(0.6f,med*.42f))x[i]=Float.NaN;
+            fillMissing(x);x=smooth(x,2);normalize01(x);
+            Trace t=new Trace();t.x=x;t.energy=smooth(e,1);t.timeMs=tm;t.fps=fps;
+            t.engineName="Batch Frame Scan";t.sampleCount=x.length+1;t.extractSec=(android.os.SystemClock.elapsedRealtime()-started)/1000.0;
+            return t;
+        } finally {try{r.release();}catch(Exception ignored){}}
+    }
+
+    private static Trace extractTraceRetriever(Context c,Uri uri,long duration,boolean fastMode) throws Exception {
+        long started=android.os.SystemClock.elapsedRealtime();
         MediaMetadataRetriever r=new MediaMetadataRetriever(); r.setDataSource(c,uri);
         int fps=30; try{String q=r.extractMetadata(MediaMetadataRetriever.METADATA_KEY_CAPTURE_FRAMERATE);if(q!=null)fps=Math.max(1,Math.round(Float.parseFloat(q)));}catch(Exception ignored){}
-        int cap=fastMode?92:145;
-        int floor=fastMode?61:81;
-        int sampleFps=fastMode?18:28;
+        int cap=fastMode?82:145;
+        int floor=fastMode?55:81;
+        int sampleFps=fastMode?16:28;
         int n=Math.max(floor,Math.min(cap,(int)Math.ceil(duration/1000.0*Math.min(fps,sampleFps))+1));
-        int w=fastMode?176:208,h=fastMode?100:118; float[] x=new float[n-1],e=new float[n-1]; long[] tm=new long[n-1];
+        int w=fastMode?168:208,h=fastMode?96:118; float[] x=new float[n-1],e=new float[n-1]; long[] tm=new long[n-1];
         Gray prev=null;
         try{
             for(int i=0;i<n;i++){
                 long ms=Math.round(duration*i/(double)(n-1));
-                Bitmap raw=r.getFrameAtTime(ms*1000L,MediaMetadataRetriever.OPTION_CLOSEST);
+                Bitmap raw=null;
+                if(Build.VERSION.SDK_INT>=27){
+                    try{raw=r.getScaledFrameAtTime(ms*1000L,MediaMetadataRetriever.OPTION_CLOSEST,w,h);}catch(Exception ignored){}
+                }
+                if(raw==null) raw=r.getFrameAtTime(ms*1000L,MediaMetadataRetriever.OPTION_CLOSEST);
                 if(raw==null)raw=r.getFrameAtTime(ms*1000L,MediaMetadataRetriever.OPTION_CLOSEST_SYNC);
                 if(raw==null)continue;
-                Bitmap small=Bitmap.createScaledBitmap(raw,w,h,true); Gray cur=gray(small); small.recycle();
+                Bitmap small=(raw.getWidth()==w&&raw.getHeight()==h)?raw:Bitmap.createScaledBitmap(raw,w,h,true);
+                Gray cur=gray(small);
+                if(small!=raw)small.recycle();
+                if(!raw.isRecycled())raw.recycle();
                 if(prev!=null){Shift sh=globalShift(prev,cur);float[] xe=cutterX(prev,cur,sh.dx,sh.dy);x[i-1]=xe[0];e[i-1]=xe[1];tm[i-1]=ms;}
                 prev=cur;
             }
@@ -198,7 +292,9 @@ public final class CycleRepeatabilityAnalyzer {
         fillMissingTimes(tm,duration);
         float med=median(e); for(int i=0;i<x.length;i++)if(e[i]<Math.max(0.6f,med*.42f))x[i]=Float.NaN;
         fillMissing(x); x=smooth(x,2); normalize01(x);
-        Trace t=new Trace();t.x=x;t.energy=smooth(e,1);t.timeMs=tm;t.fps=fps;return t;
+        Trace t=new Trace();t.x=x;t.energy=smooth(e,1);t.timeMs=tm;t.fps=fps;
+        t.engineName=fastMode?"Scaled Random Scan (fallback)":"Detailed Frame Scan";t.sampleCount=n;t.extractSec=(android.os.SystemClock.elapsedRealtime()-started)/1000.0;
+        return t;
     }
 
     private static Gray gray(Bitmap b){int w=b.getWidth(),h=b.getHeight();Gray g=new Gray(w,h);int[]px=new int[w*h];b.getPixels(px,0,w,0,0,w,h);for(int i=0;i<px.length;i++){int z=px[i];g.p[i]=(byte)((Color.red(z)*30+Color.green(z)*59+Color.blue(z)*11)/100);}return g;}
@@ -244,6 +340,7 @@ public final class CycleRepeatabilityAnalyzer {
             s.append("검출 Cycle ").append(r.cycleCount).append("개 · 반복성 계산에 Cycle이 부족합니다. 촬영 시간을 늘리거나 커터가 여러 번 왕복하도록 촬영해 주세요.\n");
         }else{
             s.append(String.format(Locale.getDefault(),"검출 Cycle %d개 · 재현성 Score %.0f/100 (100=안정) · 평균 Cycle Time %.3fs · Time CV %.1f%%\n",r.cycleCount,r.repeatabilityScore,r.meanCycleSec,r.cycleTimeCvPct));
+            s.append(String.format(Locale.getDefault(),"Fast Engine: %s · 샘플 %d · Trace %.1fs\n",r.engineName,r.sampledFrameCount,r.traceExtractSec));
             s.append("Cycle Time: ");
             for(int i=0;i<r.cycleTimesSec.length&&i<10;i++){if(i>0)s.append(" / ");s.append(String.format(Locale.getDefault(),"%.3fs",r.cycleTimesSec[i]));}
             s.append("\n");
@@ -303,7 +400,7 @@ public final class CycleRepeatabilityAnalyzer {
 
     private static Bitmap draw(Result a,Result b,float diff,float speedDiff,int worstStart,int worstEnd){
         int w=1200,h=2080;Bitmap out=Bitmap.createBitmap(w,h,Bitmap.Config.ARGB_8888);Canvas c=new Canvas(out);c.drawColor(Color.WHITE);Paint p=new Paint(Paint.ANTI_ALIAS_FLAG);
-        p.setColor(Color.rgb(15,48,88));p.setTextSize(38);p.setFakeBoldText(true);c.drawText("v1.7.1 Cycle Intelligence · Polish + Replay",45,55,p);p.setFakeBoldText(false);p.setTextSize(22);p.setColor(Color.DKGRAY);c.drawText("Cycle 검증 + Worst Cycle TOP3 + 문제 동작구간 + Heatmap",45,92,p);
+        p.setColor(Color.rgb(15,48,88));p.setTextSize(38);p.setFakeBoldText(true);c.drawText("v1.8 Fast Engine · Cycle Diagnosis",45,55,p);p.setFakeBoldText(false);p.setTextSize(22);p.setColor(Color.DKGRAY);c.drawText("A/B 병렬 추출 + Batch Frame Scan + Worst Cycle TOP3 + 문제 동작구간",45,92,p);
         drawOverlayPanel(c,p,a,60,135,1140,395,"A 기준영상 · Cycle 1~10 내부 재현성",Color.rgb(30,100,220));
         drawOverlayPanel(c,p,b,60,430,1140,690,"B 비교영상 · Cycle 1~10 내부 재현성",Color.rgb(220,75,50));
         drawComparePanel(c,p,a,b,60,725,1140,975,worstStart,worstEnd);

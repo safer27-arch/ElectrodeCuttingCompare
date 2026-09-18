@@ -136,7 +136,7 @@ public class MainActivity extends Activity {
 
     private void updateInspectionModeHint(int mode){
         if(txtInspectionModeHint==null)return;
-        if(mode==0)txtInspectionModeHint.setText("빠른검사 · 문제 Cycle TOP3 + 문제 동작구간 + A/B 대표 비교를 우선 분석합니다. 프레임 샘플 수를 줄여 현장 확인 시간을 단축합니다.");
+        if(mode==0)txtInspectionModeHint.setText("빠른검사 v1.8 Fast Engine · A/B 영상을 병렬로 읽고 Batch Frame Scan을 우선 사용합니다. 문제 Cycle TOP3 + 문제 동작구간을 먼저 계산하며 픽셀 Difference/ROI 정밀검사는 생략해 시간을 단축합니다.");
         else if(mode==1)txtInspectionModeHint.setText("표준검사 · Cycle Diagnosis에 Event, 공통진동 분리, Top3/Golden을 추가합니다. 일상 점검용 권장 모드입니다.");
         else txtInspectionModeHint.setText("정밀검사 · 기존 전체 분석 8개 + ROI/Jerk까지 수행합니다. 시간이 더 걸리지만 상세 원인 확인에 적합합니다.");
     }
@@ -369,14 +369,22 @@ public class MainActivity extends Activity {
         lastInspectionElapsedSec=0.0;
         applyInspectionModeVisibility(mode);
         progressIntegrated.setProgress(2);
-        statusIntegrated.setText("통합검사 시작 · "+lastInspectionModeName+" · 중복 영상처리 최소화");
-        summaryIntegrated.setText("검사 진행 중... 문제 Cycle TOP3와 문제 동작구간을 우선 계산합니다.");
+        statusIntegrated.setText("통합검사 시작 · "+lastInspectionModeName+" · v1.8 Fast Engine");
+        summaryIntegrated.setText("검사 진행 중... A/B 병렬 Frame Scan → 문제 Cycle TOP3 → 문제 동작구간 순으로 계산합니다.");
         if(mode==0)statusDiagnostic.setText("Smart Diagnostic / Top3 / Golden · 빠른검사에서는 생략");
 
-        analyze();
-        integratedMark(15,"A/B 대표 프레임·촬영각 보정 완료");
+        if(mode==0){
+            // Fast mode: Cycle diagnosis does not require the expensive pixel-level camera transform/difference map.
+            // Skipping it removes one full decode/registration pass while keeping A/B cycle comparison intact.
+            progressCompare.setProgress(100);
+            statusCompare.setText("v1.8 빠른검사 · 픽셀 Difference/촬영각 정밀보정 생략 · Cycle 내부 좌표 정규화 사용");
+            integratedMark(8,"Fast Engine 준비 · A/B 병렬 Frame Scan");
+        }else{
+            analyze();
+            integratedMark(15,"A/B 대표 프레임·촬영각 보정 완료");
+        }
         analyzeRepeatability(mode==0);
-        integratedMark(mode==0?85:34,"Cycle 검증 · Worst Cycle TOP3 · 문제 동작구간 완료");
+        integratedMark(mode==0?94:34,"Cycle 검증 · Worst Cycle TOP3 · 문제 동작구간 완료");
 
         if(mode>=2){
             analyzeCycle();
@@ -428,6 +436,7 @@ public class MainActivity extends Activity {
         sb.append("• Tip/Gripper/Nip ROI 편차 · Golden 변화 · Top3 이상순간\n\n");
         if(repeatCompare!=null){
             sb.append(String.format(Locale.getDefault(),"Cycle Intelligence · 재현성 Score(100=안정): A %.0f/100 · B %.0f/100 · 평균궤적 차이 %.1f%% · 속도패턴 차이 %.1f%% · 최대차이 %d~%d%%\n",repeatA.repeatabilityScore,repeatB.repeatabilityScore,repeatCompare.meanTrajectoryDifferencePct,repeatCompare.meanSpeedDifferencePct,repeatCompare.worstStartPct,repeatCompare.worstEndPct));
+            sb.append(String.format(Locale.getDefault(),"Fast Engine · A %s %.1fs / B %s %.1fs · A/B 병렬 처리\n",repeatA.engineName,repeatA.traceExtractSec,repeatB.engineName,repeatB.traceExtractSec));
             if(repeatA.repeatabilityScore<75f) sb.append("기준영상 점검: A 기준영상 자체의 반복 재현성이 낮습니다. 더 안정적인 정상 기준영상으로 재확인 권장\n");
         }
         if(lastAdvanced!=null) sb.append("고급동작: 분석 완료 · Trend/Timing/Jerk 반영\n");
@@ -469,12 +478,26 @@ public class MainActivity extends Activity {
 
     private void analyzeRepeatability(boolean fastMode){
         if(uriA==null||uriB==null){Toast.makeText(this,"A/B 영상을 모두 선택해 주세요.",Toast.LENGTH_SHORT).show();return;}
-        progressRepeatability.setProgress(5); statusRepeatability.setText((fastMode?"빠른검사 · ":"")+"v1.7 Cycle Diagnosis 분석 중... A 기준영상 Cycle 자동 분리 + 경계 검증");
+        progressRepeatability.setProgress(5); statusRepeatability.setText((fastMode?"v1.8 Fast Engine · A/B 병렬 추출 · ":"")+"Cycle Diagnosis 분석 중... Cycle 자동 분리 + 경계 검증");
         executor.execute(()->{
             try{
-                CycleRepeatabilityAnalyzer.Result a=CycleRepeatabilityAnalyzer.analyze(this,uriA,durationA,"A 기준영상",fastMode);
-                runOnUiThread(()->{progressRepeatability.setProgress(48);statusRepeatability.setText("B 비교영상 Cycle 자동 분리 · 불완전 Cycle 제외 · 문제 동작구간 계산 중...");});
-                CycleRepeatabilityAnalyzer.Result b=CycleRepeatabilityAnalyzer.analyze(this,uriB,durationB,"B 비교영상",fastMode);
+                CycleRepeatabilityAnalyzer.Result a;
+                CycleRepeatabilityAnalyzer.Result b;
+                if(fastMode){
+                    runOnUiThread(()->{progressRepeatability.setProgress(18);statusRepeatability.setText("v1.8 Fast Engine · A/B 영상 병렬 Frame Scan 중...");});
+                    java.util.concurrent.ExecutorService pair=java.util.concurrent.Executors.newFixedThreadPool(2);
+                    try{
+                        java.util.concurrent.Future<CycleRepeatabilityAnalyzer.Result> fa=pair.submit(()->CycleRepeatabilityAnalyzer.analyze(this,uriA,durationA,"A 기준영상",true));
+                        java.util.concurrent.Future<CycleRepeatabilityAnalyzer.Result> fb=pair.submit(()->CycleRepeatabilityAnalyzer.analyze(this,uriB,durationB,"B 비교영상",true));
+                        a=fa.get();
+                        runOnUiThread(()->{progressRepeatability.setProgress(58);statusRepeatability.setText("A/B 병렬 추출 완료 · Cycle 경계 검증 + 문제 동작구간 계산 중...");});
+                        b=fb.get();
+                    }finally{pair.shutdownNow();}
+                }else{
+                    a=CycleRepeatabilityAnalyzer.analyze(this,uriA,durationA,"A 기준영상",false);
+                    runOnUiThread(()->{progressRepeatability.setProgress(48);statusRepeatability.setText("B 비교영상 Cycle 자동 분리 · 불완전 Cycle 제외 · 문제 동작구간 계산 중...");});
+                    b=CycleRepeatabilityAnalyzer.analyze(this,uriB,durationB,"B 비교영상",false);
+                }
                 CycleRepeatabilityAnalyzer.CompareResult cr=CycleRepeatabilityAnalyzer.compare(a,b);
                 repeatA=a;repeatB=b;repeatCompare=cr;repeatabilityBitmap=cr.chart;
                 runOnUiThread(()->{
@@ -505,9 +528,10 @@ public class MainActivity extends Activity {
         float stageSpread=(repeatB.stageSpreadPct!=null&&wi<repeatB.stageSpreadPct.length)?repeatB.stageSpreadPct[wi]:0f;
         String validation=repeatB.excludedCycleCount>0?"불완전 Cycle "+repeatB.excludedCycleCount+"개 자동 제외":"Cycle 경계 검증 통과";
         String text=String.format(Locale.getDefault(),
-                "v1.7.1 Cycle Diagnosis · %s\nA 기준: %d Cycle · 재현성 Score %.0f/100 (100=안정) · Time CV %.1f%%\nB 비교: %d Cycle · 재현성 Score %.0f/100 (100=안정) · Time CV %.1f%% · %s\n\n어느 Cycle이 문제인가? / 어떤 동작이 문제인가?\n%s\n\n전체 문제 집중 구간: %s · 퍼짐 %.1f%%\nCycle Time Trend: %+.1f%%\n\nA↔B 평균 궤적 차이 %.1f%% · 속도패턴 차이 %.1f%% · 최대 차이 %d~%d%%",
+                "v1.8 Fast Engine Cycle Diagnosis · %s\nA 기준: %d Cycle · 재현성 Score %.0f/100 (100=안정) · Time CV %.1f%%\nB 비교: %d Cycle · 재현성 Score %.0f/100 (100=안정) · Time CV %.1f%% · %s\nFast Engine: A %s %.1fs / B %s %.1fs · 병렬처리\n\n어느 Cycle이 문제인가? / 어떤 동작이 문제인가?\n%s\n\n전체 문제 집중 구간: %s · 퍼짐 %.1f%%\nCycle Time Trend: %+.1f%%\n\nA↔B 평균 궤적 차이 %.1f%% · 속도패턴 차이 %.1f%% · 최대 차이 %d~%d%%",
                 validation,repeatA.cycleCount,repeatA.repeatabilityScore,repeatA.cycleTimeCvPct,
                 repeatB.cycleCount,repeatB.repeatabilityScore,repeatB.cycleTimeCvPct,bLevel,
+                repeatA.engineName,repeatA.traceExtractSec,repeatB.engineName,repeatB.traceExtractSec,
                 ranked.length()==0?"Cycle 부족":ranked.toString(),stages[wi],stageSpread,repeatB.cycleTimeTrendPct,
                 repeatCompare.meanTrajectoryDifferencePct,repeatCompare.meanSpeedDifferencePct,repeatCompare.worstStartPct,repeatCompare.worstEndPct);
         if(repeatA.repeatabilityScore<75f) text += "\n\n기준영상 점검: A 기준영상 자체 재현성 Score가 낮습니다. 정상 기준영상 재선정/재촬영을 권장합니다.";
