@@ -26,7 +26,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
-            android:text="v1.8.1 · FAST ENGINE + CYCLE DIAGNOSIS UI POLISH  |  Permanent Signing"
+            android:text="v1.8.2 · TOP3 QUICK REPLAY + REFERENCE RELIABILITY  |  Permanent Signing"
             android:textColor="@color/text_dark"
             android:textSize="14sp" />
 
@@ -57,6 +57,25 @@
             android:textStyle="bold"
             android:visibility="gone"/>
 
+        <TextView
+            android:id="@+id/txtReferenceBanner"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:background="@drawable/panel"
+            android:padding="12dp"
+            android:text="기준영상 신뢰도 · 검사 후 표시"
+            android:textSize="15sp"
+            android:textStyle="bold"
+            android:visibility="gone"/>
+
+        <LinearLayout android:id="@+id/replayPanel" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="6dp" android:orientation="vertical" android:background="@drawable/panel" android:padding="8dp" android:visibility="gone">
+            <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="문제 Cycle 바로 비교재생 · A 기준 Cycle ↔ B 문제 Cycle 좌우 동시 재생" android:textStyle="bold" android:textSize="13sp"/>
+            <Button android:id="@+id/btnReplayTop1" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="60dp" android:textSize="15sp" android:text="🥇 TOP1 Cycle 비교재생 · 분석 후 활성화" android:enabled="false"/>
+            <Button android:id="@+id/btnReplayTop2" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="60dp" android:textSize="15sp" android:text="🥈 TOP2 Cycle 비교재생 · 분석 후 활성화" android:enabled="false"/>
+            <Button android:id="@+id/btnReplayTop3" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="60dp" android:textSize="15sp" android:text="🥉 TOP3 Cycle 비교재생 · 분석 후 활성화" android:enabled="false"/>
+        </LinearLayout>
+
         <TextView android:id="@+id/txtOverallVerdict" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="10dp" android:background="@drawable/panel" android:gravity="center" android:padding="14dp" android:text="종합판정 · 검사 대기" android:textSize="22sp" android:textStyle="bold"/>
         <TextView android:id="@+id/txtStageDashboard" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:background="@drawable/panel" android:padding="12dp" android:text="5단계 Cutter 추정 상태\n① 대기  ② 전진가속  ③ 커팅/충격  ④ 복귀가속  ⑤ 안정화" android:textSize="15sp" android:textStyle="bold"/>
         <TextView android:id="@+id/txtTop3Dashboard" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:background="@drawable/panel" android:padding="12dp" android:text="A 기준 대비 B 주요 차이 TOP 3 · 검사 대기" android:textSize="15sp" android:textStyle="bold"/>
@@ -67,12 +86,7 @@
 
         <TextView android:id="@+id/txtRepeatabilityDashboard" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:background="@drawable/panel" android:padding="12dp" android:text="Cycle Diagnosis · 검사 대기&#10;어느 Cycle이 문제인지 + 어떤 동작구간이 문제인지 TOP3로 표시합니다." android:textSize="15sp" android:textStyle="bold"/>
 
-        <LinearLayout android:id="@+id/replayPanel" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="6dp" android:orientation="vertical" android:background="@drawable/panel" android:padding="8dp" android:visibility="gone">
-            <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Worst Cycle A/B 반복 비교재생 · 버튼을 누르면 좌우 동시 재생" android:textStyle="bold" android:textSize="13sp"/>
-            <Button android:id="@+id/btnReplayTop1" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="52dp" android:textSize="14sp" android:text="🥇 TOP1 Cycle 비교재생 · 분석 후 활성화" android:enabled="false"/>
-            <Button android:id="@+id/btnReplayTop2" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="52dp" android:textSize="14sp" android:text="🥈 TOP2 Cycle 비교재생 · 분석 후 활성화" android:enabled="false"/>
-            <Button android:id="@+id/btnReplayTop3" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="52dp" android:textSize="14sp" android:text="🥉 TOP3 Cycle 비교재생 · 분석 후 활성화" android:enabled="false"/>
-        </LinearLayout>
+
 
         <TextView android:id="@+id/txtDashboard" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="10dp" android:background="@drawable/panel" android:padding="12dp" android:text="SYSTEM READY  •  종합 진단 대기\nA 기준영상과 B 비교영상을 선택하고 분석을 시작하세요.\n결과는 각 분석 카드에 독립적으로 유지됩니다." android:textSize="16sp" android:textStyle="bold"/>
 
@@ -304,7 +318,7 @@
             android:background="#0B1523"
             android:scaleType="fitCenter" android:visibility="gone"/>
 
-        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="10dp" android:text="v1.8.1 Fast Engine · Overlay + Heatmap + Worst Cycle TOP3 (누르면 확대)" android:textStyle="bold"/>
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="10dp" android:text="v1.8.2 Fast Engine · Overlay + Heatmap + Worst Cycle TOP3 (누르면 확대)" android:textStyle="bold"/>
         <ImageView android:id="@+id/imgRepeatability" android:layout_width="match_parent" android:layout_height="460dp" android:adjustViewBounds="true" android:background="#0B1523" android:scaleType="fitCenter" android:visibility="gone"/>
 
         <TextView

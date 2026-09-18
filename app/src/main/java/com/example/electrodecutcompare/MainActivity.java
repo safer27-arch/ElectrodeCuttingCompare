@@ -32,7 +32,7 @@ public class MainActivity extends Activity {
     private static final int PICK_A=1001, PICK_B=1002;
     private Uri uriA, uriB;
     private long durationA=0, durationB=0;
-    private TextView txtA,txtB,txtTimeA,txtTimeB,txtStatus,txtDashboard,statusIntegrated,summaryIntegrated,txtOverallVerdict,txtStageDashboard,txtTop3Dashboard,txtRepeatabilityDashboard,txtInspectionModeHint,txtFastHeadline;
+    private TextView txtA,txtB,txtTimeA,txtTimeB,txtStatus,txtDashboard,statusIntegrated,summaryIntegrated,txtOverallVerdict,txtStageDashboard,txtTop3Dashboard,txtRepeatabilityDashboard,txtInspectionModeHint,txtFastHeadline,txtReferenceBanner;
     private TextView statusCompare,statusCycle,statusRepeatability,statusHighSpeed,statusAdvanced,statusEasy,statusDiagnostic,statusRoi;
     private SeekBar seekA,seekB;
     private ImageView imgA,imgB,imgDiff,imgCycle,imgRepeatability,imgHighSpeed,imgRoiA,imgRoiB,imgRoiCompare,imgTop1,imgTop2,imgTop3;
@@ -67,7 +67,7 @@ public class MainActivity extends Activity {
         imgRoiA=findViewById(R.id.imgRoiA); imgRoiB=findViewById(R.id.imgRoiB); imgRoiCompare=findViewById(R.id.imgRoiCompare);
         progress=findViewById(R.id.progress); btnSave=findViewById(R.id.btnSave); imgAdvanced=findViewById(R.id.imgAdvanced); imgDiagnostic=findViewById(R.id.imgDiagnostic); imgEasyDiagnostic=findViewById(R.id.imgEasyDiagnostic);
         txtDashboard=findViewById(R.id.txtDashboard); statusIntegrated=findViewById(R.id.statusIntegrated); summaryIntegrated=findViewById(R.id.summaryIntegrated); progressIntegrated=findViewById(R.id.progressIntegrated);
-        txtOverallVerdict=findViewById(R.id.txtOverallVerdict); txtStageDashboard=findViewById(R.id.txtStageDashboard); txtTop3Dashboard=findViewById(R.id.txtTop3Dashboard); txtRepeatabilityDashboard=findViewById(R.id.txtRepeatabilityDashboard); txtFastHeadline=findViewById(R.id.txtFastHeadline);
+        txtOverallVerdict=findViewById(R.id.txtOverallVerdict); txtStageDashboard=findViewById(R.id.txtStageDashboard); txtTop3Dashboard=findViewById(R.id.txtTop3Dashboard); txtRepeatabilityDashboard=findViewById(R.id.txtRepeatabilityDashboard); txtFastHeadline=findViewById(R.id.txtFastHeadline); txtReferenceBanner=findViewById(R.id.txtReferenceBanner);
         imgTop1=findViewById(R.id.imgTop1); imgTop2=findViewById(R.id.imgTop2); imgTop3=findViewById(R.id.imgTop3);
         progressCompare=findViewById(R.id.progressCompare); statusCompare=findViewById(R.id.statusCompare);
         progressCycle=findViewById(R.id.progressCycle); statusCycle=findViewById(R.id.statusCycle);
@@ -130,14 +130,14 @@ public class MainActivity extends Activity {
     private void dashboard(String message){ runOnUiThread(()->txtDashboard.setText(highlight(message))); }
     private android.text.SpannableString highlight(String text){
         android.text.SpannableString sp=new android.text.SpannableString(text);
-        String[] keys={"핵심 차이","확인 필요","큰 차이","재현성 저하","불안정","최대 차이","주의 후보","이상 후보","Worst Cycle","문제 집중 구간","Cycle Time 변동","TOP1","문제 Cycle","문제 동작","불완전 Cycle","기준영상 점검","검사시간"};
+        String[] keys={"핵심 차이","확인 필요","큰 차이","재현성 저하","불안정","최대 차이","주의 후보","이상 후보","Worst Cycle","문제 집중 구간","Cycle Time 변동","TOP1","문제 Cycle","문제 동작","불완전 Cycle","기준영상 점검","검사시간","기준영상 신뢰도","비교재생"};
         for(String k:keys){int from=0; while((from=text.indexOf(k,from))>=0){int end=from+k.length(); sp.setSpan(new android.text.style.BackgroundColorSpan(Color.rgb(255,235,59)),from,end,android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE); sp.setSpan(new android.text.style.ForegroundColorSpan(Color.rgb(15,20,25)),from,end,android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE); sp.setSpan(new android.text.style.StyleSpan(android.graphics.Typeface.BOLD),from,end,android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE); from=end;}}
         return sp;
     }
 
     private void updateInspectionModeHint(int mode){
         if(txtInspectionModeHint==null)return;
-        if(mode==0)txtInspectionModeHint.setText("빠른검사 v1.8.1 Fast Engine · A/B 영상을 병렬로 읽고 Batch Frame Scan을 우선 사용합니다. 문제 Cycle TOP3 + 문제 동작구간을 먼저 계산하며 픽셀 Difference/ROI 정밀검사는 생략해 시간을 단축합니다.");
+        if(mode==0)txtInspectionModeHint.setText("빠른검사 v1.8.2 Fast Engine · A/B 영상을 병렬로 읽고 Batch Frame Scan을 우선 사용합니다. 문제 Cycle TOP3 + 문제 동작구간을 먼저 계산하며 픽셀 Difference/ROI 정밀검사는 생략해 시간을 단축합니다.");
         else if(mode==1)txtInspectionModeHint.setText("표준검사 · Cycle Diagnosis에 Event, 공통진동 분리, Top3/Golden을 추가합니다. 일상 점검용 권장 모드입니다.");
         else txtInspectionModeHint.setText("정밀검사 · 기존 전체 분석 8개 + ROI/Jerk까지 수행합니다. 시간이 더 걸리지만 상세 원인 확인에 적합합니다.");
     }
@@ -370,8 +370,9 @@ public class MainActivity extends Activity {
         lastInspectionElapsedSec=0.0;
         applyInspectionModeVisibility(mode);
         progressIntegrated.setProgress(2);
-        statusIntegrated.setText("통합검사 시작 · "+lastInspectionModeName+" · v1.8.1 Fast Engine");
+        statusIntegrated.setText("통합검사 시작 · "+lastInspectionModeName+" · v1.8.2 Fast Engine");
         txtFastHeadline.setVisibility(View.GONE);
+        if(txtReferenceBanner!=null) txtReferenceBanner.setVisibility(View.GONE);
         replayPanel.setVisibility(View.GONE);
         summaryIntegrated.setText("검사 진행 중... A/B 병렬 Frame Scan → 문제 Cycle TOP3 → 문제 동작구간 순으로 계산합니다.");
         if(mode==0)statusDiagnostic.setText("Smart Diagnostic / Top3 / Golden · 빠른검사에서는 생략");
@@ -482,13 +483,13 @@ public class MainActivity extends Activity {
 
     private void analyzeRepeatability(boolean fastMode){
         if(uriA==null||uriB==null){Toast.makeText(this,"A/B 영상을 모두 선택해 주세요.",Toast.LENGTH_SHORT).show();return;}
-        progressRepeatability.setProgress(5); statusRepeatability.setText((fastMode?"v1.8.1 Fast Engine · A/B 병렬 추출 · ":"")+"Cycle Diagnosis 분석 중... Cycle 자동 분리 + 경계 검증");
+        progressRepeatability.setProgress(5); statusRepeatability.setText((fastMode?"v1.8.2 Fast Engine · A/B 병렬 추출 · ":"")+"Cycle Diagnosis 분석 중... Cycle 자동 분리 + 경계 검증");
         executor.execute(()->{
             try{
                 CycleRepeatabilityAnalyzer.Result a;
                 CycleRepeatabilityAnalyzer.Result b;
                 if(fastMode){
-                    runOnUiThread(()->{progressRepeatability.setProgress(18);statusRepeatability.setText("v1.8.1 Fast Engine · A/B 영상 병렬 Frame Scan 중...");});
+                    runOnUiThread(()->{progressRepeatability.setProgress(18);statusRepeatability.setText("v1.8.2 Fast Engine · A/B 영상 병렬 Frame Scan 중...");});
                     java.util.concurrent.ExecutorService pair=java.util.concurrent.Executors.newFixedThreadPool(2);
                     try{
                         java.util.concurrent.Future<CycleRepeatabilityAnalyzer.Result> fa=pair.submit(()->CycleRepeatabilityAnalyzer.analyze(this,uriA,durationA,"A 기준영상",true));
@@ -532,7 +533,7 @@ public class MainActivity extends Activity {
         float stageSpread=(repeatB.stageSpreadPct!=null&&wi<repeatB.stageSpreadPct.length)?repeatB.stageSpreadPct[wi]:0f;
         String validation=repeatB.excludedCycleCount>0?"불완전 Cycle "+repeatB.excludedCycleCount+"개 자동 제외":"Cycle 경계 검증 통과";
         String text=String.format(Locale.getDefault(),
-                "v1.8.1 Fast Engine Cycle Diagnosis · %s\nA 기준: %d Cycle · 재현성 Score %.0f/100 (100=안정) · Time CV %.1f%%\nB 비교: %d Cycle · 재현성 Score %.0f/100 (100=안정) · Time CV %.1f%% · %s\nFast Engine: A %s %.1fs / B %s %.1fs · 병렬처리\n\n어느 Cycle이 문제인가? / 어떤 동작이 문제인가?\n%s\n\n전체 문제 집중 구간: %s · 퍼짐 %.1f%%\nCycle Time Trend: %+.1f%%\n\nA↔B 평균 궤적 차이 %.1f%% · 속도패턴 차이 %.1f%% · 최대 차이 %d~%d%%",
+                "v1.8.2 Fast Engine Cycle Diagnosis · %s\nA 기준: %d Cycle · 재현성 Score %.0f/100 (100=안정) · Time CV %.1f%%\nB 비교: %d Cycle · 재현성 Score %.0f/100 (100=안정) · Time CV %.1f%% · %s\nFast Engine: A %s %.1fs / B %s %.1fs · 병렬처리\n\n어느 Cycle이 문제인가? / 어떤 동작이 문제인가?\n%s\n\n전체 문제 집중 구간: %s · 퍼짐 %.1f%%\nCycle Time Trend: %+.1f%%\n\nA↔B 평균 궤적 차이 %.1f%% · 속도패턴 차이 %.1f%% · 최대 차이 %d~%d%%",
                 validation,repeatA.cycleCount,repeatA.repeatabilityScore,repeatA.cycleTimeCvPct,
                 repeatB.cycleCount,repeatB.repeatabilityScore,repeatB.cycleTimeCvPct,bLevel,
                 repeatA.engineName,repeatA.traceExtractSec,repeatB.engineName,repeatB.traceExtractSec,
@@ -541,6 +542,7 @@ public class MainActivity extends Activity {
         if(repeatA.repeatabilityScore<75f) text += "\n\n기준영상 점검: A 기준영상 자체 재현성 Score가 낮습니다. 정상 기준영상 재선정/재촬영을 권장합니다.";
         txtRepeatabilityDashboard.setText(highlight(text));
         updateFastHeadline();
+        updateReferenceBanner();
         updateReplayButtons();
     }
 
@@ -551,7 +553,7 @@ public class MainActivity extends Activity {
             return;
         }
         StringBuilder sb=new StringBuilder();
-        sb.append("문제 Cycle TOP3 · 무엇이 다른지 먼저 확인\n");
+        sb.append("문제 Cycle TOP3 · Cycle 번호 → 문제 동작 → 편차\n");
         int shown=0;
         for(int k=0;k<repeatB.worstCycleIndices.length&&shown<3;k++){
             int idx=repeatB.worstCycleIndices[k];
@@ -569,10 +571,31 @@ public class MainActivity extends Activity {
         else if(repeatA!=null&&repeatA.repeatabilityScore<75f) state="기준영상 점검 필요";
         else if(repeatB.excludedCycleCount>0) state="경계검증 완료 · 불완전 Cycle "+repeatB.excludedCycleCount+"개 제외";
         else state="Cycle 경계검증 완료";
+        sb.append("→ 아래 TOP1~3 버튼을 누르면 A/B Cycle을 즉시 좌우 비교재생\n");
         sb.append("분석 상태: ").append(state);
         if(lastInspectionElapsedSec>0) sb.append(String.format(Locale.getDefault()," · 검사시간 %.1f초",lastInspectionElapsedSec));
         txtFastHeadline.setText(highlight(sb.toString()));
         txtFastHeadline.setVisibility(View.VISIBLE);
+    }
+
+    private void updateReferenceBanner(){
+        if(txtReferenceBanner==null){ return; }
+        if(repeatA==null || repeatA.cycleCount<2){
+            txtReferenceBanner.setVisibility(View.GONE);
+            return;
+        }
+        if(repeatA.repeatabilityScore < 75f){
+            txtReferenceBanner.setText(highlight(String.format(Locale.getDefault(),
+                    "⚠ 기준영상 신뢰도 낮음 · A 재현성 Score %.0f/100\n정상 기준영상으로 사용하기 전에 재촬영/재선정을 권장합니다.",
+                    repeatA.repeatabilityScore)));
+            txtReferenceBanner.setTextColor(Color.rgb(255,215,64));
+        }else{
+            txtReferenceBanner.setText(String.format(Locale.getDefault(),
+                    "✓ 기준영상 반복성 양호 · A 재현성 Score %.0f/100 · %d Cycle 검증",
+                    repeatA.repeatabilityScore, repeatA.cycleCount));
+            txtReferenceBanner.setTextColor(Color.rgb(100,221,120));
+        }
+        txtReferenceBanner.setVisibility(View.VISIBLE);
     }
 
     private void setReplayButtonsEnabled(boolean enabled){
