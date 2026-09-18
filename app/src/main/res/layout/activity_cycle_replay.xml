@@ -56,6 +56,42 @@
         </LinearLayout>
     </LinearLayout>
 
+    <TextView
+        android:id="@+id/txtReplayProgress"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:gravity="center"
+        android:text="Cycle 진행률 · A 0% | B 0% | Δ 0%"
+        android:textSize="14sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="A 기준 Cycle 진행률"
+        android:textSize="11sp" />
+    <ProgressBar
+        android:id="@+id/progressReplayA"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:max="1000"
+        android:progress="0" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="B 문제 Cycle 진행률"
+        android:textSize="11sp" />
+    <ProgressBar
+        android:id="@+id/progressReplayB"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:max="1000"
+        android:progress="0" />
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -63,13 +99,15 @@
         android:orientation="horizontal">
         <Button android:id="@+id/btnReplayRestart" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="↻ 동시 다시 시작" />
         <Button android:id="@+id/btnReplayPause" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="⏸ 일시정지" />
+        <Button android:id="@+id/btnReplaySync" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="⇄ 진행률 동기화" />
         <Button android:id="@+id/btnReplayClose" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="닫기" />
     </LinearLayout>
 
     <TextView
+        android:id="@+id/txtReplayModeNote"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="4dp"
-        android:text="※ A/B는 원래 속도로 반복재생됩니다. Cycle Time 차이 자체도 진단 정보이므로 속도를 인위적으로 맞추지 않습니다."
+        android:text="※ 원속도 모드: 실제 Cycle Time 차이를 그대로 봅니다. 진행률 동기화 모드: 짧은 Cycle을 느리게 재생해 A/B의 0~100% 동작 위치를 맞춰 비교합니다."
         android:textSize="11sp" />
 </LinearLayout>

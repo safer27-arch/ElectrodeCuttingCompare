@@ -26,7 +26,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
-            android:text="v1.8.2 · TOP3 QUICK REPLAY + REFERENCE RELIABILITY  |  Permanent Signing"
+            android:text="v1.8.3 · DUAL REPLAY + SYNCHRONIZED PROGRESS  |  Permanent Signing"
             android:textColor="@color/text_dark"
             android:textSize="14sp" />
 
@@ -318,7 +318,7 @@
             android:background="#0B1523"
             android:scaleType="fitCenter" android:visibility="gone"/>
 
-        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="10dp" android:text="v1.8.2 Fast Engine · Overlay + Heatmap + Worst Cycle TOP3 (누르면 확대)" android:textStyle="bold"/>
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="10dp" android:text="v1.8.3 Fast Engine · Overlay + Heatmap + Worst Cycle TOP3 (누르면 확대)" android:textStyle="bold"/>
         <ImageView android:id="@+id/imgRepeatability" android:layout_width="match_parent" android:layout_height="460dp" android:adjustViewBounds="true" android:background="#0B1523" android:scaleType="fitCenter" android:visibility="gone"/>
 
         <TextView

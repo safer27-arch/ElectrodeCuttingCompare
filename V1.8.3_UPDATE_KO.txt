@@ -1,0 +1,14 @@
+ElectrodeCuttingCompare v1.8.3
+
+주요 업데이트
+1. A 기준 Cycle / B 문제 Cycle 좌우 재생 화면에 각각 0~100% 진행률 막대 추가
+2. 현재 Cycle 진행률을 A/B 숫자로 동시 표시하고 진행률 차이(Δ%) 표시
+3. '진행률 동기화' 버튼 추가
+   - OFF: 실제 원속도 비교 (Cycle Time 차이를 그대로 관찰)
+   - ON: 짧은 Cycle을 느리게 재생하여 A/B가 같은 0~100% 동작 위치를 함께 지나가도록 비교
+4. Worst Cycle TOP1~3 비교재생과 기존 Fast Engine / Heatmap / 기준영상 신뢰도 기능 유지
+5. Permanent Signing 유지 - 기존 앱 삭제 없이 업데이트 설치
+
+주의
+- 동기화 모드는 영상 비교 편의를 위한 정규화 재생이며 실제 설비 속도를 변경하거나 물리량을 재계산하는 기능이 아닙니다.
+- 실제 Cycle Time 차이는 분석 Summary의 Cycle Time / Time CV 결과를 기준으로 확인합니다.

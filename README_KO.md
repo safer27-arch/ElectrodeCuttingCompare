@@ -1,4 +1,4 @@
-# ElectrodeCuttingCompare v1.8.2
+# ElectrodeCuttingCompare v1.8.3
 
 현재 핵심: Fast Engine + Cycle Diagnosis + TOP3 핵심 카드 + A/B Worst Cycle Replay.
 문제 Cycle과 문제 동작구간을 먼저 보여주고, 상세 그래프/ROI는 아래에서 확인합니다.
@@ -130,4 +130,12 @@ v1.5 반복재현성 분석을 확장해 B 비교영상의 Worst Cycle TOP3, Cyc
 ## v1.8.2
 - TOP3 즉시 A/B 비교재생
 - 기준영상 신뢰도 배너
+- Permanent Signing 유지
+
+
+## v1.8.3
+- Worst Cycle 좌우 비교재생에 A/B Cycle 진행률(0~100%) 막대 추가
+- 현재 A/B 진행률과 Δ%를 실시간 표시
+- 진행률 동기화 모드 추가: 짧은 Cycle을 느리게 재생해 같은 동작 위치를 비교
+- 원속도 모드는 그대로 유지해 실제 Cycle Time 차이 관찰 가능
 - Permanent Signing 유지
