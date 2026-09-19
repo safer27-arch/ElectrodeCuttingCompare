@@ -1,3 +1,16 @@
+# ElectrodeCuttingCompare v1.9.0
+
+## Easy Problem Finder · Graph + Table
+
+이번 버전은 **사용자가 글을 읽기 전에 그래프와 표만으로 문제 Cycle과 문제 동작을 찾는 것**에 초점을 둡니다.
+
+- 5단계 동작구간 차이 막대그래프
+- 문제 집중 동작 자동 강조
+- 문제 Cycle TOP3 표
+- 그래프/표 터치 전체화면 확대
+- 기존 A/B TOP3 비교재생, Heatmap, Fast Engine 유지
+- Permanent Signing 유지
+
 # ElectrodeCuttingCompare v1.8.4
 
 현재 핵심: Fast Engine + Cycle Diagnosis + TOP3 핵심 카드 + A/B Worst Cycle Replay.

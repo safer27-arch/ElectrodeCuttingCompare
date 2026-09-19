@@ -35,7 +35,7 @@ public class MainActivity extends Activity {
     private TextView txtA,txtB,txtTimeA,txtTimeB,txtStatus,txtDashboard,statusIntegrated,summaryIntegrated,txtOverallVerdict,txtStageDashboard,txtTop3Dashboard,txtRepeatabilityDashboard,txtInspectionModeHint,txtFastHeadline,txtReferenceBanner;
     private TextView statusCompare,statusCycle,statusRepeatability,statusHighSpeed,statusAdvanced,statusEasy,statusDiagnostic,statusRoi;
     private SeekBar seekA,seekB;
-    private ImageView imgA,imgB,imgDiff,imgCycle,imgRepeatability,imgHighSpeed,imgRoiA,imgRoiB,imgRoiCompare,imgTop1,imgTop2,imgTop3;
+    private ImageView imgA,imgB,imgDiff,imgCycle,imgRepeatability,imgHighSpeed,imgRoiA,imgRoiB,imgRoiCompare,imgTop1,imgTop2,imgTop3,imgProblemFinder;
     private ProgressBar progress,progressIntegrated;
     private ProgressBar progressCompare,progressCycle,progressRepeatability,progressHighSpeed,progressAdvanced,progressEasy,progressDiagnostic,progressRoi;
     private Button btnSave,btnReplayTop1,btnReplayTop2,btnReplayTop3;
@@ -68,7 +68,7 @@ public class MainActivity extends Activity {
         progress=findViewById(R.id.progress); btnSave=findViewById(R.id.btnSave); imgAdvanced=findViewById(R.id.imgAdvanced); imgDiagnostic=findViewById(R.id.imgDiagnostic); imgEasyDiagnostic=findViewById(R.id.imgEasyDiagnostic);
         txtDashboard=findViewById(R.id.txtDashboard); statusIntegrated=findViewById(R.id.statusIntegrated); summaryIntegrated=findViewById(R.id.summaryIntegrated); progressIntegrated=findViewById(R.id.progressIntegrated);
         txtOverallVerdict=findViewById(R.id.txtOverallVerdict); txtStageDashboard=findViewById(R.id.txtStageDashboard); txtTop3Dashboard=findViewById(R.id.txtTop3Dashboard); txtRepeatabilityDashboard=findViewById(R.id.txtRepeatabilityDashboard); txtFastHeadline=findViewById(R.id.txtFastHeadline); txtReferenceBanner=findViewById(R.id.txtReferenceBanner);
-        imgTop1=findViewById(R.id.imgTop1); imgTop2=findViewById(R.id.imgTop2); imgTop3=findViewById(R.id.imgTop3);
+        imgTop1=findViewById(R.id.imgTop1); imgTop2=findViewById(R.id.imgTop2); imgTop3=findViewById(R.id.imgTop3); imgProblemFinder=findViewById(R.id.imgProblemFinder);
         progressCompare=findViewById(R.id.progressCompare); statusCompare=findViewById(R.id.statusCompare);
         progressCycle=findViewById(R.id.progressCycle); statusCycle=findViewById(R.id.statusCycle);
         progressRepeatability=findViewById(R.id.progressRepeatability); statusRepeatability=findViewById(R.id.statusRepeatability); imgRepeatability=findViewById(R.id.imgRepeatability);
@@ -120,7 +120,7 @@ public class MainActivity extends Activity {
         };
         seekA.setOnSeekBarChangeListener(listener); seekB.setOnSeekBarChangeListener(listener);
         restoreState();
-        ImageView[] zoomables={imgA,imgB,imgDiff,imgCycle,imgRepeatability,imgHighSpeed,imgRoiA,imgRoiB,imgRoiCompare,imgAdvanced,imgDiagnostic,imgEasyDiagnostic,imgTop1,imgTop2,imgTop3};
+        ImageView[] zoomables={imgA,imgB,imgDiff,imgCycle,imgRepeatability,imgHighSpeed,imgRoiA,imgRoiB,imgRoiCompare,imgAdvanced,imgDiagnostic,imgEasyDiagnostic,imgTop1,imgTop2,imgTop3,imgProblemFinder};
         for(ImageView z:zoomables)z.setOnClickListener(v->openZoom((ImageView)v));
     }
 
@@ -137,7 +137,7 @@ public class MainActivity extends Activity {
 
     private void updateInspectionModeHint(int mode){
         if(txtInspectionModeHint==null)return;
-        if(mode==0)txtInspectionModeHint.setText("빠른검사 v1.8.4 Fast Engine · A/B 영상을 병렬로 읽고 Batch Frame Scan을 우선 사용합니다. 문제 Cycle TOP3 + 문제 동작구간을 먼저 계산하며 픽셀 Difference/ROI 정밀검사는 생략해 시간을 단축합니다.");
+        if(mode==0)txtInspectionModeHint.setText("빠른검사 v1.9 Easy Problem Finder · Fast Engine · A/B 영상을 병렬로 읽고 Batch Frame Scan을 우선 사용합니다. 문제 Cycle TOP3 + 문제 동작구간을 먼저 계산하며 픽셀 Difference/ROI 정밀검사는 생략해 시간을 단축합니다.");
         else if(mode==1)txtInspectionModeHint.setText("표준검사 · Cycle Diagnosis에 Event, 공통진동 분리, Top3/Golden을 추가합니다. 일상 점검용 권장 모드입니다.");
         else txtInspectionModeHint.setText("정밀검사 · 기존 전체 분석 8개 + ROI/Jerk까지 수행합니다. 시간이 더 걸리지만 상세 원인 확인에 적합합니다.");
     }
@@ -374,6 +374,7 @@ public class MainActivity extends Activity {
         txtFastHeadline.setVisibility(View.GONE);
         if(txtReferenceBanner!=null) txtReferenceBanner.setVisibility(View.GONE);
         replayPanel.setVisibility(View.GONE);
+        if(imgProblemFinder!=null) imgProblemFinder.setVisibility(View.GONE);
         summaryIntegrated.setText("검사 진행 중... A/B 병렬 Frame Scan → 문제 Cycle TOP3 → 문제 동작구간 순으로 계산합니다.");
         if(mode==0)statusDiagnostic.setText("Smart Diagnostic / Top3 / Golden · 빠른검사에서는 생략");
 
@@ -533,7 +534,7 @@ public class MainActivity extends Activity {
         float stageSpread=(repeatB.stageSpreadPct!=null&&wi<repeatB.stageSpreadPct.length)?repeatB.stageSpreadPct[wi]:0f;
         String validation=repeatB.excludedCycleCount>0?"불완전 Cycle "+repeatB.excludedCycleCount+"개 자동 제외":"Cycle 경계 검증 통과";
         String text=String.format(Locale.getDefault(),
-                "v1.8.4 Fast Engine Cycle Diagnosis · %s\nA 기준: %d Cycle · 재현성 Score %.0f/100 (100=안정) · Time CV %.1f%%\nB 비교: %d Cycle · 재현성 Score %.0f/100 (100=안정) · Time CV %.1f%% · %s\nFast Engine: A %s %.1fs / B %s %.1fs · 병렬처리\n\n어느 Cycle이 문제인가? / 어떤 동작이 문제인가?\n%s\n\n전체 문제 집중 구간: %s · 퍼짐 %.1f%%\nCycle Time Trend: %+.1f%%\n\nA↔B 평균 궤적 차이 %.1f%% · 속도패턴 차이 %.1f%% · 최대 차이 %d~%d%%",
+                "v1.9 Easy Problem Finder · Cycle Diagnosis · %s\nA 기준: %d Cycle · 재현성 Score %.0f/100 (100=안정) · Time CV %.1f%%\nB 비교: %d Cycle · 재현성 Score %.0f/100 (100=안정) · Time CV %.1f%% · %s\nFast Engine: A %s %.1fs / B %s %.1fs · 병렬처리\n\n어느 Cycle이 문제인가? / 어떤 동작이 문제인가?\n%s\n\n전체 문제 집중 구간: %s · 퍼짐 %.1f%%\nCycle Time Trend: %+.1f%%\n\nA↔B 평균 궤적 차이 %.1f%% · 속도패턴 차이 %.1f%% · 최대 차이 %d~%d%%",
                 validation,repeatA.cycleCount,repeatA.repeatabilityScore,repeatA.cycleTimeCvPct,
                 repeatB.cycleCount,repeatB.repeatabilityScore,repeatB.cycleTimeCvPct,bLevel,
                 repeatA.engineName,repeatA.traceExtractSec,repeatB.engineName,repeatB.traceExtractSec,
@@ -542,6 +543,7 @@ public class MainActivity extends Activity {
         if(repeatA.repeatabilityScore<75f) text += "\n\n기준영상 점검: A 기준영상 자체 재현성 Score가 낮습니다. 정상 기준영상 재선정/재촬영을 권장합니다.";
         txtRepeatabilityDashboard.setText(highlight(text));
         updateFastHeadline();
+        updateProblemFinderGraphic();
         updateReferenceBanner();
         updateReplayButtons();
     }
@@ -576,6 +578,76 @@ public class MainActivity extends Activity {
         if(lastInspectionElapsedSec>0) sb.append(String.format(Locale.getDefault()," · 검사시간 %.1f초",lastInspectionElapsedSec));
         txtFastHeadline.setText(highlight(sb.toString()));
         txtFastHeadline.setVisibility(View.VISIBLE);
+    }
+
+    private void updateProblemFinderGraphic(){
+        if(imgProblemFinder==null)return;
+        if(repeatB==null||repeatB.cycleCount<1){imgProblemFinder.setVisibility(View.GONE);return;}
+        final int w=1080,h=820;
+        Bitmap bm=Bitmap.createBitmap(w,h,Bitmap.Config.ARGB_8888);
+        Canvas c=new Canvas(bm);
+        Paint p=new Paint(Paint.ANTI_ALIAS_FLAG);
+        c.drawColor(Color.rgb(10,20,34));
+
+        p.setColor(Color.WHITE);p.setTextSize(40);p.setFakeBoldText(true);
+        c.drawText("한눈에 보는 문제 지도",42,58,p);
+        p.setFakeBoldText(false);p.setTextSize(24);p.setColor(Color.rgb(180,198,218));
+        c.drawText("그래프 = 어떤 동작이 다른가  |  표 = 어느 Cycle이 문제인가",42,94,p);
+
+        String[] labels={"대기/초기","전진가속","커팅/충격","복귀가속","안정화"};
+        int[] start={0,25,45,55,80}, end={25,45,55,80,100};
+        float max=1f;
+        if(repeatB.stageSpreadPct!=null)for(float v:repeatB.stageSpreadPct)max=Math.max(max,v);
+        int chartL=230,chartR=1010,top=132,rowH=72,barH=34;
+        p.setTextSize(27);p.setFakeBoldText(true);p.setColor(Color.WHITE);
+        c.drawText("동작별 차이 그래프",42,130,p);p.setFakeBoldText(false);
+        for(int i=0;i<5;i++){
+            float v=repeatB.stageSpreadPct!=null&&i<repeatB.stageSpreadPct.length?repeatB.stageSpreadPct[i]:0f;
+            int y=top+38+i*rowH;
+            p.setTextSize(25);p.setColor(Color.rgb(220,230,240));
+            c.drawText(labels[i],42,y+24,p);
+            p.setTextSize(18);p.setColor(Color.rgb(135,155,180));
+            c.drawText(start[i]+"~"+end[i]+"%",145,y+24,p);
+            p.setColor(Color.rgb(36,54,76));
+            c.drawRoundRect(chartL,y,chartR,y+barH,12,12,p);
+            float frac=Math.min(1f,v/max);
+            boolean worst=i==repeatB.worstStageIndex;
+            p.setColor(worst?Color.rgb(255,184,56):Color.rgb(70,164,235));
+            c.drawRoundRect(chartL,y,chartL+(chartR-chartL)*frac,y+barH,12,12,p);
+            p.setTextSize(22);p.setFakeBoldText(true);p.setColor(worst?Color.rgb(255,224,120):Color.WHITE);
+            c.drawText(String.format(Locale.getDefault(),"%.1f%%",v),chartR-88,y+26,p);
+            if(worst){p.setTextSize(19);c.drawText("← 문제 집중",chartR-235,y+26,p);}
+            p.setFakeBoldText(false);
+        }
+
+        int tableTop=535;
+        p.setColor(Color.WHITE);p.setTextSize(27);p.setFakeBoldText(true);c.drawText("문제 Cycle TOP3 표",42,tableTop-18,p);p.setFakeBoldText(false);
+        int[] cols={42,150,315,630,825,1038};
+        String[] heads={"순위","Cycle","문제 동작","전체 편차","구간 편차"};
+        p.setColor(Color.rgb(26,48,72));c.drawRoundRect(42,tableTop,1038,tableTop+52,10,10,p);
+        p.setTextSize(20);p.setFakeBoldText(true);p.setColor(Color.WHITE);
+        for(int i=0;i<heads.length;i++)c.drawText(heads[i],cols[i]+10,tableTop+34,p);
+        p.setFakeBoldText(false);
+        for(int k=0;k<3;k++){
+            int y=tableTop+58+k*70;
+            p.setColor(k%2==0?Color.rgb(17,32,50):Color.rgb(21,40,61));c.drawRoundRect(42,y,1038,y+62,8,8,p);
+            if(repeatB.worstCycleIndices==null||k>=repeatB.worstCycleIndices.length||repeatB.worstCycleIndices[k]<0)continue;
+            int idx=repeatB.worstCycleIndices[k];
+            int stage=(repeatB.worstStagePerCycle!=null&&idx<repeatB.worstStagePerCycle.length)?repeatB.worstStagePerCycle[idx]:repeatB.worstStageIndex;
+            float total=(repeatB.worstCycleDeviationPct!=null&&k<repeatB.worstCycleDeviationPct.length)?repeatB.worstCycleDeviationPct[k]:0f;
+            float local=(repeatB.worstStageDeviationPct!=null&&idx<repeatB.worstStageDeviationPct.length)?repeatB.worstStageDeviationPct[idx]:0f;
+            String medal=k==0?"1위":k==1?"2위":"3위";
+            p.setTextSize(22);p.setColor(k==0?Color.rgb(255,214,70):Color.WHITE);p.setFakeBoldText(k==0);
+            c.drawText(medal,cols[0]+10,y+39,p);c.drawText(String.valueOf(idx+1),cols[1]+22,y+39,p);
+            c.drawText(CycleRepeatabilityAnalyzer.stageNameForIndex(stage),cols[2]+10,y+39,p);
+            c.drawText(String.format(Locale.getDefault(),"%.1f%%",total),cols[3]+16,y+39,p);
+            c.drawText(String.format(Locale.getDefault(),"%.1f%%",local),cols[4]+16,y+39,p);
+            p.setFakeBoldText(false);
+        }
+        p.setTextSize(19);p.setColor(Color.rgb(150,172,198));
+        c.drawText("※ 막대가 길수록 반복 편차가 큽니다. TOP3 버튼을 누르면 실제 A/B Cycle 영상을 바로 비교할 수 있습니다.",42,794,p);
+        imgProblemFinder.setImageBitmap(bm);
+        imgProblemFinder.setVisibility(View.VISIBLE);
     }
 
     private void updateReferenceBanner(){

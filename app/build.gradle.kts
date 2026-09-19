@@ -10,7 +10,7 @@ android {
         applicationId = "com.example.electrodecutcompare"
         minSdk = 26
         targetSdk = 35
-        versionCode = 31
-        versionName = "1.8.4"
+        versionCode = 32
+        versionName = "1.9.0"
     }
 }
