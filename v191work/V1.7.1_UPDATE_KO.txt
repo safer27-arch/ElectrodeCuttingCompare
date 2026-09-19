@@ -1,8 +1,0 @@
-ElectrodeCuttingCompare v1.7.1 Polish
-
-- 재현성 Score 의미 통일: 100에 가까울수록 반복 동작 안정
-- A 기준영상 자체 재현성이 낮으면 기준영상 점검 경고
-- 빠른/표준검사에서 실행하지 않는 결과 이미지 영역을 숨겨 큰 빈 공간 제거
-- Worst Cycle TOP3 비교재생 버튼에 Cycle/동작구간/편차율 표시
-- 통합검사 실제 소요시간(초) 표시
-- Permanent Signing 유지: 기존 앱 위 업데이트 설치

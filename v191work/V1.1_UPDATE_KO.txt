@@ -1,9 +1,0 @@
-ElectrodeCuttingCompare v1.1
-- Premium industrial UI 유지
-- 핵심 문제 키워드 형광 강조(종합진단)
-- 앱 내 분석 가이드/용어사전 추가
-- 각 분석의 왜/무엇/어떻게/결과 읽기 설명
-- Cutter Module 실제운동 vs 고정부 Common Vibration 원리 설명
-- ROI, Golden, Jerk, Jitter, Nip Offset, Timing CV, Top3 등 쉬운 용어 설명
-- 기존 각 분석별 독립 진행률/결과 유지
-- versionCode 14 / versionName 1.1.0

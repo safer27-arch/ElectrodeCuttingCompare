@@ -1,3 +1,11 @@
+# ElectrodeCuttingCompare v1.9.1
+
+## Visual Summary Dashboard
+- 전체 검사항목을 그래프 + 표로 한눈에 요약
+- 문제도가 큰 검사항목을 자동 정렬
+- 메인 화면의 중복 장문 설명을 줄이고 상세 텍스트는 전문가 분석에 유지
+- v1.9 문제 Cycle 지도/TOP3/A-B 비교재생/Fast Engine/Permanent Signing 유지
+
 # ElectrodeCuttingCompare v1.9.0
 
 ## Easy Problem Finder · Graph + Table

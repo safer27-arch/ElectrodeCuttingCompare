@@ -1,9 +1,0 @@
-# Never commit app signing material
-signing/
-*.jks
-*.keystore
-
-# Local Android/Gradle files
-local.properties
-.gradle/
-**/build/

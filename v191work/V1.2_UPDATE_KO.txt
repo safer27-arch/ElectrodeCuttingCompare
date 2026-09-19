@@ -1,7 +1,0 @@
-v1.2 One-Touch Integrated Inspection
-- 통합검사 START 버튼 하나로 전체 분석 자동 실행
-- 통합 진행률/현재 단계 표시
-- 통합 Summary + 5단계 Cutter 추정구간
-- Cycle 반복성, 전진/복귀 비대칭, 안정화시간, Common Vibration, Golden/Top3를 한 화면에서 해석
-- 핵심 문제 키워드 형광 강조 유지
-- 개별 분석 버튼은 전문가/재검사용으로 유지

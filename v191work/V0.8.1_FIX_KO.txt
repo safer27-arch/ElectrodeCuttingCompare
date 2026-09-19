@@ -1,4 +1,0 @@
-v0.8.1 컴파일 수정
-- MainActivity.java v0.8 결과 문자열의 잘못된 실제 줄바꿈을 Java \n 이스케이프로 수정
-- v0.8 진동분리 분석 기능 유지
-- versionCode 11 / versionName 0.8.1

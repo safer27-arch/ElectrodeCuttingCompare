@@ -1,3 +1,0 @@
-v1.1.1 Build Fix
-- activity_main.xml의 분석 가이드 버튼 텍스트에서 XML 예약문자 &를 &amp;로 수정
-- versionCode 15 / versionName 1.1.1
