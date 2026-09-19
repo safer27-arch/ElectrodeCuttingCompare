@@ -1,4 +1,4 @@
-# ElectrodeCuttingCompare v1.8.3
+# ElectrodeCuttingCompare v1.8.4
 
 현재 핵심: Fast Engine + Cycle Diagnosis + TOP3 핵심 카드 + A/B Worst Cycle Replay.
 문제 Cycle과 문제 동작구간을 먼저 보여주고, 상세 그래프/ROI는 아래에서 확인합니다.
@@ -139,3 +139,12 @@ v1.5 반복재현성 분석을 확장해 B 비교영상의 Worst Cycle TOP3, Cyc
 - 진행률 동기화 모드 추가: 짧은 Cycle을 느리게 재생해 같은 동작 위치를 비교
 - 원속도 모드는 그대로 유지해 실제 Cycle Time 차이 관찰 가능
 - Permanent Signing 유지
+
+
+## v1.8.4 TOP3 Direct Replay UI Fix
+- 문제 Cycle TOP3 결과 바로 아래에 TOP1/TOP2/TOP3 A↔B 비교재생 버튼을 항상 표시하도록 수정했습니다.
+- v1.8.3에서 버튼이 활성화되어도 replayPanel이 GONE 상태로 남던 UI 버그를 수정했습니다.
+- 각 버튼에 Cycle 번호, 문제 동작구간, 편차율을 표시합니다.
+- 버튼을 누르면 A 기준 대표 Cycle과 B 문제 Cycle이 좌우 동시 반복재생됩니다.
+- 기존 진행률 0~100%, Δ 진행률, 진행률 동기화 기능은 그대로 유지합니다.
+- Permanent Signing 유지: 기존 앱 위에 업데이트 설치합니다.
