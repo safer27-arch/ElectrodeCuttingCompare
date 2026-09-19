@@ -1,0 +1,12 @@
+ElectrodeCuttingCompare v1.8.1
+
+목표: 빠른검사 결과를 3초 안에 읽을 수 있도록 UI 정리
+
+변경사항
+- 문제 Cycle TOP3를 통합검사 Summary 바로 아래 큰 카드로 표시
+- 각 TOP3: Cycle 번호 + 문제 동작구간 + 편차율 표시
+- 검사시간과 Cycle 경계검증/기준영상 점검 상태를 핵심 카드에 표시
+- Worst Cycle A/B 반복 비교재생 패널은 분석 전에는 숨기고, 결과가 있을 때만 표시
+- 비교재생 버튼 크기/가독성 개선
+- v1.8 Fast Engine과 Permanent Signing 유지
+- versionCode 28 / versionName 1.8.1

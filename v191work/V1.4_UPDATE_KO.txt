@@ -1,0 +1,12 @@
+v1.4 Reference A vs Test B
+- A = 기준영상(정상 권장), B = 비교영상(검사 대상)
+- 통합검사 결과를 'B가 A와 무엇이 다른가' TOP 1/2/3 순위로 표시
+- 각 순위: 차이 종류 / A-B 발생시점 / 상대 편차 / 현장 확인 포인트
+- 실제 핵심 차이만 형광 강조하도록 강조 범위 축소
+- TOP3 이미지 검사 전 숨김
+- versionCode 19 / versionName 1.4.0
+
+서명 주의:
+GitHub Actions cache만으로는 영구 signing key 보존을 보장하기 어렵습니다.
+고정 release signing은 GitHub Secrets에 keystore를 등록한 뒤 적용하는 것이 안전합니다.
+비밀번호/keystore를 채팅이나 저장소에 올리지 마세요.

@@ -1,0 +1,10 @@
+v0.9 Clear Diagnostic 통합 업데이트
+- 각 분석 항목별 독립 ProgressBar 추가
+- 각 분석 항목별 해석 결과 TextView 추가: 다른 분석 실행 후에도 결과 유지
+- 공용 진행률/공용 결과 영역은 숨김 처리
+- 상단 종합 진단 대시보드 추가
+- v0.8 Cutter 실제운동 / 고정부 Global Vibration 보정 유지
+- Cycle, High-Speed Event, Multi-Cycle/Timing/Jerk, Smart Diagnostic/Top3/Golden, ROI 분석 유지
+- 45° / 0° / 사용자 Cutter Profile별 Golden/ROI/Trend 구조 유지
+- 그래프 터치 확대, Safe Area, 영상 상태 복원 유지
+- 판정은 검증된 NG 기준 확보 전까지 정상 후보/WATCH/이상 후보로 표시

@@ -1,0 +1,23 @@
+ElectrodeCuttingCompare v0.3.1 - GitHub 업로드 체크리스트
+
+압축을 푼 뒤 이 폴더 안의 내용물을 전부 GitHub 저장소 최상위에 업로드하세요.
+
+반드시 보여야 하는 항목:
+1. .github/
+2. app/
+3. build.gradle.kts
+4. gradle.properties
+5. settings.gradle.kts
+6. README_KO.md
+7. UPLOAD_CHECKLIST.txt
+
+중요:
+- ZIP 파일 자체를 GitHub에 올리는 것이 아닙니다.
+- ElectrodeCuttingCompare_v0.3.1_GitHubReady 폴더를 한 단계 더 만들어 넣지 마세요.
+- 저장소 첫 화면에서 .github, app, build.gradle.kts 등이 바로 보여야 합니다.
+- 이 프로젝트는 GitHub Actions에서 Gradle 8.9를 직접 설치하므로 gradlew / gradlew.bat /
+  gradle-wrapper.jar 파일이 없어도 APK 빌드가 됩니다.
+
+APK 생성:
+GitHub 저장소 → Actions → Build Android APK → Run workflow
+완료 후 Artifacts → ElectrodeCuttingCompare-v0.3.1-debug-apk → app-debug.apk

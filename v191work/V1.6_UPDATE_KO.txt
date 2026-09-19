@@ -1,0 +1,36 @@
+ElectrodeCuttingCompare v1.6.0 - Cycle Intelligence
+
+주요 변경
+1. v1.5 Cycle Repeatability를 Cycle Intelligence로 확장
+2. B 비교영상의 Worst Cycle TOP3 자동 순위
+   - 평균 궤적에서 가장 크게 벗어난 Cycle 1/2/3위
+   - 각 Cycle의 영상 기반 상대 편차율 표시
+3. Cycle 편차 Heatmap
+   - X축: Cycle 진행률 0~100%
+   - Y축: 반복 Cycle 번호
+   - 진한 영역일수록 해당 Cycle이 평균 궤적에서 크게 벗어난 구간
+4. 5개 구간별 반복성 Spread
+   - 대기/초기 0~25%
+   - 전진가속 25~45%
+   - 커팅/충격 45~55%
+   - 복귀가속 55~80%
+   - 안정화 80~100%
+   - 가장 퍼짐이 큰 구간을 문제 집중 구간으로 표시
+5. Cycle Time Trend
+   - 첫 Cycle 대비 마지막 Cycle의 상대 시간 변화 표시
+   - A/B Cycle Time 선 그래프 추가
+6. 상단 Cycle Intelligence Dashboard 강화
+   - A/B 재현성 Score, Time CV
+   - Worst Cycle TOP3
+   - 문제 집중 구간
+   - Cycle Time Trend
+   - 평균 궤적/속도패턴 차이 및 최대 차이 구간
+7. 통합검사 START에 자동 포함
+8. 기존 TOP3 A/B 좌우 이미지 비교/확대 기능 유지
+9. Permanent Signing 유지
+   - 기존 앱 삭제 없이 업데이트 설치 가능
+
+주의
+- 현재 결과는 영상 기반 상대지표입니다.
+- 각 Cycle을 0~100% 시간 정규화하므로 실제 mm, 실제 속도, 실제 충격력과 동일한 값이 아닙니다.
+- 검증된 정상/불량 기준 확보 전에는 품질 NG 확정값으로 사용하지 마세요.
