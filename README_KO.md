@@ -1,3 +1,12 @@
+# ElectrodeCuttingCompare v1.9.2
+
+## Visual Clarity Dashboard
+- 현장 사용자가 3초 안에 문제 항목을 찾도록 글자/색상/그래프 가독성을 강화했습니다.
+- 전체 검사 항목은 큰 막대그래프 + 우선 확인 TOP4 표로 요약합니다.
+- 문제 Cycle은 동작별 차이 그래프 + TOP3 표 + A/B 즉시 비교재생으로 연결됩니다.
+- 정상/안정, 확인/주의, 큰 차이/불안정 상태를 색상 카드로 분리합니다.
+- APK 파일명에도 버전을 포함합니다. Permanent Signing을 유지합니다.
+
 # ElectrodeCuttingCompare v1.9.1
 
 ## Visual Summary Dashboard

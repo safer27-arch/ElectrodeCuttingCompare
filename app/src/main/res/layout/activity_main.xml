@@ -9,52 +9,53 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="16dp">
+        android:padding="14dp">
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@color/navy"
+            android:background="@drawable/header_panel"
             android:gravity="center_vertical"
-            android:padding="16dp"
+            android:padding="18dp"
             android:text="CUTTER MOTION  •  A/B INSPECTOR\n전극 컷팅 공정 진단"
             android:textColor="#FFFFFF"
-            android:textSize="24sp"
+            android:textSize="28sp"
             android:textStyle="bold" />
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
-            android:text="v1.9.1 · VISUAL SUMMARY DASHBOARD · GRAPH + TABLE  |  Permanent Signing"
+            android:text="v1.9.2 · VISUAL CLARITY DASHBOARD · GRAPH + TABLE  |  Permanent Signing"
             android:textColor="@color/text_dark"
-            android:textSize="14sp" />
+            android:textSize="16sp" />
 
-        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="10dp" android:text="Cutter Profile (형상별 Golden/ROI/Trend 분리)" android:textStyle="bold"/>
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="10dp" android:text="Cutter Profile (형상별 Golden/ROI/Trend 분리)" android:textStyle="bold" android:textSize="16sp" android:textColor="@color/text_secondary"/>
         <Spinner android:id="@+id/cutterProfile" android:layout_width="match_parent" android:layout_height="wrap_content"/>
 
-        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="통합검사 모드" android:textStyle="bold"/>
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="통합검사 모드" android:textStyle="bold" android:textSize="17sp" android:textColor="@color/text_secondary"/>
         <Spinner android:id="@+id/inspectionMode" android:layout_width="match_parent" android:layout_height="wrap_content"/>
-        <TextView android:id="@+id/txtInspectionModeHint" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:background="@drawable/panel" android:padding="8dp" android:text="빠른검사: 문제 Cycle TOP3와 문제 동작구간을 우선 분석합니다." android:textSize="12sp"/>
+        <TextView android:id="@+id/txtInspectionModeHint" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:background="@drawable/panel_info" android:padding="12dp" android:text="빠른검사: 문제 Cycle TOP3와 문제 동작구간을 우선 분석합니다." android:textSize="14sp" android:textColor="@color/text_secondary"/>
 
-        <Button android:id="@+id/btnGuide" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="10dp" android:background="@drawable/button_primary" android:text="ⓘ 분석 가이드 · 용어사전" android:textColor="#FFFFFF" android:textStyle="bold"/>
+        <Button android:id="@+id/btnGuide" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="10dp" android:minHeight="58dp" android:background="@drawable/button_secondary" android:text="ⓘ 분석 가이드 · 용어사전" android:textColor="#FFFFFF" android:textStyle="bold"/>
 
-        <Button android:id="@+id/btnIntegrated" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:minHeight="68dp" android:background="@drawable/button_primary" android:text="▶ 통합검사 START · 선택 모드로 자동 분석" android:textColor="#FFFFFF" android:textSize="18sp" android:textStyle="bold"/>
+        <Button android:id="@+id/btnIntegrated" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:minHeight="76dp" android:background="@drawable/button_primary" android:text="▶ 통합검사 START · 선택 모드로 자동 분석" android:textColor="#FFFFFF" android:textSize="20sp" android:textStyle="bold"/>
         <ProgressBar android:id="@+id/progressIntegrated" style="?android:attr/progressBarStyleHorizontal" android:layout_width="match_parent" android:layout_height="wrap_content" android:max="100" android:progress="0"/>
-        <TextView android:id="@+id/statusIntegrated" android:layout_width="match_parent" android:layout_height="wrap_content" android:background="@drawable/panel" android:padding="10dp" android:text="ONE-TOUCH · A 기준영상(정상 권장)과 B 비교영상(검사 대상)을 선택한 뒤 전체 검사를 실행합니다." android:textSize="14sp" android:textStyle="bold"/>
-        <TextView android:id="@+id/summaryIntegrated" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:background="@drawable/panel" android:padding="12dp" android:text="통합검사 Summary 대기" android:textSize="15sp" android:maxLines="4" android:ellipsize="end"/>
+        <TextView android:id="@+id/statusIntegrated" android:layout_width="match_parent" android:layout_height="wrap_content" android:background="@drawable/panel_info" android:padding="14dp" android:text="ONE-TOUCH · A 기준영상(정상 권장)과 B 비교영상(검사 대상)을 선택한 뒤 전체 검사를 실행합니다." android:textSize="16sp" android:textStyle="bold"/>
+        <TextView android:id="@+id/summaryIntegrated" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:background="@drawable/panel_info" android:padding="14dp" android:text="통합검사 Summary 대기" android:textSize="17sp" android:maxLines="4" android:ellipsize="end"/>
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
-            android:text="전체 검사항목 한눈 요약 · 항목별 차이/위험 그래프 + 핵심 문제 표 (누르면 확대)"
+            android:text="전체 검사항목 한눈 요약 · 큰 차이부터 바로 확인"
+            android:textColor="@color/cyan"
             android:textStyle="bold"
-            android:textSize="15sp"/>
+            android:textSize="20sp"/>
         <ImageView
             android:id="@+id/imgInspectionOverview"
             android:layout_width="match_parent"
-            android:layout_height="430dp"
+            android:layout_height="560dp"
             android:layout_marginTop="4dp"
             android:background="#0B1523"
             android:adjustViewBounds="true"
@@ -79,24 +80,25 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="6dp"
-            android:text="한눈에 보는 문제 지도 · 동작별 차이 그래프 + 문제 Cycle TOP3 표 (누르면 확대)"
+            android:text="한눈에 보는 문제 지도 · 어느 Cycle / 어느 동작이 문제인지"
+            android:textColor="@color/cyan"
             android:textStyle="bold"
-            android:textSize="13sp"/>
+            android:textSize="19sp"/>
         <ImageView
             android:id="@+id/imgProblemFinder"
             android:layout_width="match_parent"
-            android:layout_height="300dp"
+            android:layout_height="430dp"
             android:layout_marginTop="4dp"
             android:background="#0B1523"
             android:adjustViewBounds="true"
             android:scaleType="fitCenter"
             android:visibility="gone"/>
 
-        <LinearLayout android:id="@+id/replayPanel" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="6dp" android:orientation="vertical" android:background="@drawable/panel" android:padding="8dp" android:visibility="gone">
-            <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="문제 Cycle 바로 비교재생 · A 기준 Cycle ↔ B 문제 Cycle 좌우 동시 재생" android:textStyle="bold" android:textSize="13sp"/>
-            <Button android:id="@+id/btnReplayTop1" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="6dp" android:minHeight="68dp" android:background="@drawable/button_primary" android:textColor="#FFFFFF" android:textSize="15sp" android:textStyle="bold" android:text="🥇 TOP1 Cycle 비교재생 · 분석 후 활성화" android:enabled="false"/>
-            <Button android:id="@+id/btnReplayTop2" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="6dp" android:minHeight="68dp" android:background="@drawable/button_primary" android:textColor="#FFFFFF" android:textSize="15sp" android:textStyle="bold" android:text="🥈 TOP2 Cycle 비교재생 · 분석 후 활성화" android:enabled="false"/>
-            <Button android:id="@+id/btnReplayTop3" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="6dp" android:minHeight="68dp" android:background="@drawable/button_primary" android:textColor="#FFFFFF" android:textSize="15sp" android:textStyle="bold" android:text="🥉 TOP3 Cycle 비교재생 · 분석 후 활성화" android:enabled="false"/>
+        <LinearLayout android:id="@+id/replayPanel" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:orientation="vertical" android:background="@drawable/panel_info" android:padding="12dp" android:visibility="gone">
+            <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="▶ 문제 Cycle 바로 비교재생 · A 기준 ↔ B 문제 Cycle" android:textColor="@color/cyan" android:textStyle="bold" android:textSize="17sp"/>
+            <Button android:id="@+id/btnReplayTop1" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="6dp" android:minHeight="72dp" android:background="@drawable/button_primary" android:textColor="#FFFFFF" android:textSize="17sp" android:textStyle="bold" android:text="🥇 TOP1 Cycle 비교재생 · 분석 후 활성화" android:enabled="false"/>
+            <Button android:id="@+id/btnReplayTop2" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="6dp" android:minHeight="72dp" android:background="@drawable/button_primary" android:textColor="#FFFFFF" android:textSize="17sp" android:textStyle="bold" android:text="🥈 TOP2 Cycle 비교재생 · 분석 후 활성화" android:enabled="false"/>
+            <Button android:id="@+id/btnReplayTop3" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="6dp" android:minHeight="72dp" android:background="@drawable/button_primary" android:textColor="#FFFFFF" android:textSize="17sp" android:textStyle="bold" android:text="🥉 TOP3 Cycle 비교재생 · 분석 후 활성화" android:enabled="false"/>
         </LinearLayout>
 
         <TextView
@@ -104,17 +106,17 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="6dp"
-            android:background="@drawable/panel"
-            android:padding="12dp"
+            android:background="@drawable/panel_warning"
+            android:padding="14dp"
             android:text="기준영상 신뢰도 · 검사 후 표시"
-            android:textSize="15sp"
+            android:textSize="17sp"
             android:textStyle="bold"
             android:visibility="gone"/>
 
-        <TextView android:id="@+id/txtOverallVerdict" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="10dp" android:background="@drawable/panel" android:gravity="center" android:padding="14dp" android:text="종합판정 · 검사 대기" android:textSize="22sp" android:textStyle="bold"/>
+        <TextView android:id="@+id/txtOverallVerdict" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="10dp" android:background="@drawable/panel_info" android:gravity="center" android:padding="16dp" android:text="종합판정 · 검사 대기" android:textSize="24sp" android:textStyle="bold"/>
         <TextView android:id="@+id/txtStageDashboard" android:visibility="gone" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:background="@drawable/panel" android:padding="12dp" android:text="5단계 Cutter 추정 상태\n① 대기  ② 전진가속  ③ 커팅/충격  ④ 복귀가속  ⑤ 안정화" android:textSize="15sp" android:textStyle="bold"/>
         <TextView android:id="@+id/txtTop3Dashboard" android:visibility="gone" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:background="@drawable/panel" android:padding="12dp" android:text="A 기준 대비 B 주요 차이 TOP 3 · 검사 대기" android:textSize="15sp" android:textStyle="bold"/>
-        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="6dp" android:text="TOP3 비교 이미지는 왼쪽 A 기준 / 오른쪽 B 비교입니다. 이미지를 누르면 전체화면 확대됩니다." android:textSize="12sp" android:textStyle="bold"/>
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="6dp" android:text="TOP3 비교 이미지는 왼쪽 A 기준 / 오른쪽 B 비교입니다. 이미지를 누르면 전체화면 확대됩니다." android:textSize="14sp" android:textStyle="bold"/>
         <ImageView android:id="@+id/imgTop1" android:layout_width="match_parent" android:layout_height="170dp" android:layout_marginTop="6dp" android:background="#0B1523" android:adjustViewBounds="true" android:scaleType="fitCenter" android:visibility="gone"/>
         <ImageView android:id="@+id/imgTop2" android:layout_width="match_parent" android:layout_height="170dp" android:layout_marginTop="8dp" android:background="#0B1523" android:adjustViewBounds="true" android:scaleType="fitCenter" android:visibility="gone"/>
         <ImageView android:id="@+id/imgTop3" android:layout_width="match_parent" android:layout_height="170dp" android:layout_marginTop="8dp" android:background="#0B1523" android:adjustViewBounds="true" android:scaleType="fitCenter" android:visibility="gone"/>
@@ -143,7 +145,7 @@
                 android:layout_height="wrap_content"
                 android:padding="6dp"
                 android:text="선택 안 됨"
-                android:textSize="13sp" />
+                android:textSize="15sp" />
             <SeekBar
                 android:id="@+id/seekA"
                 android:layout_width="match_parent"
@@ -155,7 +157,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="대표 프레임: 50%"
-                android:textSize="12sp" />
+                android:textSize="14sp" />
             <Button
                 android:id="@+id/btnPreviewA"
                 android:layout_width="match_parent"
@@ -181,7 +183,7 @@
                 android:layout_height="wrap_content"
                 android:padding="6dp"
                 android:text="선택 안 됨"
-                android:textSize="13sp" />
+                android:textSize="15sp" />
             <SeekBar
                 android:id="@+id/seekB"
                 android:layout_width="match_parent"
@@ -193,7 +195,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="대표 프레임: 50%"
-                android:textSize="12sp" />
+                android:textSize="14sp" />
             <Button
                 android:id="@+id/btnPreviewB"
                 android:layout_width="match_parent"
@@ -201,7 +203,7 @@
                 android:text="B 비교영상 재생" />
         </LinearLayout>
 
-        <Button android:id="@+id/btnToggleExpert" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="14dp" android:background="@drawable/button_primary" android:text="▼ 전문가 상세분석 보기" android:textColor="#FFFFFF" android:textStyle="bold"/>
+        <Button android:id="@+id/btnToggleExpert" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="16dp" android:minHeight="60dp" android:background="@drawable/button_secondary" android:text="▼ 전문가 상세분석 보기" android:textColor="#FFFFFF" android:textStyle="bold"/>
         <LinearLayout android:id="@+id/expertPanel" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:visibility="gone">
 
         <Button
@@ -212,7 +214,7 @@
             android:text="자동 보정 + A/B 비교 분석"
             android:textStyle="bold"  android:background="@drawable/button_primary" android:textColor="#FFFFFF" android:minHeight="54dp"/>
         <ProgressBar android:id="@+id/progressCompare" style="?android:attr/progressBarStyleHorizontal" android:layout_width="match_parent" android:layout_height="wrap_content" android:max="100" android:progress="0"/>
-        <TextView android:id="@+id/statusCompare" android:layout_width="match_parent" android:layout_height="wrap_content" android:background="@drawable/panel" android:padding="8dp" android:text="자동 보정 + A/B 비교 · 대기" android:textSize="13sp"/>
+        <TextView android:id="@+id/statusCompare" android:layout_width="match_parent" android:layout_height="wrap_content" android:background="@drawable/panel" android:padding="8dp" android:text="자동 보정 + A/B 비교 · 대기" android:textSize="15sp"/>
 
         <Button
             android:id="@+id/btnCycle"
@@ -222,22 +224,22 @@
             android:text="Cycle 자동 분석 + A/B 동작 패턴 비교"
             android:textStyle="bold"  android:background="@drawable/button_primary" android:textColor="#FFFFFF" android:minHeight="54dp"/>
         <ProgressBar android:id="@+id/progressCycle" style="?android:attr/progressBarStyleHorizontal" android:layout_width="match_parent" android:layout_height="wrap_content" android:max="100" android:progress="0"/>
-        <TextView android:id="@+id/statusCycle" android:layout_width="match_parent" android:layout_height="wrap_content" android:background="@drawable/panel" android:padding="8dp" android:text="Cycle 패턴 비교 · 대기" android:textSize="13sp"/>
+        <TextView android:id="@+id/statusCycle" android:layout_width="match_parent" android:layout_height="wrap_content" android:background="@drawable/panel" android:padding="8dp" android:text="Cycle 패턴 비교 · 대기" android:textSize="15sp"/>
 
         <Button android:id="@+id/btnRepeatability" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="v1.8 Fast Engine · 문제 Cycle TOP3 · 문제 동작 · 빠른 분석" android:textStyle="bold" android:background="@drawable/button_primary" android:textColor="#FFFFFF" android:minHeight="54dp"/>
         <ProgressBar android:id="@+id/progressRepeatability" style="?android:attr/progressBarStyleHorizontal" android:layout_width="match_parent" android:layout_height="wrap_content" android:max="100" android:progress="0"/>
-        <TextView android:id="@+id/statusRepeatability" android:layout_width="match_parent" android:layout_height="wrap_content" android:background="@drawable/panel" android:padding="8dp" android:text="Cycle 반복 재현성 · 대기" android:textSize="13sp"/>
+        <TextView android:id="@+id/statusRepeatability" android:layout_width="match_parent" android:layout_height="wrap_content" android:background="@drawable/panel" android:padding="8dp" android:text="Cycle 반복 재현성 · 대기" android:textSize="15sp"/>
 
         <Button android:id="@+id/btnHighSpeed" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="v0.5 고속 동작 이상검출 · Event 자동 동기화" android:textStyle="bold"  android:background="@drawable/button_primary" android:textColor="#FFFFFF" android:minHeight="54dp"/>
         <ProgressBar android:id="@+id/progressHighSpeed" style="?android:attr/progressBarStyleHorizontal" android:layout_width="match_parent" android:layout_height="wrap_content" android:max="100" android:progress="0"/>
-        <TextView android:id="@+id/statusHighSpeed" android:layout_width="match_parent" android:layout_height="wrap_content" android:background="@drawable/panel" android:padding="8dp" android:text="고속 Event 동기화 · 대기" android:textSize="13sp"/>
+        <TextView android:id="@+id/statusHighSpeed" android:layout_width="match_parent" android:layout_height="wrap_content" android:background="@drawable/panel" android:padding="8dp" android:text="고속 Event 동기화 · 대기" android:textSize="15sp"/>
         <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="v0.5 고속 Event 동기화 / 이상 후보 시점" android:textStyle="bold" />
         <ImageView android:id="@+id/imgHighSpeed" android:layout_width="match_parent" android:layout_height="260dp" android:adjustViewBounds="true" android:background="#0B1523" android:scaleType="fitCenter" android:visibility="gone"/>
 
         <Button android:id="@+id/btnAdvanced" android:layout_width="match_parent" android:layout_height="wrap_content"
             android:layout_marginTop="8dp" android:text="v0.6 Multi-Cycle + Timing + Jerk + 예방 Trend 분석" android:textStyle="bold" android:background="@drawable/button_primary" android:textColor="#FFFFFF" android:minHeight="54dp"/>
         <ProgressBar android:id="@+id/progressAdvanced" style="?android:attr/progressBarStyleHorizontal" android:layout_width="match_parent" android:layout_height="wrap_content" android:max="100" android:progress="0"/>
-        <TextView android:id="@+id/statusAdvanced" android:layout_width="match_parent" android:layout_height="wrap_content" android:background="@drawable/panel" android:padding="8dp" android:text="Multi-Cycle / Timing / Jerk · 대기" android:textSize="13sp"/>
+        <TextView android:id="@+id/statusAdvanced" android:layout_width="match_parent" android:layout_height="wrap_content" android:background="@drawable/panel" android:padding="8dp" android:text="Multi-Cycle / Timing / Jerk · 대기" android:textSize="15sp"/>
         <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp"
             android:text="v0.6 고급 동작 분석 (누르면 확대)" android:textStyle="bold"/>
         <ImageView android:id="@+id/imgAdvanced" android:layout_width="match_parent" android:layout_height="270dp"
@@ -245,13 +247,13 @@
 
         <Button android:id="@+id/btnEasyDiagnostic" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="10dp" android:text="v0.8 쉬운 진단 · Cutter 운동 / 고정부 진동 분리 + 구간별 분석" android:textStyle="bold" android:background="@drawable/button_primary" android:textColor="#FFFFFF" android:minHeight="54dp"/>
         <ProgressBar android:id="@+id/progressEasy" style="?android:attr/progressBarStyleHorizontal" android:layout_width="match_parent" android:layout_height="wrap_content" android:max="100" android:progress="0"/>
-        <TextView android:id="@+id/statusEasy" android:layout_width="match_parent" android:layout_height="wrap_content" android:background="@drawable/panel" android:padding="8dp" android:text="Cutter 운동 / 고정부 진동 분리 · 대기" android:textSize="13sp"/>
+        <TextView android:id="@+id/statusEasy" android:layout_width="match_parent" android:layout_height="wrap_content" android:background="@drawable/panel" android:padding="8dp" android:text="Cutter 운동 / 고정부 진동 분리 · 대기" android:textSize="15sp"/>
         <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="v0.8 한눈에 보기 (파랑=Cutter 실제운동 / 회색=공통진동 / 자홍=Top3)" android:textStyle="bold"/>
         <ImageView android:id="@+id/imgEasyDiagnostic" android:layout_width="match_parent" android:layout_height="300dp" android:adjustViewBounds="true" android:background="#0B1523" android:scaleType="fitCenter" android:visibility="gone"/>
 
         <Button android:id="@+id/btnDiagnostic" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="v0.7 통합진단 · Top3 이상 순간 + Golden 비교" android:textStyle="bold" android:background="@drawable/button_primary" android:textColor="#FFFFFF" android:minHeight="54dp"/>
         <ProgressBar android:id="@+id/progressDiagnostic" style="?android:attr/progressBarStyleHorizontal" android:layout_width="match_parent" android:layout_height="wrap_content" android:max="100" android:progress="0"/>
-        <TextView android:id="@+id/statusDiagnostic" android:layout_width="match_parent" android:layout_height="wrap_content" android:background="@drawable/panel" android:padding="8dp" android:text="Smart Diagnostic / Top3 / Golden · 대기" android:textSize="13sp"/>
+        <TextView android:id="@+id/statusDiagnostic" android:layout_width="match_parent" android:layout_height="wrap_content" android:background="@drawable/panel" android:padding="8dp" android:text="Smart Diagnostic / Top3 / Golden · 대기" android:textSize="15sp"/>
         <Button android:id="@+id/btnGolden" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="6dp" android:text="현재 결과 Golden 등록 (정상 확인 후)"/>
         <Button android:id="@+id/btnCalibration" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="6dp" android:text="px → mm Calibration 설정"/>
         <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="v0.7 Smart Diagnostic (자홍선 = Top3 이상 후보 순간)" android:textStyle="bold"/>
@@ -273,7 +275,7 @@
             android:text="v0.4 저장 ROI로 전극 선단 + Gripper + Nip 분석"
             android:textStyle="bold"  android:background="@drawable/button_primary" android:textColor="#FFFFFF" android:minHeight="54dp"/>
         <ProgressBar android:id="@+id/progressRoi" style="?android:attr/progressBarStyleHorizontal" android:layout_width="match_parent" android:layout_height="wrap_content" android:max="100" android:progress="0"/>
-        <TextView android:id="@+id/statusRoi" android:layout_width="match_parent" android:layout_height="wrap_content" android:background="@drawable/panel" android:padding="8dp" android:text="ROI Gripper / Tip / Nip 분석 · 대기" android:textSize="13sp"/>
+        <TextView android:id="@+id/statusRoi" android:layout_width="match_parent" android:layout_height="wrap_content" android:background="@drawable/panel" android:padding="8dp" android:text="ROI Gripper / Tip / Nip 분석 · 대기" android:textSize="15sp"/>
 
         <ProgressBar
             android:id="@+id/progress"
@@ -415,6 +417,6 @@
             android:paddingBottom="24dp"
             android:text="※ v0.4는 전극 선단/Gripper/Nip을 경량 ROI 방식으로 추적해 진입각·Offset·흔들림·안정 Score를 표시합니다. 아직 실제 치수 Calibration과 Golden/NG 기준 학습 전이므로 품질 NG 확정 판정값이 아니라 추세/비교용 지표입니다."
             android:textColor="#A40000"
-            android:textSize="12sp" />
+            android:textSize="14sp" />
     </LinearLayout>
 </ScrollView>
