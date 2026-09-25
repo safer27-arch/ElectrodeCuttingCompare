@@ -5,6 +5,7 @@ public class ZoomImageActivity extends Activity{
  private float oldDist=1f,startX,startY; private int mode=0;
  @Override protected void onCreate(Bundle b){
   super.onCreate(b);
+  LanguageManager.init(this);
   if(Build.VERSION.SDK_INT>=30)getWindow().setDecorFitsSystemWindows(true);
   setContentView(R.layout.activity_zoom_image);
   image=findViewById(R.id.zoomImage); image.setScaleType(ImageView.ScaleType.MATRIX);

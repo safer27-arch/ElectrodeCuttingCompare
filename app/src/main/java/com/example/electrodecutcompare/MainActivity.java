@@ -60,6 +60,7 @@ public class MainActivity extends Activity {
 
     @Override protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        LanguageManager.init(this);
         if (android.os.Build.VERSION.SDK_INT >= 30) getWindow().setDecorFitsSystemWindows(true); setContentView(R.layout.activity_main);
         txtA=findViewById(R.id.txtA); txtB=findViewById(R.id.txtB);
         txtTimeA=findViewById(R.id.txtTimeA); txtTimeB=findViewById(R.id.txtTimeB);
@@ -81,10 +82,18 @@ public class MainActivity extends Activity {
         cutterProfile=findViewById(R.id.cutterProfile);
         inspectionMode=findViewById(R.id.inspectionMode); txtInspectionModeHint=findViewById(R.id.txtInspectionModeHint);
         btnReplayTop1=findViewById(R.id.btnReplayTop1); btnReplayTop2=findViewById(R.id.btnReplayTop2); btnReplayTop3=findViewById(R.id.btnReplayTop3); replayPanel=findViewById(R.id.replayPanel);
-        cutterProfile.setAdapter(new ArrayAdapter<>(this,android.R.layout.simple_spinner_dropdown_item,new String[]{"45° Cutter","0° Cutter","사용자 Cutter"}));
+        Button btnLanguage=findViewById(R.id.btnLanguage);
+        btnLanguage.setText(LanguageManager.flag());
+        btnLanguage.setContentDescription("Language / 언어");
+        btnLanguage.setOnClickListener(v->showLanguageMenu(btnLanguage));
+        cutterProfile.setAdapter(new ArrayAdapter<>(this,android.R.layout.simple_spinner_dropdown_item,new String[]{
+                LanguageManager.ts("45° Cutter"),LanguageManager.ts("0° Cutter"),LanguageManager.ts("사용자 Cutter")}));
         cutterProfile.setSelection(AppStateStore.getInt(this,"profile",0));
         cutterProfile.setOnItemSelectedListener(new android.widget.AdapterView.OnItemSelectedListener(){public void onItemSelected(android.widget.AdapterView<?> p,View v,int pos,long id){AppStateStore.putInt(MainActivity.this,"profile",pos);}public void onNothingSelected(android.widget.AdapterView<?> p){}});
-        inspectionMode.setAdapter(new ArrayAdapter<>(this,android.R.layout.simple_spinner_dropdown_item,new String[]{"빠른검사 · Cycle 문제 우선 (추천)","표준검사 · Cycle + Event + 진동 + Top3","정밀검사 · 전체 8개 분석"}));
+        inspectionMode.setAdapter(new ArrayAdapter<>(this,android.R.layout.simple_spinner_dropdown_item,new String[]{
+                LanguageManager.ts("빠른검사 · Cycle 문제 우선 (추천)"),
+                LanguageManager.ts("표준검사 · Cycle + Event + 진동 + Top3"),
+                LanguageManager.ts("정밀검사 · 전체 8개 분석")}));
         inspectionMode.setSelection(AppStateStore.getInt(this,"inspectionMode",0));
         inspectionMode.setOnItemSelectedListener(new android.widget.AdapterView.OnItemSelectedListener(){public void onItemSelected(android.widget.AdapterView<?> p,View v,int pos,long id){AppStateStore.putInt(MainActivity.this,"inspectionMode",pos);updateInspectionModeHint(pos);}public void onNothingSelected(android.widget.AdapterView<?> p){}});
 
@@ -125,25 +134,44 @@ public class MainActivity extends Activity {
         for(ImageView z:zoomables)z.setOnClickListener(v->openZoom((ImageView)v));
     }
 
+    private void showLanguageMenu(View anchor){
+        android.widget.PopupMenu popup=new android.widget.PopupMenu(this,anchor);
+        popup.getMenu().add(0,1,1,"🇰🇷  한국어");
+        popup.getMenu().add(0,2,2,"🇬🇧  English");
+        popup.getMenu().add(0,3,3,"🇵🇱  Polski");
+        popup.getMenu().add(0,4,4,"🇺🇦  Українська");
+        popup.setOnMenuItemClickListener(item->{
+            String code=item.getItemId()==2?LanguageManager.EN:item.getItemId()==3?LanguageManager.PL:item.getItemId()==4?LanguageManager.UK:LanguageManager.KO;
+            if(!code.equals(LanguageManager.code())){
+                LanguageManager.setLanguage(this,code);
+                recreate();
+            }
+            return true;
+        });
+        popup.show();
+    }
+
     private void card(ProgressBar p, TextView t, int value, String message){
         runOnUiThread(()->{ p.setProgress(value); t.setText(message); });
     }
     private void dashboard(String message){ runOnUiThread(()->txtDashboard.setText(highlight(message))); }
-    private android.text.SpannableString highlight(String text){
+    private android.text.SpannableString highlight(String raw){
+        String text=LanguageManager.ts(raw);
         android.text.SpannableString sp=new android.text.SpannableString(text);
-        String[] yellow={"핵심 차이","확인 필요","최대 차이","Worst Cycle","문제 집중 구간","TOP1","문제 Cycle","문제 동작","기준영상 점검","검사시간","기준영상 신뢰도","비교재생","최우선","편차"};
-        String[] red={"큰 차이","재현성 저하","불안정","이상 후보","불완전 Cycle"};
-        String[] green={"정상 후보","양호","완료","안정"};
-        for(String k:yellow){int from=0; while((from=text.indexOf(k,from))>=0){int end=from+k.length(); sp.setSpan(new android.text.style.BackgroundColorSpan(Color.rgb(255,216,61)),from,end,android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE); sp.setSpan(new android.text.style.ForegroundColorSpan(Color.rgb(10,16,22)),from,end,android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE); sp.setSpan(new android.text.style.StyleSpan(android.graphics.Typeface.BOLD),from,end,android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE); from=end;}}
-        for(String k:red){int from=0; while((from=text.indexOf(k,from))>=0){int end=from+k.length(); sp.setSpan(new android.text.style.ForegroundColorSpan(Color.rgb(255,88,104)),from,end,android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE); sp.setSpan(new android.text.style.StyleSpan(android.graphics.Typeface.BOLD),from,end,android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE); from=end;}}
-        for(String k:green){int from=0; while((from=text.indexOf(k,from))>=0){int end=from+k.length(); sp.setSpan(new android.text.style.ForegroundColorSpan(Color.rgb(82,229,154)),from,end,android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE); sp.setSpan(new android.text.style.StyleSpan(android.graphics.Typeface.BOLD),from,end,android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE); from=end;}}
+        String[] yellow={LanguageManager.ts("핵심 차이"),LanguageManager.ts("확인 필요"),LanguageManager.ts("최대 차이"),"Worst Cycle",LanguageManager.ts("문제 집중 구간"),"TOP1",LanguageManager.ts("문제 Cycle"),LanguageManager.ts("문제 동작"),LanguageManager.ts("기준영상 점검"),LanguageManager.ts("검사시간"),LanguageManager.ts("기준영상 신뢰도"),LanguageManager.ts("비교재생"),LanguageManager.ts("최우선"),LanguageManager.ts("편차")};
+        String[] red={LanguageManager.ts("큰 차이"),LanguageManager.ts("재현성 저하"),LanguageManager.ts("불안정"),LanguageManager.ts("이상 후보"),LanguageManager.ts("불완전 Cycle")};
+        String[] green={LanguageManager.ts("정상 후보"),LanguageManager.ts("양호"),LanguageManager.ts("완료"),LanguageManager.ts("안정")};
+        for(String k:yellow){int from=0; while(k.length()>0&&(from=text.indexOf(k,from))>=0){int end=from+k.length(); sp.setSpan(new android.text.style.BackgroundColorSpan(Color.rgb(255,216,61)),from,end,android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE); sp.setSpan(new android.text.style.ForegroundColorSpan(Color.rgb(10,16,22)),from,end,android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE); sp.setSpan(new android.text.style.StyleSpan(android.graphics.Typeface.BOLD),from,end,android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE); from=end;}}
+        for(String k:red){int from=0; while(k.length()>0&&(from=text.indexOf(k,from))>=0){int end=from+k.length(); sp.setSpan(new android.text.style.ForegroundColorSpan(Color.rgb(255,88,104)),from,end,android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE); sp.setSpan(new android.text.style.StyleSpan(android.graphics.Typeface.BOLD),from,end,android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE); from=end;}}
+        for(String k:green){int from=0; while(k.length()>0&&(from=text.indexOf(k,from))>=0){int end=from+k.length(); sp.setSpan(new android.text.style.ForegroundColorSpan(Color.rgb(82,229,154)),from,end,android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE); sp.setSpan(new android.text.style.StyleSpan(android.graphics.Typeface.BOLD),from,end,android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE); from=end;}}
         return sp;
     }
 
     private android.text.SpannableString statusLegend(){
-        String text="● 빨강 큰 차이   ● 노랑 확인 필요   ● 초록 안정   ● 회색 빠른검사 제외";
+        String[] raw={"● 빨강 큰 차이","● 노랑 확인 필요","● 초록 안정","● 회색 빠른검사 제외"};
+        String[] keys={LanguageManager.ts(raw[0]),LanguageManager.ts(raw[1]),LanguageManager.ts(raw[2]),LanguageManager.ts(raw[3])};
+        String text=keys[0]+"   "+keys[1]+"   "+keys[2]+"   "+keys[3];
         android.text.SpannableString sp=new android.text.SpannableString(text);
-        String[] keys={"● 빨강 큰 차이","● 노랑 확인 필요","● 초록 안정","● 회색 빠른검사 제외"};
         int[] colors={Color.rgb(255,77,103),Color.rgb(255,212,59),Color.rgb(66,230,142),Color.rgb(145,165,185)};
         for(int i=0;i<keys.length;i++){int st=text.indexOf(keys[i]);if(st>=0){int en=st+keys[i].length();sp.setSpan(new android.text.style.ForegroundColorSpan(colors[i]),st,en,android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);sp.setSpan(new android.text.style.StyleSpan(android.graphics.Typeface.BOLD),st,en,android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);}}
         return sp;
@@ -159,7 +187,7 @@ public class MainActivity extends Activity {
 
     private void updateInspectionModeHint(int mode){
         if(txtInspectionModeHint==null)return;
-        if(mode==0)txtInspectionModeHint.setText("빠른검사 v1.9.3 · 문제 Cycle TOP3와 문제 동작구간을 먼저 찾습니다. 무거운 정밀검사는 제외해 현장 확인 시간을 줄입니다.");
+        if(mode==0)txtInspectionModeHint.setText("빠른검사 v1.9.4 · 문제 Cycle TOP3와 문제 동작구간을 먼저 찾습니다. 무거운 정밀검사는 제외해 현장 확인 시간을 줄입니다.");
         else if(mode==1)txtInspectionModeHint.setText("표준검사 · Cycle Diagnosis에 Event, 공통진동 분리, Top3/Golden을 추가합니다. 일상 점검용 권장 모드입니다.");
         else txtInspectionModeHint.setText("정밀검사 · 기존 전체 분석 8개 + ROI/Jerk까지 수행합니다. 시간이 더 걸리지만 상세 원인 확인에 적합합니다.");
     }
@@ -320,12 +348,12 @@ public class MainActivity extends Activity {
             c.drawColor(Color.rgb(8,19,31));
             Paint p=new Paint(Paint.ANTI_ALIAS_FLAG);
             p.setColor(Color.WHITE); p.setTextSize(31f); p.setFakeBoldText(true);
-            c.drawText("TOP "+rank+"   A 기준 · "+String.format(Locale.getDefault(),"%.3fs",secA),18,38,p);
-            c.drawText("B 비교 · "+String.format(Locale.getDefault(),"%.3fs",secB),eachW+18,38,p);
+            c.drawText(LanguageManager.ts("TOP "+rank+"   A 기준 · ")+String.format(Locale.getDefault(),"%.3fs",secA),18,38,p);
+            c.drawText(LanguageManager.ts("B 비교 · ")+String.format(Locale.getDefault(),"%.3fs",secB),eachW+18,38,p);
             p.setTextSize(23f); p.setColor(Color.rgb(255,212,59));
             String shortType=type==null?"주요 동작 차이":type;
             if(shortType.length()>30)shortType=shortType.substring(0,30)+"…";
-            c.drawText(shortType,18,76,p);
+            c.drawText(LanguageManager.ts(shortType),18,76,p);
             p.setColor(Color.rgb(43,231,255)); p.setStrokeWidth(4f);
             c.drawLine(eachW,0,eachW,imageH+header,p);
             c.drawBitmap(as,0,header,null);
@@ -333,10 +361,10 @@ public class MainActivity extends Activity {
             int fy=header+imageH;
             p.setColor(Color.rgb(255,212,59));p.setTextSize(22);p.setFakeBoldText(true);
             if(aligned){
-                c.drawText("차이 강조 · 빨강 = 촬영각 보정 후 A/B 차이가 큰 위치",18,fy+33,p);p.setFakeBoldText(false);
+                c.drawText(LanguageManager.ts("차이 강조 · 빨강 = 촬영각 보정 후 A/B 차이가 큰 위치"),18,fy+33,p);p.setFakeBoldText(false);
                 c.drawBitmap(ds,0,fy+48,null);
             }else{
-                c.drawText("빠른검사 프레임 · 좌 A / 우 B · 촬영각 정밀보정은 표준/정밀검사에서 적용",18,fy+36,p);p.setFakeBoldText(false);
+                c.drawText(LanguageManager.ts("빠른검사 프레임 · 좌 A / 우 B · 촬영각 정밀보정은 표준/정밀검사에서 적용"),18,fy+36,p);p.setFakeBoldText(false);
             }
             view.setImageBitmap(pair);
             view.setVisibility(View.VISIBLE);
@@ -390,7 +418,7 @@ public class MainActivity extends Activity {
     }
 
     private void preview(Uri uri){
-        if(uri==null){Toast.makeText(this,"먼저 영상을 선택해 주세요.",Toast.LENGTH_SHORT).show();return;}
+        if(uri==null){Toast.makeText(this,LanguageManager.ts("먼저 영상을 선택해 주세요."),Toast.LENGTH_SHORT).show();return;}
         Intent i=new Intent(this,VideoPreviewActivity.class); i.putExtra("uri",uri.toString()); startActivity(i);
     }
 
@@ -405,7 +433,7 @@ public class MainActivity extends Activity {
     }
 
     private void analyze(){
-        if(uriA==null||uriB==null){Toast.makeText(this,"A/B 영상을 모두 선택해 주세요.",Toast.LENGTH_SHORT).show();return;}
+        if(uriA==null||uriB==null){Toast.makeText(this,LanguageManager.ts("A/B 영상을 모두 선택해 주세요."),Toast.LENGTH_SHORT).show();return;}
         btnSave.setEnabled(false); progressCompare.setProgress(5); statusCompare.setText("대표 프레임 추출 중...");
         executor.execute(()->{
             try{
@@ -430,14 +458,14 @@ public class MainActivity extends Activity {
 
 
     private void analyzeIntegrated(){
-        if(uriA==null||uriB==null){Toast.makeText(this,"A/B 영상을 모두 선택해 주세요.",Toast.LENGTH_SHORT).show();return;}
+        if(uriA==null||uriB==null){Toast.makeText(this,LanguageManager.ts("A/B 영상을 모두 선택해 주세요."),Toast.LENGTH_SHORT).show();return;}
         int mode=inspectionMode==null?0:inspectionMode.getSelectedItemPosition();
         lastInspectionModeName=mode==0?"빠른검사":mode==1?"표준검사":"정밀검사";
         integratedStartElapsedMs=android.os.SystemClock.elapsedRealtime();
         lastInspectionElapsedSec=0.0;
         applyInspectionModeVisibility(mode);
         progressIntegrated.setProgress(2);
-        statusIntegrated.setText("통합검사 시작 · "+lastInspectionModeName+" · v1.9.3 Fast Engine");
+        statusIntegrated.setText("통합검사 시작 · "+lastInspectionModeName+" · v1.9.4 Fast Engine");
         txtFastHeadline.setVisibility(View.GONE);
         if(txtReferenceBanner!=null) txtReferenceBanner.setVisibility(View.GONE);
         replayPanel.setVisibility(View.GONE);
@@ -526,7 +554,7 @@ public class MainActivity extends Activity {
     }
 
     private void analyzeCycle(){
-        if(uriA==null||uriB==null){Toast.makeText(this,"A/B 영상을 모두 선택해 주세요.",Toast.LENGTH_SHORT).show();return;}
+        if(uriA==null||uriB==null){Toast.makeText(this,LanguageManager.ts("A/B 영상을 모두 선택해 주세요."),Toast.LENGTH_SHORT).show();return;}
         progressCycle.setProgress(5); statusCycle.setText("Cycle 움직임 분석 중... (CPU 경량 분석)");
         executor.execute(()->{
             try{
@@ -548,14 +576,14 @@ public class MainActivity extends Activity {
     private void analyzeRepeatability(){ analyzeRepeatability(false); }
 
     private void analyzeRepeatability(boolean fastMode){
-        if(uriA==null||uriB==null){Toast.makeText(this,"A/B 영상을 모두 선택해 주세요.",Toast.LENGTH_SHORT).show();return;}
-        progressRepeatability.setProgress(5); statusRepeatability.setText((fastMode?"v1.9.3 Fast Engine · A/B 병렬 추출 · ":"")+"Cycle Diagnosis 분석 중... Cycle 자동 분리 + 경계 검증");
+        if(uriA==null||uriB==null){Toast.makeText(this,LanguageManager.ts("A/B 영상을 모두 선택해 주세요."),Toast.LENGTH_SHORT).show();return;}
+        progressRepeatability.setProgress(5); statusRepeatability.setText((fastMode?"v1.9.4 Fast Engine · A/B 병렬 추출 · ":"")+"Cycle Diagnosis 분석 중... Cycle 자동 분리 + 경계 검증");
         executor.execute(()->{
             try{
                 CycleRepeatabilityAnalyzer.Result a;
                 CycleRepeatabilityAnalyzer.Result b;
                 if(fastMode){
-                    runOnUiThread(()->{progressRepeatability.setProgress(18);statusRepeatability.setText("v1.9.3 Fast Engine · A/B 영상 병렬 Frame Scan 중...");});
+                    runOnUiThread(()->{progressRepeatability.setProgress(18);statusRepeatability.setText("v1.9.4 Fast Engine · A/B 영상 병렬 Frame Scan 중...");});
                     java.util.concurrent.ExecutorService pair=java.util.concurrent.Executors.newFixedThreadPool(2);
                     try{
                         java.util.concurrent.Future<CycleRepeatabilityAnalyzer.Result> fa=pair.submit(()->CycleRepeatabilityAnalyzer.analyze(this,uriA,durationA,"A 기준영상",true));
@@ -665,15 +693,15 @@ public class MainActivity extends Activity {
     }
 
     private String riskWord(float v){
-        if(v<18f)return "안정";
-        if(v<35f)return "확인";
-        return "큰 차이";
+        if(v<18f)return LanguageManager.ts("안정");
+        if(v<35f)return LanguageManager.ts("확인");
+        return LanguageManager.ts("큰 차이");
     }
 
     private void updateInspectionOverviewGraphic(){
         if(imgInspectionOverview==null)return;
         final int n=8,w=1000,h=1400;
-        String[] names={"A 기준영상 점검도","B Cycle 불안정도","A↔B 궤적 차이","고속 Event 차이","Timing / Jerk 변화","공통진동 / 안정화","Smart / Golden 차이","ROI 위치 / 흔들림"};
+        String[] names={LanguageManager.ts("A 기준영상 점검도"),LanguageManager.ts("B Cycle 불안정도"),LanguageManager.ts("A↔B 궤적 차이"),LanguageManager.ts("고속 Event 차이"),LanguageManager.ts("Timing / Jerk 변화"),LanguageManager.ts("공통진동 / 안정화"),LanguageManager.ts("Smart / Golden 차이"),LanguageManager.ts("ROI 위치 / 흔들림")};
         boolean[] on=new boolean[n];
         float[] risk=new float[n];
         String[] key=new String[n];
@@ -684,15 +712,15 @@ public class MainActivity extends Activity {
         if(cachedHighCompare!=null){on[3]=true;risk[3]=Math.min(100f,parseMetric(cachedHighCompare.summary,"Event 동기화 패턴 편차 ([0-9.]+)/100",0f));key[3]=String.format(Locale.getDefault(),"패턴 %.1f/100",risk[3]);}
         if(lastAdvanced!=null){on[4]=true;risk[4]=Math.min(100f,lastAdvanced.score);key[4]=String.format(Locale.getDefault(),"Motion %.1f/100",lastAdvanced.score);}
         if(lastVibrationB!=null){on[5]=true;risk[5]=Math.min(100f,lastVibrationB.risk);key[5]=String.format(Locale.getDefault(),"안정화 %.0fms",lastVibrationB.settleMs);}
-        if(diagnosticBitmap!=null){on[6]=true;risk[6]=Math.min(100f,parseMetric(statusDiagnostic.getText()==null?"":statusDiagnostic.getText().toString(),"Motion Risk ([0-9.]+)/100",lastAdvanced==null?0f:lastAdvanced.score));GoldenBaselineStore.Baseline g=GoldenBaselineStore.get(this,profileName());key[6]=g==null?"Golden 미등록":"Golden 비교 완료";}
+        if(diagnosticBitmap!=null){on[6]=true;risk[6]=Math.min(100f,parseMetric(statusDiagnostic.getText()==null?"":statusDiagnostic.getText().toString(),"Motion Risk ([0-9.]+)/100",lastAdvanced==null?0f:lastAdvanced.score));GoldenBaselineStore.Baseline g=GoldenBaselineStore.get(this,profileName());key[6]=g==null?LanguageManager.ts("Golden 미등록"):LanguageManager.ts("Golden 비교 완료");}
         if(roiB!=null){on[7]=true;risk[7]=Math.max(0f,Math.min(100f,100f-roiB.qualityScore));key[7]=String.format(Locale.getDefault(),"Offset %.1fpx · 흔들림 %.1f",roiB.nipOffsetPx,roiB.tipJitterPx);}
 
         Bitmap bm=Bitmap.createBitmap(w,h,Bitmap.Config.ARGB_8888);
         Canvas c=new Canvas(bm); Paint p=new Paint(Paint.ANTI_ALIAS_FLAG);
         c.drawColor(Color.rgb(4,13,24));
-        p.setColor(Color.rgb(43,231,255));p.setTextSize(42);p.setFakeBoldText(true);c.drawText("전체 검사항목 · 문제 우선도",34,58,p);
+        p.setColor(Color.rgb(43,231,255));p.setTextSize(42);p.setFakeBoldText(true);c.drawText(LanguageManager.ts("전체 검사항목 · 문제 우선도"),34,58,p);
         p.setFakeBoldText(false);p.setTextSize(24);p.setColor(Color.rgb(210,230,246));
-        c.drawText("높을수록 먼저 확인  |  빨강 큰 차이 · 노랑 확인 · 초록 안정",34,95,p);
+        c.drawText(LanguageManager.ts("높을수록 먼저 확인  |  빨강 큰 차이 · 노랑 확인 · 초록 안정"),34,95,p);
 
         int labelX=34,barL=315,barR=720,numX=742,badgeL=840,badgeR=970;
         int top=132,row=76,barH=38;
@@ -709,15 +737,15 @@ public class MainActivity extends Activity {
                 p.setTextSize(r>=35f?21:23);p.setColor(Color.rgb(5,14,25));String word=riskWord(r);float tw=p.measureText(word);c.drawText(word,badgeL+(badgeR-badgeL-tw)/2,y+27,p);p.setFakeBoldText(false);
             }else{
                 p.setColor(Color.rgb(81,103,124));c.drawRoundRect(barL,y,barR,y+barH,13,13,p);
-                p.setColor(Color.rgb(145,165,185));p.setTextSize(21);p.setFakeBoldText(true);c.drawText("빠른검사 제외",735,y+29,p);p.setFakeBoldText(false);
+                p.setColor(Color.rgb(145,165,185));p.setTextSize(21);p.setFakeBoldText(true);c.drawText(LanguageManager.ts("빠른검사 제외"),735,y+29,p);p.setFakeBoldText(false);
             }
         }
 
         int tableTop=790;
-        p.setColor(Color.rgb(43,231,255));p.setTextSize(34);p.setFakeBoldText(true);c.drawText("우선 확인 TOP 4",34,tableTop-20,p);p.setFakeBoldText(false);
+        p.setColor(Color.rgb(43,231,255));p.setTextSize(34);p.setFakeBoldText(true);c.drawText(LanguageManager.ts("우선 확인 TOP 4"),34,tableTop-20,p);p.setFakeBoldText(false);
         p.setColor(Color.rgb(18,48,75));c.drawRoundRect(30,tableTop,970,tableTop+58,12,12,p);
         p.setTextSize(23);p.setFakeBoldText(true);p.setColor(Color.WHITE);
-        c.drawText("검사항목",48,tableTop+38,p);c.drawText("상태",420,tableTop+38,p);c.drawText("핵심 확인",605,tableTop+38,p);p.setFakeBoldText(false);
+        c.drawText(LanguageManager.ts("검사항목"),48,tableTop+38,p);c.drawText(LanguageManager.ts("상태"),420,tableTop+38,p);c.drawText(LanguageManager.ts("핵심 확인"),605,tableTop+38,p);p.setFakeBoldText(false);
         java.util.ArrayList<Integer> ids=new java.util.ArrayList<>();
         for(int i=0;i<n;i++)if(on[i])ids.add(i);
         java.util.Collections.sort(ids,(a,b)->Float.compare(risk[b],risk[a]));
@@ -728,10 +756,10 @@ public class MainActivity extends Activity {
             p.setTextSize(26);p.setColor(Color.WHITE);p.setFakeBoldText(shown==0);c.drawText((shown+1)+". "+names[i],48,y+39,p);p.setFakeBoldText(false);
             float r=risk[i];int col=r<18f?Color.rgb(66,230,142):r<35f?Color.rgb(255,212,59):Color.rgb(255,77,103);
             p.setColor(col);p.setTextSize(25);p.setFakeBoldText(true);c.drawText(riskWord(r)+String.format(Locale.getDefault()," · %.0f/100",r),420,y+39,p);p.setFakeBoldText(false);
-            p.setColor(Color.rgb(222,238,251));p.setTextSize(22);String k=key[i]==null?"확인":key[i];if(k.length()>28)k=k.substring(0,28)+"…";c.drawText(k,48,y+78,p);
+            p.setColor(Color.rgb(222,238,251));p.setTextSize(22);String k=key[i]==null?LanguageManager.ts("확인"):LanguageManager.ts(key[i]);if(k.length()>28)k=k.substring(0,28)+"…";c.drawText(k,48,y+78,p);
         }
         p.setTextSize(20);p.setColor(Color.rgb(166,190,211));
-        c.drawText("※ 문제 우선도는 상대 비교용입니다. 검증된 NG 기준 전에는 확정 불량 판정값이 아닙니다.",34,1360,p);
+        c.drawText(LanguageManager.ts("※ 문제 우선도는 상대 비교용입니다. 검증된 NG 기준 전에는 확정 불량 판정값이 아닙니다."),34,1360,p);
         imgInspectionOverview.setImageBitmap(bm);
         imgInspectionOverview.setVisibility(View.VISIBLE);
     }
@@ -743,15 +771,15 @@ public class MainActivity extends Activity {
         Bitmap bm=Bitmap.createBitmap(w,h,Bitmap.Config.ARGB_8888);
         Canvas c=new Canvas(bm); Paint p=new Paint(Paint.ANTI_ALIAS_FLAG);
         c.drawColor(Color.rgb(4,13,24));
-        p.setColor(Color.rgb(43,231,255));p.setTextSize(42);p.setFakeBoldText(true);c.drawText("한눈에 보는 문제 지도",34,58,p);
+        p.setColor(Color.rgb(43,231,255));p.setTextSize(42);p.setFakeBoldText(true);c.drawText(LanguageManager.ts("한눈에 보는 문제 지도"),34,58,p);
         p.setFakeBoldText(false);p.setTextSize(24);p.setColor(Color.rgb(210,230,246));
-        c.drawText("1) 문제 동작 확인  →  2) 문제 Cycle 확인  →  3) 실제 A/B 재생",34,96,p);
+        c.drawText(LanguageManager.ts("1) 문제 동작 확인  →  2) 문제 Cycle 확인  →  3) 실제 A/B 재생"),34,96,p);
 
-        String[] labels={"대기/초기","전진가속","커팅/충격","복귀가속","안정화"};
+        String[] labels={LanguageManager.ts("대기/초기"),LanguageManager.ts("전진가속"),LanguageManager.ts("커팅/충격"),LanguageManager.ts("복귀가속"),LanguageManager.ts("안정화")};
         int[] startPct={0,25,45,55,80}, endPct={25,45,55,80,100};
         float max=1f;if(repeatB.stageSpreadPct!=null)for(float v:repeatB.stageSpreadPct)max=Math.max(max,v);
         int chartL=260,chartR=870,top=145,rowH=82,barH=42;
-        p.setTextSize(30);p.setFakeBoldText(true);p.setColor(Color.WHITE);c.drawText("동작별 차이",34,137,p);p.setFakeBoldText(false);
+        p.setTextSize(30);p.setFakeBoldText(true);p.setColor(Color.WHITE);c.drawText(LanguageManager.ts("동작별 차이"),34,137,p);p.setFakeBoldText(false);
         for(int i=0;i<5;i++){
             float v=repeatB.stageSpreadPct!=null&&i<repeatB.stageSpreadPct.length?repeatB.stageSpreadPct[i]:0f;
             int y=top+30+i*rowH;
@@ -762,13 +790,13 @@ public class MainActivity extends Activity {
             float frac=Math.min(1f,v/max);
             p.setColor(worst?Color.rgb(255,159,67):Color.rgb(48,173,236));c.drawRoundRect(chartL,y,chartL+(chartR-chartL)*Math.max(.035f,frac),y+barH,14,14,p);
             p.setTextSize(24);p.setFakeBoldText(true);p.setColor(worst?Color.rgb(255,226,110):Color.WHITE);c.drawText(String.format(Locale.getDefault(),"%.1f%%",v),885,y+31,p);p.setFakeBoldText(false);
-            if(worst){p.setTextSize(19);p.setColor(Color.rgb(255,226,110));p.setFakeBoldText(true);c.drawText("← 최우선",760,y-8,p);p.setFakeBoldText(false);}
+            if(worst){p.setTextSize(19);p.setColor(Color.rgb(255,226,110));p.setFakeBoldText(true);c.drawText(LanguageManager.ts("← 최우선"),760,y-8,p);p.setFakeBoldText(false);}
         }
 
         int tableTop=650;
-        p.setColor(Color.rgb(43,231,255));p.setTextSize(32);p.setFakeBoldText(true);c.drawText("문제 Cycle TOP3",34,tableTop-20,p);p.setFakeBoldText(false);
+        p.setColor(Color.rgb(43,231,255));p.setTextSize(32);p.setFakeBoldText(true);c.drawText(LanguageManager.ts("문제 Cycle TOP3"),34,tableTop-20,p);p.setFakeBoldText(false);
         p.setColor(Color.rgb(18,48,75));c.drawRoundRect(30,tableTop,970,tableTop+58,12,12,p);
-        int[] cols={30,135,255,650,820,970};String[] heads={"TOP","Cycle","문제 동작","전체 편차","구간 편차"};
+        int[] cols={30,135,255,650,820,970};String[] heads={"TOP","Cycle",LanguageManager.ts("문제 동작"),LanguageManager.ts("전체 편차"),LanguageManager.ts("구간 편차")};
         p.setTextSize(21);p.setFakeBoldText(true);p.setColor(Color.WHITE);for(int i=0;i<heads.length;i++)c.drawText(heads[i],cols[i]+12,tableTop+38,p);p.setFakeBoldText(false);
         for(int k=0;k<3;k++){
             int y=tableTop+68+k*92;p.setColor(k%2==0?Color.rgb(12,29,46):Color.rgb(16,38,58));c.drawRoundRect(30,y,970,y+82,12,12,p);
@@ -777,9 +805,9 @@ public class MainActivity extends Activity {
             float total=(repeatB.worstCycleDeviationPct!=null&&k<repeatB.worstCycleDeviationPct.length)?repeatB.worstCycleDeviationPct[k]:0f;float local=(repeatB.worstStageDeviationPct!=null&&idx<repeatB.worstStageDeviationPct.length)?repeatB.worstStageDeviationPct[idx]:0f;
             int col=k==0?Color.rgb(255,212,59):k==1?Color.rgb(230,235,243):Color.rgb(48,173,236);
             p.setTextSize(25);p.setFakeBoldText(true);p.setColor(col);c.drawText(String.valueOf(k+1),cols[0]+32,y+50,p);c.drawText(String.valueOf(idx+1),cols[1]+35,y+50,p);
-            c.drawText(CycleRepeatabilityAnalyzer.stageNameForIndex(stage),cols[2]+12,y+50,p);c.drawText(String.format(Locale.getDefault(),"%.1f%%",total),cols[3]+12,y+50,p);c.drawText(String.format(Locale.getDefault(),"%.1f%%",local),cols[4]+12,y+50,p);p.setFakeBoldText(false);
+            c.drawText(LanguageManager.ts(CycleRepeatabilityAnalyzer.stageNameForIndex(stage)),cols[2]+12,y+50,p);c.drawText(String.format(Locale.getDefault(),"%.1f%%",total),cols[3]+12,y+50,p);c.drawText(String.format(Locale.getDefault(),"%.1f%%",local),cols[4]+12,y+50,p);p.setFakeBoldText(false);
         }
-        p.setTextSize(21);p.setColor(Color.rgb(192,217,237));p.setFakeBoldText(true);c.drawText("↓ 아래 TOP1~3 버튼을 누르면 해당 Cycle을 A/B 좌우 동시 비교합니다.",34,1010,p);p.setFakeBoldText(false);
+        p.setTextSize(21);p.setColor(Color.rgb(192,217,237));p.setFakeBoldText(true);c.drawText(LanguageManager.ts("↓ 아래 TOP1~3 버튼을 누르면 해당 Cycle을 A/B 좌우 동시 비교합니다."),34,1010,p);p.setFakeBoldText(false);
         imgProblemFinder.setImageBitmap(bm);imgProblemFinder.setVisibility(View.VISIBLE);
     }
 
@@ -831,10 +859,10 @@ public class MainActivity extends Activity {
     }
 
     private void replayWorstCycle(int rank){
-        if(repeatA==null||repeatB==null||uriA==null||uriB==null||repeatB.worstCycleIndices==null||rank<0||rank>=repeatB.worstCycleIndices.length){Toast.makeText(this,"먼저 Cycle Diagnosis 분석을 실행해 주세요.",Toast.LENGTH_SHORT).show();return;}
+        if(repeatA==null||repeatB==null||uriA==null||uriB==null||repeatB.worstCycleIndices==null||rank<0||rank>=repeatB.worstCycleIndices.length){Toast.makeText(this,LanguageManager.ts("먼저 Cycle Diagnosis 분석을 실행해 주세요."),Toast.LENGTH_SHORT).show();return;}
         int bIdx=repeatB.worstCycleIndices[rank];
         int aIdx=repeatA.bestCycleIndex>=0?repeatA.bestCycleIndex:0;
-        if(bIdx<0||aIdx<0||bIdx>=repeatB.cycleStartSec.length||aIdx>=repeatA.cycleStartSec.length){Toast.makeText(this,"재생 가능한 Cycle 구간이 부족합니다.",Toast.LENGTH_SHORT).show();return;}
+        if(bIdx<0||aIdx<0||bIdx>=repeatB.cycleStartSec.length||aIdx>=repeatA.cycleStartSec.length){Toast.makeText(this,LanguageManager.ts("재생 가능한 Cycle 구간이 부족합니다."),Toast.LENGTH_SHORT).show();return;}
         int stage=(repeatB.worstStagePerCycle!=null&&bIdx<repeatB.worstStagePerCycle.length)?repeatB.worstStagePerCycle[bIdx]:repeatB.worstStageIndex;
         Intent i=new Intent(this,CycleReplayActivity.class);
         i.putExtra("uriA",uriA.toString());i.putExtra("uriB",uriB.toString());
@@ -849,15 +877,18 @@ public class MainActivity extends Activity {
 
 
     private void analyzeHighSpeed(){
-        if(uriA==null||uriB==null){Toast.makeText(this,"A/B 영상을 모두 선택해 주세요.",Toast.LENGTH_SHORT).show();return;}
+        if(uriA==null||uriB==null){Toast.makeText(this,LanguageManager.ts("A/B 영상을 모두 선택해 주세요."),Toast.LENGTH_SHORT).show();return;}
         progressHighSpeed.setProgress(5);statusHighSpeed.setText("v0.5 고속 Event 동기화 분석 중... (동일 영상 재분석 시 Cache 재사용)");
         executor.execute(()->{try{ensureHighSpeedCache();HighSpeedAnalyzer.CompareResult cr=cachedHighCompare;highSpeedBitmap=cr.chart;runOnUiThread(()->{progressHighSpeed.setProgress(100);imgHighSpeed.setVisibility(View.VISIBLE);imgHighSpeed.setImageBitmap(cr.chart);statusHighSpeed.setText(cr.summary+"\n※ 동일 영상 재분석 시 Cache를 재사용합니다.");btnSave.setEnabled(true);updateInspectionOverviewGraphic();});}catch(Exception e){runOnUiThread(()->statusHighSpeed.setText("고속 분석 실패: "+e.getMessage()));}});
     }
 
 
-    private String profileName(){Object o=cutterProfile.getSelectedItem();return o==null?"45° Cutter":o.toString();}
+    private String profileName(){
+        int p=cutterProfile==null?0:cutterProfile.getSelectedItemPosition();
+        return p==1?"0° Cutter":p==2?"사용자 Cutter":"45° Cutter";
+    }
     private void analyzeAdvanced(){
-        if(uriA==null||uriB==null){Toast.makeText(this,"A/B 영상을 모두 선택해 주세요.",Toast.LENGTH_SHORT).show();return;}
+        if(uriA==null||uriB==null){Toast.makeText(this,LanguageManager.ts("A/B 영상을 모두 선택해 주세요."),Toast.LENGTH_SHORT).show();return;}
         progressAdvanced.setProgress(5);statusAdvanced.setText("v0.6 Multi-Cycle / Jerk / Timing 분석 중...");
         executor.execute(()->{try{
             ensureHighSpeedCache();
@@ -871,7 +902,7 @@ public class MainActivity extends Activity {
     }
 
     private void analyzeEasyDiagnostic(){
-        if(uriA==null||uriB==null){Toast.makeText(this,"A/B 영상을 모두 선택해 주세요.",Toast.LENGTH_SHORT).show();return;}
+        if(uriA==null||uriB==null){Toast.makeText(this,LanguageManager.ts("A/B 영상을 모두 선택해 주세요."),Toast.LENGTH_SHORT).show();return;}
         progressEasy.setProgress(5);statusEasy.setText("v0.8 고정부 공통진동과 Cutter 실제운동을 분리 분석 중...");
         executor.execute(()->{try{
             VibrationCompensatedAnalyzer.Result a=VibrationCompensatedAnalyzer.analyze(this,uriA,durationA,profileName()+" / A");
@@ -888,7 +919,7 @@ public class MainActivity extends Activity {
     }
 
     private void analyzeDiagnostic(){
-        if(uriA==null||uriB==null){Toast.makeText(this,"A/B 영상을 모두 선택해 주세요.",Toast.LENGTH_SHORT).show();return;}
+        if(uriA==null||uriB==null){Toast.makeText(this,LanguageManager.ts("A/B 영상을 모두 선택해 주세요."),Toast.LENGTH_SHORT).show();return;}
         progressDiagnostic.setProgress(5);statusDiagnostic.setText("v0.7 Smart Diagnostic · Top3 이상 순간 / Golden 비교 중...");
         executor.execute(()->{try{
             ensureHighSpeedCache();
@@ -902,18 +933,18 @@ public class MainActivity extends Activity {
     }
 
     private void saveGolden(){
-        if(lastAdvanced==null){Toast.makeText(this,"먼저 v0.6 고급분석 또는 v0.7 통합진단을 실행해 주세요.",Toast.LENGTH_LONG).show();return;}
-        new android.app.AlertDialog.Builder(this).setTitle("Golden 기준 등록")
-          .setMessage(profileName()+"의 현재 결과를 정상 Golden 기준으로 저장합니다.\n\n정상 상태가 확인된 영상에서만 등록하세요. 기존 Golden은 교체됩니다.")
-          .setNegativeButton("취소",null).setPositiveButton("Golden 등록",(d,w)->{GoldenBaselineStore.save(this,profileName(),lastAdvanced,roiB);Toast.makeText(this,""+profileName()+" Golden 기준을 저장했습니다.",Toast.LENGTH_LONG).show();}).show();
+        if(lastAdvanced==null){Toast.makeText(this,LanguageManager.ts("먼저 v0.6 고급분석 또는 v0.7 통합진단을 실행해 주세요."),Toast.LENGTH_LONG).show();return;}
+        new android.app.AlertDialog.Builder(this).setTitle(LanguageManager.ts("Golden 기준 등록"))
+          .setMessage(LanguageManager.t(profileName()+"의 현재 결과를 정상 Golden 기준으로 저장합니다.\n\n정상 상태가 확인된 영상에서만 등록하세요. 기존 Golden은 교체됩니다."))
+          .setNegativeButton(LanguageManager.ts("취소"),null).setPositiveButton(LanguageManager.ts("Golden 등록"),(d,w)->{GoldenBaselineStore.save(this,profileName(),lastAdvanced,roiB);Toast.makeText(this,LanguageManager.t(""+profileName()+" Golden 기준을 저장했습니다."),Toast.LENGTH_LONG).show();}).show();
     }
 
     private void showCalibrationDialog(){
         android.widget.LinearLayout box=new android.widget.LinearLayout(this);box.setOrientation(android.widget.LinearLayout.VERTICAL);int pad=(int)(18*getResources().getDisplayMetrics().density);box.setPadding(pad,pad,pad,pad);
-        android.widget.EditText mm=new android.widget.EditText(this);mm.setHint("실제 기준 길이 (mm), 예: 10");mm.setInputType(android.text.InputType.TYPE_CLASS_NUMBER|android.text.InputType.TYPE_NUMBER_FLAG_DECIMAL);
-        android.widget.EditText px=new android.widget.EditText(this);px.setHint("영상에서 같은 길이 (px), 예: 250");px.setInputType(android.text.InputType.TYPE_CLASS_NUMBER|android.text.InputType.TYPE_NUMBER_FLAG_DECIMAL);box.addView(mm);box.addView(px);
+        android.widget.EditText mm=new android.widget.EditText(this);mm.setHint(LanguageManager.ts("실제 기준 길이 (mm), 예: 10"));mm.setInputType(android.text.InputType.TYPE_CLASS_NUMBER|android.text.InputType.TYPE_NUMBER_FLAG_DECIMAL);
+        android.widget.EditText px=new android.widget.EditText(this);px.setHint(LanguageManager.ts("영상에서 같은 길이 (px), 예: 250"));px.setInputType(android.text.InputType.TYPE_CLASS_NUMBER|android.text.InputType.TYPE_NUMBER_FLAG_DECIMAL);box.addView(mm);box.addView(px);
         float old=CalibrationStore.get(this,profileName());String msg=old>0?String.format(Locale.getDefault(),"현재 %.6f mm/px",old):"현재 Calibration 미등록";
-        new android.app.AlertDialog.Builder(this).setTitle("px → mm Calibration").setMessage(msg+"\n같은 평면의 알려진 실제 길이와 영상 픽셀 길이를 입력하세요.").setView(box).setNegativeButton("취소",null).setPositiveButton("저장",(d,w)->{try{float m=Float.parseFloat(mm.getText().toString());float p=Float.parseFloat(px.getText().toString());CalibrationStore.set(this,profileName(),m,p);Toast.makeText(this,String.format(Locale.getDefault(),"저장: %.6f mm/px",m/p),Toast.LENGTH_LONG).show();}catch(Exception e){Toast.makeText(this,"숫자를 다시 입력해 주세요.",Toast.LENGTH_LONG).show();}}).show();
+        new android.app.AlertDialog.Builder(this).setTitle("px → mm Calibration").setMessage(LanguageManager.t(msg+"\n같은 평면의 알려진 실제 길이와 영상 픽셀 길이를 입력하세요.")).setView(box).setNegativeButton(LanguageManager.ts("취소"),null).setPositiveButton(LanguageManager.ts("저장"),(d,w)->{try{float m=Float.parseFloat(mm.getText().toString());float p=Float.parseFloat(px.getText().toString());CalibrationStore.set(this,profileName(),m,p);Toast.makeText(this,String.format(Locale.getDefault(),"저장: %.6f mm/px",m/p),Toast.LENGTH_LONG).show();}catch(Exception e){Toast.makeText(this,LanguageManager.ts("숫자를 다시 입력해 주세요."),Toast.LENGTH_LONG).show();}}).show();
     }
 
     private void restoreState(){
@@ -925,17 +956,17 @@ public class MainActivity extends Activity {
         }catch(Exception ignored){}
     }
     private void openZoom(ImageView view){
-        if(view.getDrawable()==null){Toast.makeText(this,"먼저 분석을 실행해 주세요.",Toast.LENGTH_SHORT).show();return;}
+        if(view.getDrawable()==null){Toast.makeText(this,LanguageManager.ts("먼저 분석을 실행해 주세요."),Toast.LENGTH_SHORT).show();return;}
         Bitmap b=null;
         if(view==imgA)b=frameA; else if(view==imgB)b=alignedB; else if(view==imgDiff)b=diffBitmap;
         else if(view==imgCycle)b=cycleBitmap; else if(view==imgRepeatability)b=repeatabilityBitmap; else if(view==imgHighSpeed)b=highSpeedBitmap; else if(view==imgAdvanced)b=advancedBitmap; else if(view==imgDiagnostic)b=diagnosticBitmap; else if(view==imgEasyDiagnostic)b=easyDiagnosticBitmap;
         else if(view.getDrawable() instanceof android.graphics.drawable.BitmapDrawable)b=((android.graphics.drawable.BitmapDrawable)view.getDrawable()).getBitmap();
         if(b==null)return;
-        try{java.io.File f=new java.io.File(getCacheDir(),"zoom_result.jpg");java.io.FileOutputStream os=new java.io.FileOutputStream(f);b.compress(Bitmap.CompressFormat.JPEG,95,os);os.close();Intent i=new Intent(this,ZoomImageActivity.class);i.putExtra("path",f.getAbsolutePath());startActivity(i);}catch(Exception e){Toast.makeText(this,"확대 열기 실패",Toast.LENGTH_SHORT).show();}
+        try{java.io.File f=new java.io.File(getCacheDir(),"zoom_result.jpg");java.io.FileOutputStream os=new java.io.FileOutputStream(f);b.compress(Bitmap.CompressFormat.JPEG,95,os);os.close();Intent i=new Intent(this,ZoomImageActivity.class);i.putExtra("path",f.getAbsolutePath());startActivity(i);}catch(Exception e){Toast.makeText(this,LanguageManager.ts("확대 열기 실패"),Toast.LENGTH_SHORT).show();}
     }
 
     private void analyzeRoi(){
-        if(uriA==null||uriB==null){Toast.makeText(this,"A/B 영상을 모두 선택해 주세요.",Toast.LENGTH_SHORT).show();return;}
+        if(uriA==null||uriB==null){Toast.makeText(this,LanguageManager.ts("A/B 영상을 모두 선택해 주세요."),Toast.LENGTH_SHORT).show();return;}
         progressRoi.setProgress(5); statusRoi.setText("v0.3 ROI 정밀분석 준비 중...");
         executor.execute(()->{
             try{
@@ -995,7 +1026,7 @@ public class MainActivity extends Activity {
         int diagExtra=(diagnosticBitmap==null?0:Math.round((w*3f)*diagnosticBitmap.getHeight()/diagnosticBitmap.getWidth())+gap);
         Bitmap out=Bitmap.createBitmap(w*3+gap*4,h+titleH+gap*2+cycleExtra+repeatExtra+roiExtra+advExtra+diagExtra,Bitmap.Config.ARGB_8888);
         Canvas c=new Canvas(out); c.drawColor(Color.WHITE); Paint p=new Paint(Paint.ANTI_ALIAS_FLAG); p.setColor(Color.rgb(12,45,87)); p.setTextSize(34); p.setFakeBoldText(true);
-        c.drawText("전극 컷팅 A/B 비교 · A / 보정 B / Difference",gap,52,p);
+        c.drawText(LanguageManager.ts("전극 컷팅 A/B 비교 · A / 보정 B / Difference"),gap,52,p);
         c.drawBitmap(frameA,gap,titleH+gap,p); c.drawBitmap(alignedB,w+gap*2,titleH+gap,p); c.drawBitmap(diffBitmap,w*2+gap*3,titleH+gap,p);
         int y=h+titleH+gap*2;
         if(cycleBitmap!=null){
@@ -1023,9 +1054,9 @@ public class MainActivity extends Activity {
         ContentValues v=new ContentValues(); v.put(MediaStore.Images.Media.DISPLAY_NAME,"CuttingCompare_"+stamp+".jpg"); v.put(MediaStore.Images.Media.MIME_TYPE,"image/jpeg");
         if(android.os.Build.VERSION.SDK_INT>=29) v.put(MediaStore.Images.Media.RELATIVE_PATH,"Pictures/ElectrodeCuttingCompare");
         Uri u=getContentResolver().insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI,v);
-        if(u==null){Toast.makeText(this,"저장 위치를 만들지 못했습니다.",Toast.LENGTH_LONG).show();return;}
-        try(OutputStream os=getContentResolver().openOutputStream(u)){result.compress(Bitmap.CompressFormat.JPEG,92,os); Toast.makeText(this,"Pictures/ElectrodeCuttingCompare 에 저장했습니다.",Toast.LENGTH_LONG).show();}
-        catch(Exception e){Toast.makeText(this,"저장 실패: "+e.getMessage(),Toast.LENGTH_LONG).show();}
+        if(u==null){Toast.makeText(this,LanguageManager.ts("저장 위치를 만들지 못했습니다."),Toast.LENGTH_LONG).show();return;}
+        try(OutputStream os=getContentResolver().openOutputStream(u)){result.compress(Bitmap.CompressFormat.JPEG,92,os); Toast.makeText(this,LanguageManager.ts("Pictures/ElectrodeCuttingCompare 에 저장했습니다."),Toast.LENGTH_LONG).show();}
+        catch(Exception e){Toast.makeText(this,LanguageManager.ts("저장 실패: ")+e.getMessage(),Toast.LENGTH_LONG).show();}
     }
 
     @Override protected void onDestroy(){super.onDestroy(); executor.shutdownNow();}

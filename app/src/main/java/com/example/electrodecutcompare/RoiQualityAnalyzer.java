@@ -136,9 +136,9 @@ public final class RoiQualityAnalyzer {
         Canvas c=new Canvas(out); c.drawColor(Color.WHITE);
         Paint p=new Paint(Paint.ANTI_ALIAS_FLAG);
         p.setColor(Color.rgb(15,48,88)); p.setTextSize(36); p.setFakeBoldText(true);
-        c.drawText("v0.4 A/B ROI Quality Comparison",45,55,p);
+        c.drawText(LanguageManager.ts("v0.4 A/B ROI Quality Comparison"),45,55,p);
         p.setFakeBoldText(false); p.setTextSize(22); p.setColor(Color.DKGRAY);
-        c.drawText("촬영각 보정 후 전극 선단 / Gripper / Nip 상대값 비교",45,92,p);
+        c.drawText(LanguageManager.ts("촬영각 보정 후 전극 선단 / Gripper / Nip 상대값 비교"),45,92,p);
 
         String[] names={"진입각 |°|","Nip Offset px","Tip 흔들림 px","Gripper 흔들림 px","안정 Score"};
         float[] va={Math.abs(a.entryAngleDeg),a.nipOffsetPx,a.tipJitterPx,a.gripperJitterPx,a.qualityScore};
@@ -160,11 +160,11 @@ public final class RoiQualityAnalyzer {
             p.setColor(Color.rgb(220,65,45));
             c.drawText(String.format(Locale.getDefault(),"B %.1f",vb[i]),right-150,y+31,p);
         }
-        p.setTextSize(23); p.setColor(Color.rgb(30,90,210)); c.drawText("● 설비 A",60,690,p);
-        p.setColor(Color.rgb(220,65,45)); c.drawText("● 설비 B",210,690,p);
+        p.setTextSize(23); p.setColor(Color.rgb(30,90,210)); c.drawText(LanguageManager.ts("● 설비 A"),60,690,p);
+        p.setColor(Color.rgb(220,65,45)); c.drawText(LanguageManager.ts("● 설비 B"),210,690,p);
         p.setColor(Color.DKGRAY); p.setTextSize(20);
-        c.drawText("※ px 값은 현재 영상 내 상대지표입니다. 실제 mm 변환은 기준 치수 Calibration을 추가하면 가능합니다.",390,690,p);
-        c.drawText("※ v0.4 ROI는 설비별 저장값을 사용합니다. 현재 지표는 NG 확정 판정용이 아닙니다.",60,730,p);
+        c.drawText(LanguageManager.ts("※ px 값은 현재 영상 내 상대지표입니다. 실제 mm 변환은 기준 치수 Calibration을 추가하면 가능합니다."),390,690,p);
+        c.drawText(LanguageManager.ts("※ v0.4 ROI는 설비별 저장값을 사용합니다. 현재 지표는 NG 확정 판정용이 아닙니다."),60,730,p);
         return out;
     }
 

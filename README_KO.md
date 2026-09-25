@@ -1,3 +1,13 @@
+# ElectrodeCuttingCompare v1.9.4
+
+## Multilingual Flag Selector
+- 메인 화면 우측 상단의 작은 국기 버튼으로 언어를 즉시 변경합니다.
+- 지원 언어: 🇰🇷 한국어 / 🇬🇧 English / 🇵🇱 Polski / 🇺🇦 Українська.
+- 선택 언어는 휴대폰에 저장되어 앱을 다시 실행해도 유지됩니다.
+- 메인 Dashboard, 검사 상태/결과, Cycle Replay, ROI 설정, Guide, 주요 분석 그래프/표의 표시 언어를 함께 전환합니다.
+- 분석 수치/Golden/ROI/Trend의 내부 키는 언어와 분리해 기존 데이터 호환성을 유지합니다.
+- v1.9.3 Field Visual Dashboard, Fast Engine, TOP3 A/B 비교재생, 문제구간 반복, Permanent Signing을 그대로 유지합니다.
+
 # ElectrodeCuttingCompare v1.9.2
 
 ## Visual Clarity Dashboard

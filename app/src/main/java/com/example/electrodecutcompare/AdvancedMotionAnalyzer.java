@@ -36,14 +36,14 @@ public final class AdvancedMotionAnalyzer{
  private static float ratio(float a,float b){return Math.min(1f,Math.abs(a-b)/Math.max(.001f,(Math.abs(a)+Math.abs(b))/2f));}
  private static Bitmap draw(Metrics a,Metrics b,float[] hist,float score,String profile){
   int w=1200,h=820;Bitmap o=Bitmap.createBitmap(w,h,Bitmap.Config.ARGB_8888);Canvas c=new Canvas(o);c.drawColor(Color.WHITE);Paint p=new Paint(1);
-  p.setColor(Color.rgb(15,48,88));p.setTextSize(34);p.setFakeBoldText(true);c.drawText("v0.6 Multi-Cycle / Jerk / Preventive Trend",45,55,p);p.setFakeBoldText(false);p.setTextSize(22);p.setColor(Color.DKGRAY);c.drawText(profile+" · Cycle/속도변화/충격/간헐이상 통합 분석",45,92,p);
+  p.setColor(Color.rgb(15,48,88));p.setTextSize(34);p.setFakeBoldText(true);c.drawText(LanguageManager.ts("v0.6 Multi-Cycle / Jerk / Preventive Trend"),45,55,p);p.setFakeBoldText(false);p.setTextSize(22);p.setColor(Color.DKGRAY);c.drawText(LanguageManager.ts(profile+" · Cycle/속도변화/충격/간헐이상 통합 분석"),45,92,p);
   int l=70,r=1135,t=150,bot=500;p.setStyle(Paint.Style.STROKE);p.setColor(Color.LTGRAY);c.drawRect(l,t,r,bot,p);
   float m=.001f;for(float q:a.jerk)m=Math.max(m,Math.abs(q));for(float q:b.jerk)m=Math.max(m,Math.abs(q));
   Paint pa=new Paint(1);pa.setStyle(Paint.Style.STROKE);pa.setStrokeWidth(4);pa.setColor(Color.rgb(30,90,210));Paint pb=new Paint(pa);pb.setColor(Color.rgb(220,65,45));
   int n=Math.max(a.jerk.length,b.jerk.length);for(int i=1;i<n;i++){float x1=l+(r-l)*(i-1f)/(n-1),x2=l+(r-l)*i/(n-1);if(i<a.jerk.length)c.drawLine(x1,(t+bot)/2-a.jerk[i-1]/m*150,x2,(t+bot)/2-a.jerk[i]/m*150,pa);if(i<b.jerk.length)c.drawLine(x1,(t+bot)/2-b.jerk[i-1]/m*150,x2,(t+bot)/2-b.jerk[i]/m*150,pb);}
   p.setStyle(Paint.Style.FILL);p.setColor(Color.DKGRAY);p.setTextSize(24);c.drawText(String.format(Locale.getDefault(),"Motion Risk %.1f/100 · A cycles %d · B cycles %d",score,a.cycles,b.cycles),70,555,p);
-  c.drawText("Jerk: 파랑=A / 빨강=B",70,590,p);
-  if(hist.length>0){p.setTextSize(20);c.drawText("최근 Risk Trend (최대 30회)",70,645,p);Paint tr=new Paint(1);tr.setStyle(Paint.Style.STROKE);tr.setStrokeWidth(4);tr.setColor(Color.rgb(80,80,80));for(int i=1;i<hist.length;i++){float x1=70+1000*(i-1f)/Math.max(1,hist.length-1),x2=70+1000*i/(float)Math.max(1,hist.length-1);c.drawLine(x1,780-hist[i-1]*1.2f,x2,780-hist[i]*1.2f,tr);}}
+  c.drawText(LanguageManager.ts("Jerk: 파랑=A / 빨강=B"),70,590,p);
+  if(hist.length>0){p.setTextSize(20);c.drawText(LanguageManager.ts("최근 Risk Trend (최대 30회)"),70,645,p);Paint tr=new Paint(1);tr.setStyle(Paint.Style.STROKE);tr.setStrokeWidth(4);tr.setColor(Color.rgb(80,80,80));for(int i=1;i<hist.length;i++){float x1=70+1000*(i-1f)/Math.max(1,hist.length-1),x2=70+1000*i/(float)Math.max(1,hist.length-1);c.drawLine(x1,780-hist[i-1]*1.2f,x2,780-hist[i]*1.2f,tr);}}
   return o;
  }
 }

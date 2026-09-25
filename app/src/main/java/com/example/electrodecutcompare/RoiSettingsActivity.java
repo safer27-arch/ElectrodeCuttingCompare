@@ -24,12 +24,13 @@ public class RoiSettingsActivity extends Activity {
 
     @Override protected void onCreate(Bundle b){
         super.onCreate(b);
+        LanguageManager.init(this);
         if (android.os.Build.VERSION.SDK_INT >= 30) getWindow().setDecorFitsSystemWindows(true); setContentView(R.layout.activity_roi_settings);
         image=findViewById(R.id.roiImage); info=findViewById(R.id.roiInfo);
         machineSpinner=findViewById(R.id.machineSpinner); roiSpinner=findViewById(R.id.roiSpinner);
 
-        machineSpinner.setAdapter(new ArrayAdapter<>(this,android.R.layout.simple_spinner_dropdown_item,new String[]{"설비 A","설비 B"}));
-        roiSpinner.setAdapter(new ArrayAdapter<>(this,android.R.layout.simple_spinner_dropdown_item,new String[]{"Gripper","전극 선단 Tip","Nip"}));
+        machineSpinner.setAdapter(new ArrayAdapter<>(this,android.R.layout.simple_spinner_dropdown_item,new String[]{LanguageManager.ts("설비 A"),LanguageManager.ts("설비 B")}));
+        roiSpinner.setAdapter(new ArrayAdapter<>(this,android.R.layout.simple_spinner_dropdown_item,new String[]{"Gripper",LanguageManager.ts("전극 선단 Tip"),"Nip"}));
 
         AdapterView.OnItemSelectedListener listener=new AdapterView.OnItemSelectedListener(){
             public void onItemSelected(AdapterView<?> p,android.view.View v,int pos,long id){ reloadSelection(); }
@@ -45,8 +46,8 @@ public class RoiSettingsActivity extends Activity {
         findViewById(R.id.wplus).setOnClickListener(v->resize(step,0));
         findViewById(R.id.hminus).setOnClickListener(v->resize(0,-step));
         findViewById(R.id.hplus).setOnClickListener(v->resize(0,step));
-        findViewById(R.id.saveRoi).setOnClickListener(v->{ save(); Toast.makeText(this,"ROI 저장 완료",Toast.LENGTH_SHORT).show();});
-        findViewById(R.id.resetRoi).setOnClickListener(v->{RoiSettingsStore.reset(this,machine);reloadSelection();Toast.makeText(this,"설비 "+machine+" ROI 초기화",Toast.LENGTH_SHORT).show();});
+        findViewById(R.id.saveRoi).setOnClickListener(v->{ save(); Toast.makeText(this,LanguageManager.ts("ROI 저장 완료"),Toast.LENGTH_SHORT).show();});
+        findViewById(R.id.resetRoi).setOnClickListener(v->{RoiSettingsStore.reset(this,machine);reloadSelection();Toast.makeText(this,LanguageManager.ts("설비 ")+machine+" "+LanguageManager.ts("ROI 초기화"),Toast.LENGTH_SHORT).show();});
 
         uriAString=getIntent().getStringExtra("uriA"); uriBString=getIntent().getStringExtra("uriB");
         loadFrameForMachine();

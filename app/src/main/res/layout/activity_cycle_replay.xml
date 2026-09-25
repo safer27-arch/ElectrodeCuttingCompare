@@ -7,7 +7,7 @@
     android:background="@color/light_bg"
     android:fitsSystemWindows="true">
 
-    <TextView
+    <com.example.electrodecutcompare.LocalizedTextView
         android:id="@+id/txtReplayTitle"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -18,7 +18,7 @@
         android:textSize="23sp"
         android:textStyle="bold" />
 
-    <TextView
+    <com.example.electrodecutcompare.LocalizedTextView
         android:id="@+id/txtReplayInfo"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -32,7 +32,7 @@
         android:ellipsize="end"
         android:textStyle="bold" />
 
-    <TextView
+    <com.example.electrodecutcompare.LocalizedTextView
         android:id="@+id/txtProblemAlert"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -58,7 +58,7 @@
             android:layout_weight="1"
             android:orientation="vertical"
             android:paddingEnd="4dp">
-            <TextView android:id="@+id/txtReplayA" android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center" android:text="A 기준 · 정상 Cycle" android:textColor="@color/cyan" android:textSize="17sp" android:textStyle="bold" />
+            <com.example.electrodecutcompare.LocalizedTextView android:id="@+id/txtReplayA" android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center" android:text="A 기준 · 정상 Cycle" android:textColor="@color/cyan" android:textSize="17sp" android:textStyle="bold" />
             <TextureView android:id="@+id/videoReplayA" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:background="#000000" />
         </LinearLayout>
 
@@ -68,12 +68,12 @@
             android:layout_weight="1"
             android:orientation="vertical"
             android:paddingStart="4dp">
-            <TextView android:id="@+id/txtReplayB" android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center" android:text="B 비교 · 문제 Cycle" android:textColor="@color/warning" android:textSize="17sp" android:textStyle="bold" />
+            <com.example.electrodecutcompare.LocalizedTextView android:id="@+id/txtReplayB" android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center" android:text="B 비교 · 문제 Cycle" android:textColor="@color/warning" android:textSize="17sp" android:textStyle="bold" />
             <TextureView android:id="@+id/videoReplayB" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:background="#000000" />
         </LinearLayout>
     </LinearLayout>
 
-    <TextView
+    <com.example.electrodecutcompare.LocalizedTextView
         android:id="@+id/txtReplayProgress"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -95,9 +95,9 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="5dp"
         android:orientation="horizontal">
-        <Button android:id="@+id/btnReplayRestart" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:minHeight="50dp" android:text="↻ 전체 다시" />
-        <Button android:id="@+id/btnReplayPause" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:minHeight="50dp" android:text="⏸ 일시정지" />
-        <Button android:id="@+id/btnReplaySync" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:minHeight="50dp" android:text="✓ 동기화 ON" />
+        <com.example.electrodecutcompare.LocalizedButton android:id="@+id/btnReplayRestart" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:minHeight="50dp" android:text="↻ 전체 다시" />
+        <com.example.electrodecutcompare.LocalizedButton android:id="@+id/btnReplayPause" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:minHeight="50dp" android:text="⏸ 일시정지" />
+        <com.example.electrodecutcompare.LocalizedButton android:id="@+id/btnReplaySync" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:minHeight="50dp" android:text="✓ 동기화 ON" />
     </LinearLayout>
 
     <LinearLayout
@@ -105,11 +105,11 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="4dp"
         android:orientation="horizontal">
-        <Button android:id="@+id/btnProblemLoop" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="2" android:minHeight="52dp" android:background="@drawable/button_primary" android:textColor="#FFFFFF" android:textStyle="bold" android:text="⚠ 문제구간만 반복" />
-        <Button android:id="@+id/btnReplayClose" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:minHeight="52dp" android:text="닫기" />
+        <com.example.electrodecutcompare.LocalizedButton android:id="@+id/btnProblemLoop" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="2" android:minHeight="52dp" android:background="@drawable/button_primary" android:textColor="#FFFFFF" android:textStyle="bold" android:text="⚠ 문제구간만 반복" />
+        <com.example.electrodecutcompare.LocalizedButton android:id="@+id/btnReplayClose" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:minHeight="52dp" android:text="닫기" />
     </LinearLayout>
 
-    <TextView
+    <com.example.electrodecutcompare.LocalizedTextView
         android:id="@+id/txtReplayModeNote"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

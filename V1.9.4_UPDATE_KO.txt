@@ -1,0 +1,10 @@
+ElectrodeCuttingCompare v1.9.4 · Multilingual Flag Selector
+
+- 우측 상단 국기 버튼 추가
+- 한국어 / 영어 / 폴란드어 / 우크라이나어 지원
+- 언어 선택값 영구 저장
+- 메인 Dashboard / 검사 상태 / Cycle Replay / ROI / Guide / 주요 그래프·표 언어 전환
+- 내부 Golden/ROI/Trend profile key는 언어와 분리하여 기존 데이터 유지
+- v1.9.3 Field Visual Dashboard + Replay Precision 기능 유지
+- Permanent Signing 유지, 기존 앱 위 업데이트 설치
+- versionCode 36 / versionName 1.9.4

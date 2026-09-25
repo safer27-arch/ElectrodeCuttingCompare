@@ -94,9 +94,9 @@ public class CycleAnalyzer {
         Canvas c=new Canvas(out); c.drawColor(Color.WHITE);
         Paint p=new Paint(Paint.ANTI_ALIAS_FLAG);
         p.setColor(Color.rgb(15,48,88)); p.setTextSize(34); p.setFakeBoldText(true);
-        c.drawText(label+" Cycle Motion / Trajectory",45,55,p);
+        c.drawText(LanguageManager.ts(label)+" Cycle Motion / Trajectory",45,55,p);
         p.setFakeBoldText(false); p.setTextSize(22); p.setColor(Color.DKGRAY);
-        c.drawText("상단: 프레임 변화량   하단: 움직임 중심 궤적(촬영각 보정 전 참고값)",45,90,p);
+        c.drawText(LanguageManager.ts("상단: 프레임 변화량   하단: 움직임 중심 궤적(촬영각 보정 전 참고값)"),45,90,p);
 
         int left=70,right=1140,top=125,mid=350,bottom=565;
         p.setStyle(Paint.Style.STROKE); p.setStrokeWidth(2); p.setColor(Color.LTGRAY);
@@ -131,9 +131,9 @@ public class CycleAnalyzer {
         Canvas c=new Canvas(out); c.drawColor(Color.WHITE);
         Paint p=new Paint(Paint.ANTI_ALIAS_FLAG);
         p.setColor(Color.rgb(15,48,88)); p.setTextSize(34); p.setFakeBoldText(true);
-        c.drawText("A/B Cycle Motion Comparison",45,55,p);
+        c.drawText(LanguageManager.ts("A/B Cycle Motion Comparison"),45,55,p);
         p.setFakeBoldText(false); p.setTextSize(21); p.setColor(Color.DKGRAY);
-        c.drawText("카메라 각도 차이를 고려하기 위해 절대 좌표보다 정규화된 Motion 패턴을 우선 비교",45,90,p);
+        c.drawText(LanguageManager.ts("카메라 각도 차이를 고려하기 위해 절대 좌표보다 정규화된 Motion 패턴을 우선 비교"),45,90,p);
 
         int left=70,right=1140,top=135,bottom=590;
         p.setStyle(Paint.Style.STROKE); p.setStrokeWidth(2); p.setColor(Color.LTGRAY); c.drawRect(left,top,right,bottom,p);
@@ -148,9 +148,9 @@ public class CycleAnalyzer {
             float x1=left+(right-left)*(i-1f)/(b.motion.length-1),x2=left+(right-left)*i/(b.motion.length-1);
             c.drawLine(x1,bottom-(bottom-top-20)*b.motion[i-1]/maxB,x2,bottom-(bottom-top-20)*b.motion[i]/maxB,pb);
         }
-        p.setStyle(Paint.Style.FILL); p.setTextSize(24); p.setColor(Color.rgb(30,90,210)); c.drawText("● A",80,650,p);
-        p.setColor(Color.rgb(220,65,45)); c.drawText("● B",180,650,p);
-        p.setColor(Color.DKGRAY); c.drawText("※ 현재 단계는 공정 패턴 비교용이며 전극 Damage 확정 판정은 다음 학습/ROI 단계에서 보강",300,650,p);
+        p.setStyle(Paint.Style.FILL); p.setTextSize(24); p.setColor(Color.rgb(30,90,210)); c.drawText(LanguageManager.ts("● A"),80,650,p);
+        p.setColor(Color.rgb(220,65,45)); c.drawText(LanguageManager.ts("● B"),180,650,p);
+        p.setColor(Color.DKGRAY); c.drawText(LanguageManager.ts("※ 현재 단계는 공정 패턴 비교용이며 전극 Damage 확정 판정은 다음 학습/ROI 단계에서 보강"),300,650,p);
         return out;
     }
 }

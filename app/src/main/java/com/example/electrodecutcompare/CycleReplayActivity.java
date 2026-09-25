@@ -81,6 +81,7 @@ public class CycleReplayActivity extends Activity {
 
     @Override protected void onCreate(Bundle savedInstanceState){
         super.onCreate(savedInstanceState);
+        LanguageManager.init(this);
         if(android.os.Build.VERSION.SDK_INT>=30)getWindow().setDecorFitsSystemWindows(true);
         setContentView(R.layout.activity_cycle_replay);
 

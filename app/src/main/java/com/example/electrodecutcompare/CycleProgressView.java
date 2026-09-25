@@ -36,8 +36,8 @@ public class CycleProgressView extends View {
         drawTrack(c,left,right,yA,trackH,progressA,Color.rgb(43,231,255));
         drawTrack(c,left,right,yB,trackH,progressB,Color.rgb(255,159,67));
         p.setTextSize(Math.max(22f,h*.20f)); p.setFakeBoldText(true);
-        p.setColor(Color.rgb(43,231,255)); c.drawText("A",8f,yA+trackH*.82f,p);
-        p.setColor(Color.rgb(255,190,90)); c.drawText("B",8f,yB+trackH*.82f,p);
+        p.setColor(Color.rgb(43,231,255)); c.drawText(LanguageManager.ts("A"),8f,yA+trackH*.82f,p);
+        p.setColor(Color.rgb(255,190,90)); c.drawText(LanguageManager.ts("B"),8f,yB+trackH*.82f,p);
         p.setFakeBoldText(false);
     }
 
