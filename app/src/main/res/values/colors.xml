@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="navy">#06111F</color>
-    <color name="blue">#14B9F4</color>
-    <color name="cyan">#22E0FF</color>
-    <color name="light_bg">#050D18</color>
-    <color name="text_dark">#F4FAFF</color>
-    <color name="text_secondary">#B8D0E6</color>
-    <color name="border">#2B587D</color>
-    <color name="warning">#FFD33D</color>
-    <color name="danger">#FF5868</color>
-    <color name="success">#52E59A</color>
-    <color name="orange">#FFAA3D</color>
+    <color name="navy">#04101E</color>
+    <color name="blue">#178BFF</color>
+    <color name="cyan">#2BE7FF</color>
+    <color name="light_bg">#040B14</color>
+    <color name="text_dark">#FFFFFF</color>
+    <color name="text_secondary">#D5E6F4</color>
+    <color name="border">#3979A8</color>
+    <color name="warning">#FFD43B</color>
+    <color name="danger">#FF4D67</color>
+    <color name="success">#42E68E</color>
+    <color name="orange">#FF9F43</color>
 </resources>
