@@ -1,0 +1,16 @@
+PASS periodic usable
+PASS complete cycles
+PASS PTS duration
+PASS identical repeat dispersion
+PASS static rejected no invented cycles
+PASS tracking gap held
+PASS duration differences not DTW-hidden
+PASS normalized same shape
+PASS stroke variation retained
+PASS endpoint drift retained
+PASS too few samples per cycle held
+PASS NCC position under gain offset
+PASS long cycle retained and flagged
+PASS irregular timestamps preserve duration
+PASS ambiguous repeated texture withheld
+ALL PASSED

@@ -29,6 +29,8 @@ public class CycleReplayActivity extends Activity {
 
     private int aStartMs, aEndMs, bStartMs, bEndMs;
     private int stageIndex = 2;
+    private boolean reviewed=false,seekReadyA=false,seekReadyB=false;
+    private int seekEpoch=0;
     private float problemStartPct = .45f, problemEndPct = .55f;
     private boolean preparedA=false, preparedB=false, paused=false;
     private boolean syncMode=true, problemLoop=false, restarting=false;
@@ -67,8 +69,7 @@ public class CycleReplayActivity extends Activity {
                             if(delta>5f && now-lastSyncCorrectionMs>300){
                                 float target=(pa+pb)*0.5f;
                                 if(problemLoop) target=Math.max(problemStartPct,Math.min(problemEndPct,target));
-                                seekPlayer(playerA,mapProgress(target,aStartMs,aEndMs));
-                                seekPlayer(playerB,mapProgress(target,bStartMs,bEndMs));
+                                seekBothAt(target);
                                 lastSyncCorrectionMs=now;
                             }
                         }
@@ -117,11 +118,13 @@ public class CycleReplayActivity extends Activity {
         stageIndex=Math.max(0,Math.min(4,getIntent().getIntExtra("stageIndex",2)));
         float dev=getIntent().getFloatExtra("deviation",0f);
         float[][] ranges={{0f,.25f},{.25f,.45f},{.45f,.55f},{.55f,.80f},{.80f,1f}};
-        problemStartPct=ranges[stageIndex][0];problemEndPct=ranges[stageIndex][1];
+        reviewed=getIntent().getBooleanExtra("reviewed",false);
+        problemStartPct=reviewed?getIntent().getFloatExtra("problemStart",0f):ranges[stageIndex][0];
+        problemEndPct=reviewed?getIntent().getFloatExtra("problemEnd",1f):ranges[stageIndex][1];
         progressView.setProblemRange(problemStartPct,problemEndPct);
 
         title.setText("TOP "+rank+" · Cycle "+bCycle+" · "+stageShortName(stageIndex));
-        labelA.setText("A 기준 · 정상 Cycle "+aCycle);
+        labelA.setText((reviewed?getIntent().getStringExtra("leftLabel"):"A")+" · "+ReviewText.of("기준 회차 (정상 미보증)","Reference (normality not certified)","Referencja (bez gwarancji normy)","Еталон (норма не гарантована)")+" "+aCycle);
         labelB.setText("B 비교 · 문제 Cycle "+bCycle);
         info.setText(String.format(Locale.getDefault(),
                 "문제 동작: %s · 편차 %.1f%%  |  A %.3f~%.3fs · B %.3f~%.3fs",
@@ -168,7 +171,7 @@ public class CycleReplayActivity extends Activity {
         handler.post(loopCheck);
     }
 
-    private String stageShortName(int i){String[] n={"대기/초기","전진가속","커팅/충격","복귀가속","안정화"};return n[Math.max(0,Math.min(n.length-1,i))];}
+    private String stageShortName(int i){if(reviewed)return ReviewText.phase(i);String[] n={"대기/초기","전진가속","커팅/충격","복귀가속","안정화"};return n[Math.max(0,Math.min(n.length-1,i))];}
     private float normalizedProgress(int currentMs,int startMs,int endMs){int d=Math.max(1,endMs-startMs);float p=(currentMs-startMs)/(float)d;return Math.max(0f,Math.min(1f,p));}
     private int mapProgress(float p,int start,int end){return start+Math.round((end-start)*Math.max(0f,Math.min(1f,p)));}
     private int loopStartA(){return problemLoop?mapProgress(problemStartPct,aStartMs,aEndMs):aStartMs;}
@@ -180,7 +183,9 @@ public class CycleReplayActivity extends Activity {
         if(uriA==null||playerA!=null||st==null)return;
         try{
             surfaceA=new Surface(st);playerA=new MediaPlayer();playerA.setDataSource(this,uriA);playerA.setSurface(surfaceA);playerA.setVolume(0f,0f);playerA.setScreenOnWhilePlaying(true);
-            playerA.setOnPreparedListener(mp->{preparedA=true;seekPlayer(mp,loopStartA());startIfReady();});
+            playerA.setOnSeekCompleteListener(mp->{seekReadyA=true;finishSeekBarrier();});
+            playerA.setOnErrorListener((mp,what,extra)->{paused=true;problemAlert.setText("A video error "+what+" / "+extra);return true;});
+            playerA.setOnPreparedListener(mp->{preparedA=true;startIfReady();});
             playerA.prepareAsync();
         }catch(Exception e){problemAlert.setText("A 영상 준비 실패: "+e.getMessage());}
     }
@@ -188,7 +193,9 @@ public class CycleReplayActivity extends Activity {
         if(uriB==null||playerB!=null||st==null)return;
         try{
             surfaceB=new Surface(st);playerB=new MediaPlayer();playerB.setDataSource(this,uriB);playerB.setSurface(surfaceB);playerB.setVolume(0f,0f);playerB.setScreenOnWhilePlaying(true);
-            playerB.setOnPreparedListener(mp->{preparedB=true;seekPlayer(mp,loopStartB());startIfReady();});
+            playerB.setOnSeekCompleteListener(mp->{seekReadyB=true;finishSeekBarrier();});
+            playerB.setOnErrorListener((mp,what,extra)->{paused=true;problemAlert.setText("B video error "+what+" / "+extra);return true;});
+            playerB.setOnPreparedListener(mp->{preparedB=true;startIfReady();});
             playerB.prepareAsync();
         }catch(Exception e){problemAlert.setText("B 영상 준비 실패: "+e.getMessage());}
     }
@@ -213,17 +220,18 @@ public class CycleReplayActivity extends Activity {
         }catch(Exception ignored){}
     }
 
-    private void restartBoth(){
+    private void restartBoth(){seekBothAt(problemLoop?problemStartPct:0f);}
+    private void seekBothAt(float phase){
         if(!preparedA||!preparedB||restarting)return;
-        restarting=true;
-        pausePlayers();
-        seekPlayer(playerA,loopStartA());seekPlayer(playerB,loopStartB());
-        applyPlaybackMode();
-        handler.postDelayed(()->{
-            if(!paused){startPlayers();}
-            restarting=false;
-            lastSyncCorrectionMs=SystemClock.elapsedRealtime();
-        },140);
+        restarting=true;seekReadyA=false;seekReadyB=false;int epoch=++seekEpoch;
+        applyPlaybackMode();pausePlayers();
+        seekPlayer(playerA,mapProgress(phase,aStartMs,aEndMs));
+        seekPlayer(playerB,mapProgress(phase,bStartMs,bEndMs));
+        handler.postDelayed(()->{if(restarting&&epoch==seekEpoch){restarting=false;paused=true;pausePlayers();problemAlert.setText(ReviewText.of("동기화 대기 초과 · 다시 시작을 눌러주세요","Seek timeout · tap restart","Przekroczono czas synchronizacji · uruchom ponownie","Час синхронізації вичерпано · перезапустіть"));}},4000);
+    }
+    private void finishSeekBarrier(){
+        if(!restarting||!seekReadyA||!seekReadyB)return;
+        restarting=false;lastSyncCorrectionMs=SystemClock.elapsedRealtime();if(!paused)startPlayers();
     }
 
     @Override protected void onPause(){super.onPause();pausePlayers();paused=true;pauseButton.setText("▶ 계속재생");}

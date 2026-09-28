@@ -30,11 +30,24 @@ jobs:
         with:
           gradle-version: '8.9'
 
+      - name: Verify version and run deterministic tests
+        run: |
+          set -euo pipefail
+          grep -q 'versionCode = 37' app/build.gradle.kts
+          grep -q 'versionName = "2.0.0"' app/build.gradle.kts
+          mkdir -p "$RUNNER_TEMP/core-tests"
+          javac -d "$RUNNER_TEMP/core-tests" app/src/main/java/com/example/electrodecutcompare/MotionCore.java app/src/main/java/com/example/electrodecutcompare/ReviewXlsx.java validation/MotionCoreTest.java validation/ExportWorkbookTest.java
+          java -cp "$RUNNER_TEMP/core-tests" MotionCoreTest
+          java -cp "$RUNNER_TEMP/core-tests" ExportWorkbookTest "$RUNNER_TEMP/export-test.xlsx"
+
       - name: Restore permanent signing key
         env:
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
         run: |
-          echo "$KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/electrode-release.jks"
+          set -euo pipefail
+          test -n "$KEYSTORE_BASE64"
+          umask 077
+          printf '%s' "$KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/electrode-release.jks"
           test -s "$RUNNER_TEMP/electrode-release.jks"
 
       - name: Build unsigned release APK
@@ -53,7 +66,7 @@ jobs:
 
           UNSIGNED_APK="app/build/outputs/apk/release/app-release-unsigned.apk"
           ALIGNED_APK="app/build/outputs/apk/release/app-release-aligned.apk"
-          SIGNED_APK="app/build/outputs/apk/release/ElectrodeCuttingCompare-v1.9.4-release.apk"
+          SIGNED_APK="app/build/outputs/apk/release/ElectrodeCuttingCompare-v2.0.0-release.apk"
 
           "$ZIPALIGN" -f -v 4 "$UNSIGNED_APK" "$ALIGNED_APK"
 
@@ -70,9 +83,21 @@ jobs:
             --print-certs \
             "$SIGNED_APK"
 
+      - name: Verify packaged application version
+        run: |
+          set -euo pipefail
+          BT=$(ls -1 "$ANDROID_SDK_ROOT/build-tools" | sort -V | tail -1)
+          "$ANDROID_SDK_ROOT/build-tools/$BT/aapt" dump badging app/build/outputs/apk/release/ElectrodeCuttingCompare-v2.0.0-release.apk | sed -n '1p' | tee "$RUNNER_TEMP/apk-version.txt"
+          grep -q "versionCode='37'" "$RUNNER_TEMP/apk-version.txt"
+          grep -q "versionName='2.0.0'" "$RUNNER_TEMP/apk-version.txt"
+
       - name: Upload signed APK
         uses: actions/upload-artifact@v4
         with:
-          name: ElectrodeCuttingCompare-v1.9.4-signed-apk
-          path: app/build/outputs/apk/release/ElectrodeCuttingCompare-v1.9.4-release.apk
+          name: ElectrodeCuttingCompare-v2.0.0-signed-apk
+          path: app/build/outputs/apk/release/ElectrodeCuttingCompare-v2.0.0-release.apk
           if-no-files-found: error
+
+      - name: Remove temporary signing key
+        if: always()
+        run: rm -f "$RUNNER_TEMP/electrode-release.jks"

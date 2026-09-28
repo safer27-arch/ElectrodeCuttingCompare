@@ -1,0 +1,34 @@
+package com.example.electrodecutcompare;
+
+import android.app.*;import android.graphics.*;import android.media.MediaMetadataRetriever;import android.net.Uri;import android.os.*;import android.view.*;import android.widget.*;
+import java.util.concurrent.*;
+
+/** A target patch on the rigid cutter, plus two separated stationary structure patches. */
+public class MotionRegionActivity extends Activity {
+ private String uri,profile,role;private MotionRegionStore.Settings settings;private BoxView view;private Bitmap frame;private Button save;
+ private final ExecutorService worker=Executors.newSingleThreadExecutor();
+ @Override public void onCreate(Bundle b){super.onCreate(b);LanguageManager.init(this);if(Build.VERSION.SDK_INT>=30)getWindow().setDecorFitsSystemWindows(true);
+  uri=getIntent().getStringExtra("uri");profile=getIntent().getStringExtra("profile");role=getIntent().getStringExtra("role");settings=MotionRegionStore.get(this,uri,profile);
+  ScrollView scroll=new ScrollView(this);scroll.setFillViewport(true);scroll.setBackgroundColor(ReviewUi.BG);LinearLayout root=ReviewUi.column(this);scroll.addView(root);setContentView(scroll);
+  root.addView(ReviewUi.title(this,role+" · "+ReviewUi.f("추적 부위 지정","Select tracked regions","Wybierz obszary śledzenia","Виберіть ділянки відстеження")));
+  root.addView(ReviewUi.text(this,ReviewUi.f("첫 프레임에서 ① 커터에 붙은 볼트·무늬 한 곳 ② 고정 프레임 한 곳 ③ 멀리 떨어진 고정 프레임 한 곳을 드래그해 지정하세요. 반사광·벨트·다른 이동부는 피하세요.","On the first frame draw ① a textured feature on the rigid cutter, ② a fixed-frame feature, ③ a second distant fixed-frame feature. Avoid reflections, belts and moving parts.","Na pierwszej klatce zaznacz ① detal na sztywnym nożu, ② detal nieruchomej ramy, ③ drugi odległy detal ramy. Unikaj odblasków, pasów i ruchomych części.","На першому кадрі позначте ① деталь жорсткого різака, ② деталь нерухомої рами, ③ другу віддалену деталь рами. Уникайте відблисків, ременів та рухомих частин."),16,ReviewUi.MUTED));
+  Spinner pick=new Spinner(this);pick.setAdapter(new ArrayAdapter<>(this,android.R.layout.simple_spinner_dropdown_item,new String[]{ReviewUi.f("① 커터 추적 부위","① Cutter target","① Cel na nożu","① Ціль на різаку"),ReviewUi.f("② 고정부 1","② Fixed reference 1","② Stały punkt 1","② Нерухома точка 1"),ReviewUi.f("③ 고정부 2","③ Fixed reference 2","③ Stały punkt 2","③ Нерухома точка 2")}));root.addView(pick);
+  view=new BoxView();root.addView(view,new LinearLayout.LayoutParams(-1,ReviewUi.dp(this,300)));
+  pick.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener(){public void onItemSelected(AdapterView<?> a,View v,int pos,long id){view.selected=pos;view.invalidate();}public void onNothingSelected(AdapterView<?> a){}});
+  CheckBox reverse=new CheckBox(this);reverse.setText(ReviewUi.f("이 영상의 전진 방향 반전 (A/B가 반대로 찍힌 경우)","Reverse this video's direction (opposite camera views)","Odwróć kierunek tego filmu (przeciwne ujęcia)","Змінити напрямок цього відео (протилежні ракурси)"));reverse.setTextColor(ReviewUi.WHITE);reverse.setChecked(settings.reverse);root.addView(reverse);
+  save=ReviewUi.button(this,ReviewUi.f("지정 저장 · 돌아가기","Save regions · back","Zapisz obszary · wróć","Зберегти ділянки · назад"));save.setEnabled(false);root.addView(save);save.setOnClickListener(v->{settings.reverse=reverse.isChecked();if(!settings.complete()){ReviewUi.error(this,ReviewUi.f("3개 부위를 모두 지정해주세요.","Select all three regions.","Wybierz wszystkie trzy obszary.","Виберіть усі три ділянки."));return;}MotionRegionStore.save(this,uri,profile,settings);setResult(RESULT_OK);finish();});
+  root.addView(ReviewUi.text(this,ReviewUi.f("영상마다 따로 저장됩니다. 새 영상을 선택하면 다시 지정하여 잘못된 부위의 자동 추적을 방지합니다.","Saved per video. New videos require new regions to avoid tracking the wrong part.","Zapis osobno dla każdego filmu. Nowe filmy wymagają nowych obszarów.","Зберігається окремо для кожного відео. Для нового відео позначте ділянки знову."),14,ReviewUi.WARN));
+  worker.execute(()->{MediaMetadataRetriever m=new MediaMetadataRetriever();try{m.setDataSource(this,Uri.parse(uri));Bitmap x=Build.VERSION.SDK_INT>=28?m.getFrameAtIndex(0):m.getFrameAtTime(0,MediaMetadataRetriever.OPTION_CLOSEST);if(x==null)throw new Exception("NO_FRAME");int max=1200;if(Math.max(x.getWidth(),x.getHeight())>max){double k=max/(double)Math.max(x.getWidth(),x.getHeight());Bitmap small=Bitmap.createScaledBitmap(x,(int)(x.getWidth()*k),(int)(x.getHeight()*k),true);x.recycle();x=small;}final Bitmap ready=x;runOnUiThread(()->{if(isFinishing()){ready.recycle();return;}frame=ready;view.invalidate();save.setEnabled(true);});}catch(Exception e){runOnUiThread(()->ReviewUi.error(this,ReviewUi.f("첫 프레임을 읽지 못했습니다: ","Cannot read first frame: ","Nie można odczytać pierwszej klatki: ","Не вдалося прочитати перший кадр: ")+e.getMessage()));}finally{try{m.release();}catch(Exception ignored){}}});
+ }
+ @Override protected void onDestroy(){worker.shutdownNow();super.onDestroy();}
+ private final class BoxView extends View {
+  final Paint p=new Paint(3);final RectF imageRect=new RectF();float downX,downY;int selected;boolean dragging;
+  BoxView(){super(MotionRegionActivity.this);setBackgroundColor(0xff071423);}
+  @Override protected void onDraw(Canvas c){super.onDraw(c);if(frame==null){p.setColor(ReviewUi.WHITE);p.setTextSize(ReviewUi.dp(getContext(),18));c.drawText("Loading...",15,40,p);return;}float k=Math.min(getWidth()/(float)frame.getWidth(),getHeight()/(float)frame.getHeight()),w=frame.getWidth()*k,h=frame.getHeight()*k;imageRect.set((getWidth()-w)/2,(getHeight()-h)/2,(getWidth()+w)/2,(getHeight()+h)/2);c.drawBitmap(frame,null,imageRect,p);
+   int[] colors={ReviewUi.WARN,ReviewUi.CYAN,0xff70efaf};for(int i=0;i<3;i++){float[] b=settings.boxes[i];if(b[2]<=0)continue;p.setColor(colors[i]);p.setStrokeWidth(i==selected?5:3);p.setStyle(Paint.Style.STROKE);float x=imageRect.left+b[0]*w,y=imageRect.top+b[1]*h;c.drawRect(x-b[2]*w,y-b[3]*h,x+b[2]*w,y+b[3]*h,p);p.setStyle(Paint.Style.FILL);p.setTextSize(ReviewUi.dp(getContext(),18));c.drawText(""+(i+1),x+2,y-2,p);}}
+  @Override public boolean onTouchEvent(android.view.MotionEvent e){if(frame==null||imageRect.width()==0)return false;float x=Math.max(.03f,Math.min(.97f,(e.getX()-imageRect.left)/imageRect.width())),y=Math.max(.03f,Math.min(.97f,(e.getY()-imageRect.top)/imageRect.height()));
+   if(e.getAction()==0){downX=x;downY=y;dragging=true;getParent().requestDisallowInterceptTouchEvent(true);return true;}
+   if((e.getAction()==2||e.getAction()==1)&&dragging){float l=Math.min(downX,x),r=Math.max(downX,x),t=Math.min(downY,y),b=Math.max(downY,y);if(r-l>.025&&b-t>.025){settings.boxes[selected]=new float[]{(l+r)/2,(t+b)/2,(r-l)/2,(b-t)/2};invalidate();}if(e.getAction()==1){dragging=false;getParent().requestDisallowInterceptTouchEvent(false);performClick();}return true;}return true;}
+  @Override public boolean performClick(){super.performClick();return true;}
+ }
+}

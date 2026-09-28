@@ -91,13 +91,18 @@ public class MainActivity extends Activity {
         cutterProfile.setSelection(AppStateStore.getInt(this,"profile",0));
         cutterProfile.setOnItemSelectedListener(new android.widget.AdapterView.OnItemSelectedListener(){public void onItemSelected(android.widget.AdapterView<?> p,View v,int pos,long id){AppStateStore.putInt(MainActivity.this,"profile",pos);}public void onNothingSelected(android.widget.AdapterView<?> p){}});
         inspectionMode.setAdapter(new ArrayAdapter<>(this,android.R.layout.simple_spinner_dropdown_item,new String[]{
-                LanguageManager.ts("빠른검사 · Cycle 문제 우선 (추천)"),
-                LanguageManager.ts("표준검사 · Cycle + Event + 진동 + Top3"),
-                LanguageManager.ts("정밀검사 · 전체 8개 분석")}));
+                ReviewText.of("기본 추적 · 최대 30 fps", "Basic tracking · up to 30 fps", "Śledzenie podstawowe · do 30 fps", "Базове відстеження · до 30 кадрів/с"),
+                ReviewText.of("세밀 추적 · 최대 60 fps", "Detailed tracking · up to 60 fps", "Śledzenie dokładne · do 60 fps", "Детальне відстеження · до 60 кадрів/с"),
+                ReviewText.of("고속영상 추적 · 최대 120 fps", "High-FPS tracking · up to 120 fps", "Śledzenie szybkich nagrań · do 120 fps", "Відстеження швидкісного відео · до 120 кадрів/с")}));
         inspectionMode.setSelection(AppStateStore.getInt(this,"inspectionMode",0));
         inspectionMode.setOnItemSelectedListener(new android.widget.AdapterView.OnItemSelectedListener(){public void onItemSelected(android.widget.AdapterView<?> p,View v,int pos,long id){AppStateStore.putInt(MainActivity.this,"inspectionMode",pos);updateInspectionModeHint(pos);}public void onNothingSelected(android.widget.AdapterView<?> p){}});
 
-        findViewById(R.id.btnIntegrated).setOnClickListener(v->analyzeIntegrated());
+        findViewById(R.id.btnIntegrated).setOnClickListener(v->openReviewedInspection());
+        ((Button)findViewById(R.id.btnIntegrated)).setText(ReviewText.of("▶ 측정형 통합검사 · 결과 공유", "▶ Measured inspection · export", "▶ Kontrola pomiarowa · eksport", "▶ Вимірювальна перевірка · експорт"));
+        android.widget.LinearLayout legacyPanel=findViewById(R.id.expertPanel);
+        Button legacyButton=ReviewUi.button(this,ReviewText.of("이전 분석 실행 (참고용 · 기존 점수는 품질 판정 아님)","Run previous analysis (reference only · not a quality verdict)","Uruchom poprzednią analizę (pomocnicza · nie ocena jakości)","Запустити попередній аналіз (довідково · не оцінка якості)"));
+        legacyPanel.addView(legacyButton,0);
+        legacyButton.setOnClickListener(v->analyzeIntegrated());
         btnReplayTop1.setOnClickListener(v->replayWorstCycle(0));
         btnReplayTop2.setOnClickListener(v->replayWorstCycle(1));
         btnReplayTop3.setOnClickListener(v->replayWorstCycle(2));
@@ -187,9 +192,11 @@ public class MainActivity extends Activity {
 
     private void updateInspectionModeHint(int mode){
         if(txtInspectionModeHint==null)return;
-        if(mode==0)txtInspectionModeHint.setText("빠른검사 v1.9.4 · 문제 Cycle TOP3와 문제 동작구간을 먼저 찾습니다. 무거운 정밀검사는 제외해 현장 확인 시간을 줄입니다.");
-        else if(mode==1)txtInspectionModeHint.setText("표준검사 · Cycle Diagnosis에 Event, 공통진동 분리, Top3/Golden을 추가합니다. 일상 점검용 권장 모드입니다.");
-        else txtInspectionModeHint.setText("정밀검사 · 기존 전체 분석 8개 + ROI/Jerk까지 수행합니다. 시간이 더 걸리지만 상세 원인 확인에 적합합니다.");
+        txtInspectionModeHint.setText(ReviewText.of(
+            "v2.0 측정형 비교 · 커터/고정부 지정 → 실제 프레임 시간 추적 → 사이클 비교 → 카톡·메일 내보내기. 이전 분석은 전문가 항목에 별도 유지됩니다.",
+            "v2.0 measured comparison · select cutter/fixed regions → real-timestamp tracking → cycle comparison → chat/email export. Previous analysis remains under expert tools.",
+            "v2.0 porównanie pomiarowe · obszary noża/ramy → śledzenie czasu klatek → porównanie cykli → eksport czat/e-mail. Poprzednia analiza jest w narzędziach eksperta.",
+            "v2.0 вимірювальне порівняння · ділянки різака/рами → часові мітки кадрів → порівняння циклів → експорт у чат/пошту. Попередній аналіз у меню експерта."));
     }
 
     private void clearAnalysisCaches(){
@@ -456,6 +463,14 @@ public class MainActivity extends Activity {
         });
     }
 
+
+    private void openReviewedInspection(){
+        if(uriA==null || uriB==null){Toast.makeText(this,LanguageManager.ts("A/B 영상을 모두 선택해 주세요."),Toast.LENGTH_LONG).show();return;}
+        Intent i=new Intent(this,MotionReviewActivity.class);
+        i.putExtra("uriA",uriA.toString());i.putExtra("uriB",uriB.toString());
+        i.putExtra("profile",profileName());i.putExtra("maxFps",inspectionMode.getSelectedItemPosition()==0?30:inspectionMode.getSelectedItemPosition()==1?60:120);
+        startActivity(i);
+    }
 
     private void analyzeIntegrated(){
         if(uriA==null||uriB==null){Toast.makeText(this,LanguageManager.ts("A/B 영상을 모두 선택해 주세요."),Toast.LENGTH_SHORT).show();return;}

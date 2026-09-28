@@ -1,3 +1,47 @@
+# ElectrodeCuttingCompare v2.0.0 — 측정형 비교 + 품질패트롤 방식 결과 공유
+
+**이번 파일은 전체 소스 ZIP입니다. APK 자체가 아닙니다.** Android 전체 빌드와 실제 휴대폰 실행은 GitHub Actions/실기기에서 확인해야 합니다. 이전 0~100 점수나 고정45~55% ‘커팅’ 명칭을 생산 품질판정으로 사용하지 마세요.
+
+## 바로 시작
+
+기존 앱에서 A 기준영상/B 비교영상을 선택한 후 **측정형 통합검사 · 결과 공유**를 누릅니다. 새 화면에서 A와 B 각각 **커터의 고유 무늬 1곳 + 고정부 2곳**을 지정합니다. 영상별로 저장됩니다. 사용자가 지정한 ‘A’ 자체가 정상인지 자동 보증하지 않습니다.
+
+첫 확인은 같은 영상을 A/B에 넣고 같은 영역을 지정하여 시작하세요. 최대 샘플링은 기본30 / 세밀60 / 고속영상120fps입니다. 원본보다 높은 fps를 만들어내지 않습니다. 분석 구간은 최대30초이며 잘린 경우 화면에 표시합니다. 기존 1초대의 간이 분석과 다른 측정 방법이므로 같은 속도를 약속하지 않습니다.
+
+측정 후에는 측정 가능 여부 → 실제 사이클 시간/형태 차이 표 → A/B 궤적과 시간 그래프 → 차이 TOP3 → 비교재생 순서입니다. 조건이 부족하면 순위를 만들지 않고 보류합니다. 이전 ROI/Golden/Heatmap 등의 분석은 메인 **전문가 상세분석 → 이전 분석 실행(참고용)**에서 계속 사용할 수 있습니다. 새 측정형 모드가 이전 모든 알고리즘 점수를 재사용하는 것은 아닙니다.
+
+## 카톡 / 메일 내보내기
+
+결과 아래 **결과 내보내기**를 누르고 라인, 설비 A/B, 점검자를 입력합니다. 첫 요약 이미지, 그래프, 모든 완료 회차 표(작은 차이 포함), TOP3의 판단 내용+실제 A/B 전후 사진 합성 이미지가 생성됩니다. 전체 회차의 수치는 표와 Excel에 포함되며 사진은 TOP3 중심입니다.
+
+공유창에서 JPEG(10장 단위), 실제Excel(.xlsx), 전체ZIP 중 선택합니다. 카톡/메일 앱과 수신자는 사용자가 직접 선택합니다. 앱이 자동 발송하거나 수신 완료를 확인하지 않습니다. 원본 영상/서명키는 포함하지 않습니다. 회사 반출 정책을 확인하세요. 앱 내부 내보내기 이력에서 다시 공유할 수 있습니다.
+
+## 설치 — 기존 Termux 방식
+
+다운로드한 ZIP을 임시 폴더에 푼 뒤 **그 임시 폴더의** `INSTALL_TERMUX.sh`를 bash로 실행합니다. 스크립트가 저장소, 버전, 미저장 변경 여부를 검사하고 `~/ElectrodeCuttingCompare`에 복사합니다. 기존 저장소/서명키를 삭제하지 않습니다. 문제가 있으면 중단하므로 오류 이후의 명령을 임의로 계속 실행하지 마세요.
+
+```sh
+bash /실제로_압축을_푼_폴더/INSTALL_TERMUX.sh
+cd ~/ElectrodeCuttingCompare
+git diff --stat
+git add app .github .gitignore build.gradle.kts settings.gradle.kts gradle.properties validation README_KO.md LOGIC_REVIEW_KO.md VALIDATION_KO.md V2.0.0_UPDATE_KO.txt
+git commit -m "Upgrade to v2.0.0 measured motion and patrol export"
+git push origin main
+```
+
+GitHub Actions는 합성 단위시험, unsigned release 빌드, 기존 Secrets로 서명, 실제 APK versionCode37/versionName2.0.0 확인 순서입니다. 새 키를 생성하거나 기존 Secrets를 변경하지 마세요. Artifact는 `ElectrodeCuttingCompare-v2.0.0-signed-apk`, 내부 APK는 `ElectrodeCuttingCompare-v2.0.0-release.apk`입니다. 기존 applicationId와 서명을 유지합니다.
+
+## 상세 기록
+
+- `LOGIC_REVIEW_KO.md`: 실제 기존 로직의 한계, 적용한 방법, 최신 연구 비교, 수치 정의, 남은 한계
+- `VALIDATION_KO.md`: 실제 수행/미수행한 시험과 현장 검증 절차
+- `validation/`: 수학적 회귀시험과 Excel 생성 시험 소스
+
+새 화면은 한국어/영어/폴란드어/우크라이나어를 제공합니다. 원시 Excel 열 이름은 데이터 호환성을 위해 영어입니다. v2.0.0은 대형 최신 AI 모델을 내장한 제품이 아닙니다. 실설비 정확도와 Android 동작 검증 전의 **검토·수정 소스**입니다.
+
+---
+## 이하: 이전 버전 변경 이력 (현재 기능/검증 범위는 위 문서 우선)
+
 # ElectrodeCuttingCompare v1.9.4
 
 ## Multilingual Flag Selector
